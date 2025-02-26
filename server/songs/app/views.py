@@ -141,16 +141,28 @@ def get_spotify_token():
     client_secret = settings.SPOTIFY_CLIENT_SECRET
     token_url = "https://accounts.spotify.com/api/token"
 
+    # Encode client credentials
     client_creds = f"{client_id}:{client_secret}"
     client_creds_b64 = base64.b64encode(client_creds.encode()).decode()
 
-    headers = {"Authorization": f"Basic {client_creds_b64}", "Content-Type": "application/x-www-form-urlencoded"}
+    headers = {
+        "Authorization": f"Basic {client_creds_b64}",
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+
     data = {"grant_type": "client_credentials"}
 
+    # Make the request to Spotify API
     response = requests.post(token_url, headers=headers, data=data)
-    token_info = response.json()
 
-    return token_info.get("access_token"), token_info.get("refresh_token")
+    if response.status_code != 200:
+        return None  # Return None if request fails
+
+    # Extract the access token from the response
+    token_info = response.json()
+    access_token = token_info.get("access_token")
+
+    return access_token  # Return only the access token
 
 
 def refresh_spotify_token(refresh_token):
@@ -159,23 +171,37 @@ def refresh_spotify_token(refresh_token):
     client_secret = settings.SPOTIFY_CLIENT_SECRET
     token_url = "https://accounts.spotify.com/api/token"
 
+    # Encode client credentials
     client_creds = f"{client_id}:{client_secret}"
     client_creds_b64 = base64.b64encode(client_creds.encode()).decode()
 
-    headers = {"Authorization": f"Basic {client_creds_b64}", "Content-Type": "application/x-www-form-urlencoded"}
-    data = {"grant_type": "refresh_token", "refresh_token": refresh_token}
+    headers = {
+        "Authorization": f"Basic {client_creds_b64}",
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
 
+    data = {
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token
+    }
+
+    # Make the request to Spotify API to refresh the token
     response = requests.post(token_url, headers=headers, data=data)
-    if response.status_code != 200:
-        return None
 
+    if response.status_code != 200:
+        return None  # If refreshing fails, return None
+
+    # Extract the new access token from the response
     token_info = response.json()
-    return token_info.get("access_token")
+    access_token = token_info.get("access_token")
+
+    return access_token
 
 
 @login_required
 def recommended_songs(request):
     """Returns recommended songs based on collaborative and content-based filtering"""
+    # Call the recommendation functions from algorithms.py
     collaborative_recommendations = recommend_songs_collaborative(request.user)
     content_based_recommendations = recommend_songs_content_based(request.user)
 
@@ -193,66 +219,46 @@ def recommended_songs(request):
     return JsonResponse({'status': 'success', 'recommendations': recommendations_data})
 
 
-def calculate_recommendation_score(user, song):
-    """Calculates the recommendation score for a given song and user"""
-    score = 0
+def get_songs_by_popularity(request):
+    """Fetch songs from Spotify API sorted by popularity."""
+    access_token = get_spotify_token()  # Corrected token retrieval
+    print("Access Token:", access_token)
 
-    actions = Action.objects.filter(user=user, song=song)
-    for action in actions:
-        if action.action_type == 'like':
-            score += 10
-        elif action.action_type == 'save':
-            score += 5
-        elif action.action_type == 'play':
-            score += 1
+    if not access_token:
+        return JsonResponse({"status": "error", "message": "Failed to get Spotify token"}, status=500)
 
-    user_profile = UserProfile.objects.get(user=user)
-    if song.artist in user_profile.preferences.get('favorite_artists', []):
-        score += 5
+    # Spotify search API (searching for all songs with wildcard `*`)
+    search_url = "https://api.spotify.com/v1/search"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    params = {
+        "q": "*",         # Get all songs
+        "type": "track",  # Search for tracks
+        "limit": 50       # Max limit per request (Spotify allows max 50 per request)
+    }
 
-    recommendation, created = Recommendation.objects.get_or_create(user=user, song=song)
-    recommendation.recommendation_score = score
-    recommendation.save()
+    response = requests.get(search_url, headers=headers, params=params)
 
-    similar_users = get_similar_users(user)
-    for similar_user, similarity_score in similar_users:
-        similar_user_actions = Action.objects.filter(user=similar_user, song=song)
+    if response.status_code != 200:
+        return JsonResponse({"status": "error", "message": "Failed to fetch songs"}, status=response.status_code)
 
-        for similar_user_action in similar_user_actions:
-            if similar_user_action.action_type == 'like':
-                score += similarity_score * 10
-            elif similar_user_action.action_type == 'save':
-                score += similarity_score * 5
-            elif similar_user_action.action_type == 'play':
-                score += similarity_score * 1
+    songs = response.json().get("tracks", {}).get("items", [])
 
-    recommendation.recommendation_score = score
-    recommendation.save()
+    if not songs:
+        return JsonResponse({"status": "error", "message": "No songs found"}, status=404)
 
+    # Sort songs by popularity (descending)
+    sorted_songs = sorted(songs, key=lambda x: x["popularity"], reverse=True)
 
-def calculate_user_similarity(user1, user2):
-    """Calculates similarity score between two users based on their actions"""
-    user1_actions = Action.objects.filter(user=user1)
-    user2_actions = Action.objects.filter(user=user2)
+    # Return only relevant fields
+    song_list = [
+        {
+            "name": song["name"],
+            "artist": song["artists"][0]["name"],
+            "popularity": song["popularity"],
+            "spotify_url": song["external_urls"]["spotify"]
+        }
+        for song in sorted_songs
+    ]
 
-    common_songs = set(user1_actions.values_list('song', flat=True)) & set(user2_actions.values_list('song', flat=True))
-    if not common_songs:
-        return 0
-
-    numerator = sum([1 for song in common_songs])
-    denominator = math.sqrt(len(user1_actions) * len(user2_actions))
-
-    return numerator / denominator if denominator != 0 else 0
-
-
-def get_similar_users(user, top_n=5):
-    """Gets the top N most similar users to the given user"""
-    other_users = User.objects.exclude(id=user.id)
-    user_similarities = []
-
-    for other_user in other_users:
-        similarity_score = calculate_user_similarity(user, other_user)
-        user_similarities.append((other_user, similarity_score))
-
-    user_similarities.sort(key=lambda x: x[1], reverse=True)
-    return user_similarities[:top_n]
+    return JsonResponse({"status": "success", "songs": song_list})
