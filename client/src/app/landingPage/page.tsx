@@ -2,6 +2,7 @@
 import { Music, Search, Headphones, Heart, TrendingUp, Menu } from "lucide-react";
 import React from "react";
 import ScrollPage from "@/components/functions/ScrollPage";
+import Signupbtn from "@/components/ui/signupbtn";
 
 const LandingPage = () => {
   return (
@@ -36,12 +37,7 @@ const LandingPage = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <button className="hover:bg-black hover:bg-opacity-30 text-yellow-100 px-4 py-1 border-2 border-yellow-100  rounded-full text-sm transition">
-              Sign Up
-            </button>
-            <button className="md:hidden">
-              <Menu className="text-yellow-100" />
-            </button>
+            <Signupbtn />
           </div>
         </nav>
       </header>

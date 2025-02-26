@@ -38,11 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -140,3 +143,8 @@ print(env('SPOTIFY_CLIENT_ID', default='Not Set'))
 SPOTIFY_CLIENT_ID = env("SPOTIFY_CLIENT_ID", default="default_value")
 SPOTIFY_CLIENT_SECRET = env("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = env("SPOTIFY_REDIRECT_URI")
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',  # Add your frontend domain here
+    'https://your-frontend-domain.com',  # For production, add the production domain
+]
+

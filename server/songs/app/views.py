@@ -14,6 +14,11 @@ from collections import defaultdict
 from django.db.models import Count
 from .algorithms import recommend_songs_collaborative, recommend_songs_content_based
 
+from django.middleware.csrf import get_token
+
+def csrf_token(request):
+    return JsonResponse({"csrfToken": get_token(request)})
+
 
 @csrf_exempt
 def login_view(request):
@@ -218,23 +223,22 @@ def recommended_songs(request):
 
     return JsonResponse({'status': 'success', 'recommendations': recommendations_data})
 
-
+@csrf_exempt  
 def get_songs_by_popularity(request):
-    """Fetch songs from Spotify API sorted by popularity."""
-    access_token = get_spotify_token()  # Corrected token retrieval
-    print("Access Token:", access_token)
+    """Fetch songs from Spotify API sorted by popularity, including album cover and track ID."""
+    access_token = get_spotify_token()
 
     if not access_token:
         return JsonResponse({"status": "error", "message": "Failed to get Spotify token"}, status=500)
 
-    # Spotify search API (searching for all songs with wildcard `*`)
+    # Spotify search API to fetch songs
     search_url = "https://api.spotify.com/v1/search"
     headers = {"Authorization": f"Bearer {access_token}"}
     
     params = {
-        "q": "*",         # Get all songs
+        "q": "*",         # Wildcard to fetch all songs
         "type": "track",  # Search for tracks
-        "limit": 50       # Max limit per request (Spotify allows max 50 per request)
+        "limit": 50       # Maximum allowed per request
     }
 
     response = requests.get(search_url, headers=headers, params=params)
@@ -247,18 +251,21 @@ def get_songs_by_popularity(request):
     if not songs:
         return JsonResponse({"status": "error", "message": "No songs found"}, status=404)
 
-    # Sort songs by popularity (descending)
+    # Sort songs by popularity in descending order
     sorted_songs = sorted(songs, key=lambda x: x["popularity"], reverse=True)
 
-    # Return only relevant fields
+    # Extract relevant song details including album cover and track ID
     song_list = [
         {
             "name": song["name"],
             "artist": song["artists"][0]["name"],
             "popularity": song["popularity"],
-            "spotify_url": song["external_urls"]["spotify"]
+            "spotify_url": song["external_urls"]["spotify"],
+            "album_cover": song["album"]["images"][0]["url"] if song["album"]["images"] else None,
+            "spotifyTrackId": song["id"]  # Added track ID
         }
         for song in sorted_songs
     ]
 
     return JsonResponse({"status": "success", "songs": song_list})
+
