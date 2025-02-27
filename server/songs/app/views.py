@@ -19,6 +19,7 @@ from django.middleware.csrf import get_token
 def csrf_token(request):
     return JsonResponse({"csrfToken": get_token(request)})
 
+from django.contrib.auth import logout
 
 @csrf_exempt
 def login_view(request):
@@ -269,3 +270,16 @@ def get_songs_by_popularity(request):
 
     return JsonResponse({"status": "success", "songs": song_list})
 
+
+
+@csrf_exempt
+def logout_view(request):
+    """Handles user logout"""
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'User not authenticated'}, status=401)
+
+        logout(request)
+        return JsonResponse({'status': 'success', 'message': 'Logged out successfully', 'redirect_url': '/login'}, status=200)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
