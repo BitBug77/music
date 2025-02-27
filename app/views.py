@@ -9,11 +9,8 @@ import base64
 import json
 from .models import UserProfile, Action, Song, Recommendation, UserSimilarity
 from django.views.decorators.csrf import csrf_exempt
-import math
-from collections import defaultdict
-from django.db.models import Count
 from .algorithms import recommend_songs_collaborative, recommend_songs_content_based
-from django.contrib.auth import logout
+
 
 @csrf_exempt
 def login_view(request):
@@ -261,16 +258,3 @@ def get_songs_by_popularity(request):
     ]
 
     return JsonResponse({"status": "success", "songs": song_list})
-
-
-@csrf_exempt
-def logout_view(request):
-    """Handles user logout"""
-    if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return JsonResponse({'status': 'error', 'message': 'User not authenticated'}, status=401)
-
-        logout(request)
-        return JsonResponse({'status': 'success', 'message': 'Logged out successfully', 'redirect_url': '/login'}, status=200)
-
-    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)

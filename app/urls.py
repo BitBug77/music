@@ -10,6 +10,5 @@ urlpatterns = [
     path('spotify-callback/', views.spotify_callback, name='spotify_callback'),
     path('home/', views.home, name='home'),
     path('popularity/', views.get_songs_by_popularity, name='songs_by_popularity'),
-    path('recommend/', views.recommended_songs, name='recommend_songs'),
-    path('logout/', views.logout_view, name='logout'),
+    path('recommended-songs/', views.recommended_songs, name='recommended_songs'),
 ]

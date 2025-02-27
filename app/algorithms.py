@@ -1,8 +1,9 @@
+from django.contrib.auth.models import User
 import math
 from collections import defaultdict
 from django.db.models import Count
 from .models import Action, Song, Recommendation, UserProfile, UserSimilarity
-from django.contrib.auth.models import User
+
 def recommend_songs_collaborative(user):
     """Collaborative filtering recommendation"""
     # Get similar users and calculate song recommendations based on their actions
