@@ -12,4 +12,5 @@ urlpatterns = [
     path('popularity/', views.get_songs_by_popularity, name='songs_by_popularity'),
     path('recommend/', views.recommended_songs, name='recommend_songs'),
     path('logout/', views.logout_view, name='logout'),
+    path('search-songs/', views.search_songs, name='search_songs'),
 ]

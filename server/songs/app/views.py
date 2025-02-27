@@ -274,3 +274,45 @@ def logout_view(request):
         return JsonResponse({'status': 'success', 'message': 'Logged out successfully', 'redirect_url': '/login'}, status=200)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+
+
+@login_required
+def search_songs(request):
+    """Search for songs using Spotify API and include album cover & track ID"""
+    query = request.GET.get('q', '').strip()
+
+    if not query:
+        return JsonResponse({'status': 'error', 'message': 'Search query is required'}, status=400)
+
+    access_token = get_spotify_token()  
+    if not access_token:
+        return JsonResponse({"status": "error", "message": "Failed to get Spotify token"}, status=500)
+
+    search_url = "https://api.spotify.com/v1/search"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {
+        "q": query,
+        "type": "track",
+        "limit": 10
+    }
+
+    response = requests.get(search_url, headers=headers, params=params)
+    
+    if response.status_code != 200:
+        return JsonResponse({"status": "error", "message": "Failed to fetch search results"}, status=response.status_code)
+
+    results = response.json().get("tracks", {}).get("items", [])
+
+    # Extract relevant data including album cover & track ID
+    song_list = [
+        {
+            "track_id": song["id"],  # Spotify Track ID
+            "name": song["name"],  
+            "artist": song["artists"][0]["name"],  
+            "album_cover": song["album"]["images"][0]["url"] if song["album"]["images"] else None,  # Album Cover URL
+            "spotify_url": song["external_urls"]["spotify"]  
+        }
+        for song in results
+    ]
+
+    return JsonResponse({"status": "success", "songs": song_list})
