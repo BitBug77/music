@@ -140,7 +140,6 @@ def home(request):
     }
     return JsonResponse({'status': 'success', 'data': profile_data})
 
-
 def get_spotify_token():
     """Fetches an access token using Client ID and Secret"""
     client_id = settings.SPOTIFY_CLIENT_ID
