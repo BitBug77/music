@@ -13,6 +13,12 @@ import math
 from collections import defaultdict
 from django.db.models import Count
 from .algorithms import recommend_songs_collaborative, recommend_songs_content_based
+from .models import FriendRequest
+from django.middleware.csrf import get_token
+from .models import FriendRequest
+def csrf_token(request):
+    return JsonResponse({"csrfToken": get_token(request)})
+
 from django.contrib.auth import logout
 
 @csrf_exempt
@@ -217,23 +223,22 @@ def recommended_songs(request):
 
     return JsonResponse({'status': 'success', 'recommendations': recommendations_data})
 
-
+@csrf_exempt  
 def get_songs_by_popularity(request):
-    """Fetch songs from Spotify API sorted by popularity."""
-    access_token = get_spotify_token()  # Corrected token retrieval
-    print("Access Token:", access_token)
+    """Fetch songs from Spotify API sorted by popularity, including album cover and track ID."""
+    access_token = get_spotify_token()
 
     if not access_token:
         return JsonResponse({"status": "error", "message": "Failed to get Spotify token"}, status=500)
 
-    # Spotify search API (searching for all songs with wildcard `*`)
+    # Spotify search API to fetch songs
     search_url = "https://api.spotify.com/v1/search"
     headers = {"Authorization": f"Bearer {access_token}"}
     
     params = {
-        "q": "*",         # Get all songs
+        "q": "*",         # Wildcard to fetch all songs
         "type": "track",  # Search for tracks
-        "limit": 50       # Max limit per request (Spotify allows max 50 per request)
+        "limit": 50       # Maximum allowed per request
     }
 
     response = requests.get(search_url, headers=headers, params=params)
@@ -246,21 +251,24 @@ def get_songs_by_popularity(request):
     if not songs:
         return JsonResponse({"status": "error", "message": "No songs found"}, status=404)
 
-    # Sort songs by popularity (descending)
+    # Sort songs by popularity in descending order
     sorted_songs = sorted(songs, key=lambda x: x["popularity"], reverse=True)
 
-    # Return only relevant fields
+    # Extract relevant song details including album cover and track ID
     song_list = [
         {
             "name": song["name"],
             "artist": song["artists"][0]["name"],
             "popularity": song["popularity"],
-            "spotify_url": song["external_urls"]["spotify"]
+            "spotify_url": song["external_urls"]["spotify"],
+            "album_cover": song["album"]["images"][0]["url"] if song["album"]["images"] else None,
+            "spotifyTrackId": song["id"]  # Added track ID
         }
         for song in sorted_songs
     ]
 
     return JsonResponse({"status": "success", "songs": song_list})
+
 
 
 @csrf_exempt
@@ -316,3 +324,111 @@ def search_songs(request):
     ]
 
     return JsonResponse({"status": "success", "songs": song_list})
+
+
+@login_required
+def recommend_friends(request):
+    """Recommend friends based on similar music taste."""
+    user = request.user  # Get the logged-in user
+
+    # Get similar users (sorted by similarity score)
+    similar_users = (
+        UserSimilarity.objects.filter(user1=user)
+        .order_by("-similarity_score")
+        .values_list("user2", "similarity_score")
+    )
+
+    # Exclude already connected friends (assuming a Friend model exists)
+    friends = set()  # Replace this with actual friend list if available
+
+    recommended_friends = [
+        {
+            "user_id": user_id,
+            "username": User.objects.get(id=user_id).username,
+            "similarity_score": score,
+        }
+        for user_id, score in similar_users if user_id not in friends
+    ]
+
+    return JsonResponse({"status": "success", "recommended_friends": recommended_friends})
+
+
+
+@login_required
+@csrf_exempt
+def send_friend_request(request, user_id):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+
+    sender = request.user  # Logged-in user
+    try:
+        receiver = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+
+    if sender == receiver:
+        return JsonResponse({"status": "error", "message": "You cannot send a friend request to yourself"}, status=400)
+
+    # Check if a request already exists
+    existing_request = FriendRequest.objects.filter(sender=sender, receiver=receiver, status="pending").exists()
+    if existing_request:
+        return JsonResponse({"status": "error", "message": "Friend request already sent"}, status=400)
+
+    FriendRequest.objects.create(sender=sender, receiver=receiver)
+
+    return JsonResponse({"status": "success", "message": "Friend request sent successfully"})
+
+# ACCEPT OR REJECT FRIEND REQUEST
+@csrf_exempt
+@login_required
+def respond_to_friend_request(request, request_id, response):
+    """Respond to a friend request."""
+    if request.method == "POST":
+        try:
+            friend_request = FriendRequest.objects.get(id=request_id)
+            if response == "accept":
+                # Logic to accept the request (e.g., create a friendship)
+                friend_request.status = "accepted"
+                friend_request.save()
+                return JsonResponse({"status": "success", "message": "Friend request accepted"})
+            elif response == "reject":
+                # Logic to reject the request
+                friend_request.status = "rejected"
+                friend_request.save()
+                return JsonResponse({"status": "success", "message": "Friend request rejected"})
+            else:
+                return JsonResponse({"status": "error", "message": "Invalid response"}, status=400)
+        except FriendRequest.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Friend request not found"}, status=404)
+
+@login_required
+def search_user(request, username):
+    """Search for a user by username and return similar usernames with user IDs."""
+    try:
+        # Exact match for the username
+        exact_match_user = User.objects.get(username=username)
+
+        # Fetch similar users (case-insensitive match)
+        similar_users = User.objects.filter(username__icontains=username).exclude(id=exact_match_user.id)
+        
+        # Prepare the data to send back to the frontend
+        similar_user_data = [
+            {
+                "user_id": user.id,
+                "username": user.username
+            }
+            for user in similar_users
+        ]
+        
+        # Include the exact match user as well in the response
+        return JsonResponse({
+            "status": "success",
+            "exact_match": {
+                "user_id": exact_match_user.id,
+                "username": exact_match_user.username
+            },
+            "similar_users": similar_user_data
+        })
+    
+    except User.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "User not found"}, status=404)

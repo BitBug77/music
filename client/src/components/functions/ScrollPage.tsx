@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useRouter } from "next/navigation"; // Correct import for App Router
+import { useRouter } from "next/navigation"; 
 
 const ScrollPage: React.FC = () => {
   const router = useRouter();
@@ -9,7 +9,7 @@ const ScrollPage: React.FC = () => {
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
-        router.push("/discover"); // Navigate to another page
+        router.push("/discover"); 
       }
     };
 
@@ -20,7 +20,7 @@ const ScrollPage: React.FC = () => {
     };
   }, [router]);
 
-  return null; // No UI needed
+  return null; 
 };
 
 export default ScrollPage;
