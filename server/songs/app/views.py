@@ -13,6 +13,7 @@ import math
 from collections import defaultdict
 from django.db.models import Count
 from .algorithms import recommend_songs_collaborative, recommend_songs_content_based
+from .models import FriendRequest
 from django.views import View
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -21,7 +22,18 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.middleware.csrf import get_token
+from .models import FriendRequest
+from django.db import connection
+from django.shortcuts import get_object_or_404
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
 
+
+from .models import EsewaPayment
+
+def check_db(request):
+    db_name = connection.settings_dict["NAME"]
+    return JsonResponse({"database_name": db_name})
 def csrf_token(request):
     return JsonResponse({"csrfToken": get_token(request)})
 
@@ -31,6 +43,12 @@ from django.contrib.auth import logout
 @api_view(['POST'])
 def login_view(request):
     """Handles user login"""
+   
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
     try:
         if not request.body:
             return JsonResponse({'status': 'error', 'message': 'Empty request body'}, status=400)
@@ -63,6 +81,12 @@ def login_view(request):
 @api_view(['POST'])
 def signup_view(request):
     """Handles user signup"""
+   
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -343,6 +367,320 @@ def search_songs(request):
     ]
 
     return JsonResponse({"status": "success", "songs": song_list})
+
+
+@login_required
+def recommend_friends(request):
+    """Recommend friends based on similar music taste."""
+    user = request.user  # Get the logged-in user
+
+    # Get similar users (sorted by similarity score)
+    similar_users = (
+        UserSimilarity.objects.filter(user1=user)
+        .order_by("-similarity_score")
+        .values_list("user2", "similarity_score")
+    )
+
+    # Exclude already connected friends (assuming a Friend model exists)
+    friends = set()  # Replace this with actual friend list if available
+
+    recommended_friends = [
+        {
+            "user_id": user_id,
+            "username": User.objects.get(id=user_id).username,
+            "similarity_score": score,
+        }
+        for user_id, score in similar_users if user_id not in friends
+    ]
+
+    return JsonResponse({"status": "success", "recommended_friends": recommended_friends})
+
+
+
+@login_required
+@csrf_exempt
+def send_friend_request(request, user_id):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+
+    sender = request.user  # Logged-in user
+    try:
+        receiver = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+
+    if sender == receiver:
+        return JsonResponse({"status": "error", "message": "You cannot send a friend request to yourself"}, status=400)
+
+    # Check if a request already exists
+    existing_request = FriendRequest.objects.filter(sender=sender, receiver=receiver, status="pending").exists()
+    if existing_request:
+        return JsonResponse({"status": "error", "message": "Friend request already sent"}, status=400)
+
+    FriendRequest.objects.create(sender=sender, receiver=receiver)
+
+    return JsonResponse({"status": "success", "message": "Friend request sent successfully"})
+
+# ACCEPT OR REJECT FRIEND REQUEST
+@csrf_exempt
+@login_required
+def respond_to_friend_request(request, request_id, response):
+    """Respond to a friend request."""
+    if request.method == "POST":
+        try:
+            friend_request = FriendRequest.objects.get(id=request_id)
+            if response == "accept":
+                # Logic to accept the request (e.g., create a friendship)
+                friend_request.status = "accepted"
+                friend_request.save()
+                return JsonResponse({"status": "success", "message": "Friend request accepted"})
+            elif response == "reject":
+                # Logic to reject the request
+                friend_request.status = "rejected"
+                friend_request.save()
+                return JsonResponse({"status": "success", "message": "Friend request rejected"})
+            else:
+                return JsonResponse({"status": "error", "message": "Invalid response"}, status=400)
+        except FriendRequest.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Friend request not found"}, status=404)
+
+@login_required
+def search_user(request, username):
+    """Search for a user by username and return similar usernames with user IDs."""
+    try:
+        # Exact match for the username
+        exact_match_user = User.objects.get(username=username)
+
+        # Fetch similar users (case-insensitive match)
+        similar_users = User.objects.filter(username__icontains=username).exclude(id=exact_match_user.id)
+        
+        # Prepare the data to send back to the frontend
+        similar_user_data = [
+            {
+                "user_id": user.id,
+                "username": user.username
+            }
+            for user in similar_users
+        ]
+        
+        # Include the exact match user as well in the response
+        return JsonResponse({
+            "status": "success",
+            "exact_match": {
+                "user_id": exact_match_user.id,
+                "username": exact_match_user.username
+            },
+            "similar_users": similar_user_data
+        })
+    
+    except User.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+    
+
+
+@csrf_exempt
+def initiate_payment(request):
+    try:
+        # Generate a unique transaction ID (you should store this in your database)
+        transaction_id = "123456"  # In a real app, generate a unique ID
+        
+        # Payment data
+        amount = 100  # Amount in NPR
+        
+        # Construct the eSewa payment URL with query parameters
+        esewa_url = settings.ESEWA_CONFIG['TEST_URL']
+        payment_url = (
+            f"{esewa_url}?"
+            f"amt={amount}&"
+            f"pdc=0&"
+            f"psc=0&"
+            f"txAmt=0&"
+            f"tAmt={amount}&"
+            f"pid={transaction_id}&"
+            f"scd={settings.ESEWA_CONFIG['MERCHANT_ID']}&"
+            f"su={settings.ESEWA_CONFIG['RETURN_URL']}&"
+            f"fu={settings.ESEWA_CONFIG['CANCEL_URL']}"
+        )
+        
+        # Redirect the user directly to eSewa
+        return redirect(payment_url)
+        
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+def payment_success(request):
+    try:
+        # Get parameters from eSewa response
+        ref_id = request.GET.get('refId', '')
+        transaction_id = request.GET.get('oid', '')
+        amount = request.GET.get('amt', '')
+
+        # In a real app, verify this payment with eSewa using their verification API
+        verification_data = {
+            "merchantId": settings.ESEWA_CONFIG["MERCHANT_ID"],
+            "refId": ref_id,
+            "amount": amount,
+            "transaction_uuid": transaction_id,
+        }
+
+        # Optional: Verify the transaction with eSewa's verification API
+        # verify_response = requests.get(settings.ESEWA_CONFIG["VERIFY_URL"], params=verification_data)
+        
+        # Assuming the payment is successful, you can update the transaction status in the database here
+        # You could store these details for later reference
+
+        return JsonResponse({
+            'status': 'success',
+            'ref_id': ref_id,
+            'transaction_id': transaction_id,
+            'amount': amount
+        })
+        
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+def payment_failure(request):
+    # Handle failed payment
+    return JsonResponse({
+        'status': 'failed',
+        'message': 'Payment was not successful'
+    })
+
+@csrf_exempt
+def verify_payment(request):
+    try:
+        # Get the necessary parameters for verification
+        ref_id = request.GET.get('refId')
+        amount = request.GET.get('amount')
+        transaction_id = request.GET.get('oid')
+
+        # Build the verification data
+        verification_data = {
+            "merchantId": settings.ESEWA_CONFIG["MERCHANT_ID"],
+            "refId": ref_id,
+            "amount": amount,
+            "transaction_uuid": transaction_id,
+        }
+
+        # Make the verification request to eSewa
+        verify_response = requests.get(settings.ESEWA_CONFIG["VERIFY_URL"], params=verification_data)
+
+        # Return the verification result as JSON
+        return JsonResponse(verify_response.json(), safe=False)
+        
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+@csrf_exempt
+@login_required
+def like_song(request, song_id):
+    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
+
+    if request.user.is_authenticated:
+        # Track the "like" action
+        Action.objects.create(
+            user=request.user,
+            song=song,
+            action_type='like'
+        )
+        return JsonResponse({'status': 'success', 'message': 'Song liked successfully.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to like a song.'}, status=400)
+    
+
+@csrf_exempt
+@login_required
+def save_song(request, song_id):
+    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
+
+    if request.user.is_authenticated:
+        # Track the "save" action
+        Action.objects.create(
+            user=request.user,
+            song=song,
+            action_type='save'
+        )
+        return JsonResponse({'status': 'success', 'message': 'Song saved successfully.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to save a song.'}, status=400)
+    
+
+@csrf_exempt
+@login_required
+def play_song(request, song_id):
+    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
+
+    if request.user.is_authenticated:
+        # Track the "play" action
+        Action.objects.create(
+            user=request.user,
+            song=song,
+            action_type='play'
+        )
+        return JsonResponse({'status': 'success', 'message': 'Song played successfully.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to play a song.'}, status=400)
+    
+@csrf_exempt
+@login_required
+def skip_song(request, song_id):
+    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
+
+    if request.user.is_authenticated:
+        # Track the "skip" action
+        Action.objects.create(
+            user=request.user,
+            song=song,
+            action_type='skip'
+        )
+        return JsonResponse({'status': 'success', 'message': 'Song skipped successfully.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to skip a song.'}, status=400)
+
+
+@csrf_exempt
+@login_required
+def fetch_song_data(request, track_id):
+    # Initialize the Spotify client
+    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id="your_client_id",
+                                                   client_secret="your_client_secret",
+                                                   redirect_uri="your_redirect_uri",
+                                                   scope=["user-library-read"]))
+
+    try:
+        # Fetch song data by Spotify track ID
+        track = sp.track(track_id)
+
+        # Extract relevant details
+        song_data = {
+            'spotify_id': track['id'],
+            'name': track['name'],
+            'artist': track['artists'][0]['name'],
+            'album': track['album']['name'],
+            'album_image': track['album']['images'][0]['url'],  # First image is usually the highest resolution
+            'release_date': track['album']['release_date'],
+            'url': track['external_urls']['spotify']
+        }
+
+        # Store this data in your Django model (optional, based on your needs)
+        song = Song.objects.create(**song_data)
+
+        # Return the song data as a JSON response
+        return JsonResponse({'status': 'success', 'song': song_data}, status=200)
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+
+
+
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+    client_id="your_client_id",
+    client_secret="your_client_secret",
+    redirect_uri="http://localhost:8000/callback/",  # Ensure it matches exactly
+    scope=["user-library-read"]
+))
 
 class GetSongView(View):
     def get(self, request, id):

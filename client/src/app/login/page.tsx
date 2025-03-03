@@ -60,7 +60,7 @@ export default function Login() {
   };
 
   const handleSpotifyLogin = () => {
-    window.location.href = 'http://127.0.0.1:8000/spotify-login';
+    window.location.href = 'http://localhost:8000/spotify-login/';
   };
 
   return (

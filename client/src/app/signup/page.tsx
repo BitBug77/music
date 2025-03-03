@@ -52,7 +52,7 @@ export default function Signup() {
 
   const handleSpotifySignup = () => {
     // Redirect to your Spotify auth endpoint
-    window.location.href = 'http://127.0.0.1:8000/spotify-login';
+    window.location.href = 'http://localhost:8000/spotify-login/';
   };
 
   return (

@@ -25,9 +25,9 @@ class Song(models.Model):
     name = models.CharField(max_length=255)
     artist = models.CharField(max_length=255)
     album = models.CharField(max_length=255)
-    duration = models.IntegerField()  # Duration in seconds
+    duration = models.IntegerField(null=True, blank=True)  # Duration in seconds
     genre = models.CharField(max_length=255, null=True, blank=True)
-
+    url = models.URLField(null=True, blank=True)
     def __str__(self):
         return f"{self.name} by {self.artist}"
 
@@ -44,6 +44,11 @@ class Action(models.Model):
     spotify_id = models.CharField(max_length=255, default="unkown")
     action_type = models.CharField(choices=ACTION_CHOICES, max_length=10)
     timestamp = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        unique_together = ('user', 'song', 'action_type')  # Prevent duplicates
+        indexes = [
+            models.Index(fields=['user', 'song', 'action_type']),  # Index for faster queries on these fields
+        ]
 
 # Recommendation Model
 class Recommendation(models.Model):
@@ -62,3 +67,36 @@ class UserSimilarity(models.Model):
 
     def __str__(self):
         return f"Similarity between {self.user1.username} and {self.user2.username}"
+
+
+class FriendRequest(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("accepted", "Accepted"),
+        ("rejected", "Rejected"),
+    ]
+
+    sender = models.ForeignKey(User, related_name="sent_requests", on_delete=models.CASCADE)
+    receiver = models.ForeignKey(User, related_name="received_requests", on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
+
+
+class EsewaPayment(models.Model):
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('SUCCESS', 'Success'),
+        ('FAILED', 'Failed'),
+    ]
+
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    reference_id = models.CharField(max_length=50, unique=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.reference_id} - {self.status}"
+
