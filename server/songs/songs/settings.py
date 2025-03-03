@@ -79,10 +79,15 @@ WSGI_APPLICATION = 'songs.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'music',  # Change to your database name
+        'USER': 'postgres',  # Change if you used a different username
+        'PASSWORD': '5787',  # Your PostgreSQL password
+        'HOST': '127.0.0.1',  # Use '127.0.0.1' if 'localhost' causes issues
+        'PORT': '5432',  # Default PostgreSQL port
     }
 }
+
 
 
 # Password validation
@@ -147,4 +152,16 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000',  # Add your frontend domain here
     'https://your-frontend-domain.com',  # For production, add the production domain
 ]
+
+ESEWA_CONFIG = {
+    "MERCHANT_ID": "EPAYTEST",
+    "SECRET_KEY": "8gBm/:&EnhH.1/q",
+    "CLIENT_ID": "JB0BBQ4aD0UqIThFJwAKBgAXEUkEGQUBBAwdOgABHD4DChwUAB0R",
+    "CLIENT_SECRET": "BhwIWQQADhIYSxILExMcAgFXFhcOBwAKBgAXEQ==",
+    "TEST_URL": "https://uat.esewa.com.np/epay/main",
+    "RETURN_URL": "http://127.0.0.1:8000/esewa/success/",
+    "CANCEL_URL": "http://127.0.0.1:8000/esewa/failure/"
+}
+
+
 

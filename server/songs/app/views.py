@@ -16,6 +16,17 @@ from .algorithms import recommend_songs_collaborative, recommend_songs_content_b
 from .models import FriendRequest
 from django.middleware.csrf import get_token
 from .models import FriendRequest
+from django.db import connection
+from django.shortcuts import get_object_or_404
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+
+
+from .models import EsewaPayment
+
+def check_db(request):
+    db_name = connection.settings_dict["NAME"]
+    return JsonResponse({"database_name": db_name})
 def csrf_token(request):
     return JsonResponse({"csrfToken": get_token(request)})
 
@@ -24,6 +35,7 @@ from django.contrib.auth import logout
 @csrf_exempt
 def login_view(request):
     """Handles user login"""
+   
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -50,6 +62,7 @@ def login_view(request):
 @csrf_exempt
 def signup_view(request):
     """Handles user signup"""
+   
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -432,3 +445,209 @@ def search_user(request, username):
     
     except User.DoesNotExist:
         return JsonResponse({"status": "error", "message": "User not found"}, status=404)
+    
+
+
+@csrf_exempt
+def initiate_payment(request):
+    try:
+        # Generate a unique transaction ID (you should store this in your database)
+        transaction_id = "123456"  # In a real app, generate a unique ID
+        
+        # Payment data
+        amount = 100  # Amount in NPR
+        
+        # Construct the eSewa payment URL with query parameters
+        esewa_url = settings.ESEWA_CONFIG['TEST_URL']
+        payment_url = (
+            f"{esewa_url}?"
+            f"amt={amount}&"
+            f"pdc=0&"
+            f"psc=0&"
+            f"txAmt=0&"
+            f"tAmt={amount}&"
+            f"pid={transaction_id}&"
+            f"scd={settings.ESEWA_CONFIG['MERCHANT_ID']}&"
+            f"su={settings.ESEWA_CONFIG['RETURN_URL']}&"
+            f"fu={settings.ESEWA_CONFIG['CANCEL_URL']}"
+        )
+        
+        # Redirect the user directly to eSewa
+        return redirect(payment_url)
+        
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+def payment_success(request):
+    try:
+        # Get parameters from eSewa response
+        ref_id = request.GET.get('refId', '')
+        transaction_id = request.GET.get('oid', '')
+        amount = request.GET.get('amt', '')
+
+        # In a real app, verify this payment with eSewa using their verification API
+        verification_data = {
+            "merchantId": settings.ESEWA_CONFIG["MERCHANT_ID"],
+            "refId": ref_id,
+            "amount": amount,
+            "transaction_uuid": transaction_id,
+        }
+
+        # Optional: Verify the transaction with eSewa's verification API
+        # verify_response = requests.get(settings.ESEWA_CONFIG["VERIFY_URL"], params=verification_data)
+        
+        # Assuming the payment is successful, you can update the transaction status in the database here
+        # You could store these details for later reference
+
+        return JsonResponse({
+            'status': 'success',
+            'ref_id': ref_id,
+            'transaction_id': transaction_id,
+            'amount': amount
+        })
+        
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+def payment_failure(request):
+    # Handle failed payment
+    return JsonResponse({
+        'status': 'failed',
+        'message': 'Payment was not successful'
+    })
+
+@csrf_exempt
+def verify_payment(request):
+    try:
+        # Get the necessary parameters for verification
+        ref_id = request.GET.get('refId')
+        amount = request.GET.get('amount')
+        transaction_id = request.GET.get('oid')
+
+        # Build the verification data
+        verification_data = {
+            "merchantId": settings.ESEWA_CONFIG["MERCHANT_ID"],
+            "refId": ref_id,
+            "amount": amount,
+            "transaction_uuid": transaction_id,
+        }
+
+        # Make the verification request to eSewa
+        verify_response = requests.get(settings.ESEWA_CONFIG["VERIFY_URL"], params=verification_data)
+
+        # Return the verification result as JSON
+        return JsonResponse(verify_response.json(), safe=False)
+        
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+@csrf_exempt
+@login_required
+def like_song(request, song_id):
+    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
+
+    if request.user.is_authenticated:
+        # Track the "like" action
+        Action.objects.create(
+            user=request.user,
+            song=song,
+            action_type='like'
+        )
+        return JsonResponse({'status': 'success', 'message': 'Song liked successfully.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to like a song.'}, status=400)
+    
+
+@csrf_exempt
+@login_required
+def save_song(request, song_id):
+    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
+
+    if request.user.is_authenticated:
+        # Track the "save" action
+        Action.objects.create(
+            user=request.user,
+            song=song,
+            action_type='save'
+        )
+        return JsonResponse({'status': 'success', 'message': 'Song saved successfully.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to save a song.'}, status=400)
+    
+
+@csrf_exempt
+@login_required
+def play_song(request, song_id):
+    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
+
+    if request.user.is_authenticated:
+        # Track the "play" action
+        Action.objects.create(
+            user=request.user,
+            song=song,
+            action_type='play'
+        )
+        return JsonResponse({'status': 'success', 'message': 'Song played successfully.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to play a song.'}, status=400)
+    
+@csrf_exempt
+@login_required
+def skip_song(request, song_id):
+    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
+
+    if request.user.is_authenticated:
+        # Track the "skip" action
+        Action.objects.create(
+            user=request.user,
+            song=song,
+            action_type='skip'
+        )
+        return JsonResponse({'status': 'success', 'message': 'Song skipped successfully.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to skip a song.'}, status=400)
+
+
+@csrf_exempt
+@login_required
+def fetch_song_data(request, track_id):
+    # Initialize the Spotify client
+    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id="your_client_id",
+                                                   client_secret="your_client_secret",
+                                                   redirect_uri="your_redirect_uri",
+                                                   scope=["user-library-read"]))
+
+    try:
+        # Fetch song data by Spotify track ID
+        track = sp.track(track_id)
+
+        # Extract relevant details
+        song_data = {
+            'spotify_id': track['id'],
+            'name': track['name'],
+            'artist': track['artists'][0]['name'],
+            'album': track['album']['name'],
+            'album_image': track['album']['images'][0]['url'],  # First image is usually the highest resolution
+            'release_date': track['album']['release_date'],
+            'url': track['external_urls']['spotify']
+        }
+
+        # Store this data in your Django model (optional, based on your needs)
+        song = Song.objects.create(**song_data)
+
+        # Return the song data as a JSON response
+        return JsonResponse({'status': 'success', 'song': song_data}, status=200)
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+
+
+
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+    client_id="your_client_id",
+    client_secret="your_client_secret",
+    redirect_uri="http://localhost:8000/callback/",  # Ensure it matches exactly
+    scope=["user-library-read"]
+))
