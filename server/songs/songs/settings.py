@@ -39,16 +39,40 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'app',
     'corsheaders',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+}
+
 MIDDLEWARE = [
-    
+    'corsheaders.middleware.CorsMiddleware',  # This is fine at the top for CORS handling
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',  # Session must be available before auth
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',  # Needs session to work properly
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -143,8 +167,24 @@ print(env('SPOTIFY_CLIENT_ID', default='Not Set'))
 SPOTIFY_CLIENT_ID = env("SPOTIFY_CLIENT_ID", default="default_value")
 SPOTIFY_CLIENT_SECRET = env("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = env("SPOTIFY_REDIRECT_URI")
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # Add your frontend domain here
-    'https://your-frontend-domain.com',  # For production, add the production domain
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
+# CSRF Settings
+CSRF_COOKIE_HTTPONLY = False  # Set to False if you need JavaScript access to CSRF token
+CSRF_COOKIE_SECURE = False    # False for HTTP development environment
+CSRF_COOKIE_SAMESITE = 'Lax'  # Modern browsers use Lax as default
+
+# Session Settings
+SESSION_COOKIE_NAME = 'sessionid'
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default backend
+SESSION_COOKIE_SECURE = False  # False for HTTP development environment
+SESSION_COOKIE_HTTPONLY = True  # Prevents JavaScript access to session cookie
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds (default)
+
+# CORS Settings (if you're using django-cors-headers)
+CORS_ALLOW_CREDENTIALS = True
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Ensure this line is present
+]

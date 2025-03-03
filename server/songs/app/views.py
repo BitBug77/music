@@ -13,7 +13,13 @@ import math
 from collections import defaultdict
 from django.db.models import Count
 from .algorithms import recommend_songs_collaborative, recommend_songs_content_based
-
+from django.views import View
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from django.middleware.csrf import get_token
 
 def csrf_token(request):
@@ -21,61 +27,74 @@ def csrf_token(request):
 
 from django.contrib.auth import logout
 
-@csrf_exempt
+
+@api_view(['POST'])
 def login_view(request):
     """Handles user login"""
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
+    try:
+        if not request.body:
+            return JsonResponse({'status': 'error', 'message': 'Empty request body'}, status=400)
 
-        username = data.get('username', '').strip()
-        password = data.get('password', '').strip()
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
 
-        if not username or not password:
-            return JsonResponse({'status': 'error', 'message': 'Username and password are required'}, status=400)
+    username = data.get('username', '').strip()
+    password = data.get('password', '').strip()
 
-        user = authenticate(username=username, password=password)
+    user = authenticate(username=username, password=password)
 
-        if user is not None:
-            login(request, user)
-            return JsonResponse({'status': 'success', 'redirect_url': '/home'}, status=200)
-        else:
-            return JsonResponse({'status': 'error', 'message': 'Invalid credentials'}, status=400)
+    if user is not None:
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
 
-    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+        return JsonResponse({
+            'status': 'success',
+            'access': access_token,
+            'refresh': refresh_token,
+            'message': 'Login successful'
+        })
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid credentials'}, status=400)
 
 
 @csrf_exempt
+@api_view(['POST'])
 def signup_view(request):
     """Handles user signup"""
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
 
-        username = data.get('username', '').strip()
-        password = data.get('password', '').strip()
-        password_confirmation = data.get('password_confirmation', '').strip()
+    username = data.get('username', '').strip()
+    password = data.get('password', '').strip()
+    password_confirmation = data.get('password_confirmation', '').strip()
 
-        if not username or not password or not password_confirmation:
-            return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
+    if not username or not password or not password_confirmation:
+        return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
 
-        if password != password_confirmation:
-            return JsonResponse({'status': 'error', 'message': 'Passwords do not match'}, status=400)
+    if password != password_confirmation:
+        return JsonResponse({'status': 'error', 'message': 'Passwords do not match'}, status=400)
 
-        if User.objects.filter(username=username).exists():
-            return JsonResponse({'status': 'error', 'message': 'Username already taken'}, status=400)
+    if User.objects.filter(username=username).exists():
+        return JsonResponse({'status': 'error', 'message': 'Username already taken'}, status=400)
 
-        user = User.objects.create_user(username=username, password=password)
-        user.save()
-        login(request, user)
+    user = User.objects.create_user(username=username, password=password)
+    user.save()
 
-        return JsonResponse({'status': 'success', 'message': 'Account created successfully'}, status=201)
+    refresh = RefreshToken.for_user(user)
+    access_token = str(refresh.access_token)
+    refresh_token = str(refresh)
 
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Account created successfully',
+        'access': access_token,
+        'refresh': refresh_token  # Send refresh token in response
+    }, status=201)
+
 
 
 def spotify_login(request):
@@ -129,7 +148,8 @@ def spotify_callback(request):
     return JsonResponse({'status': 'success', 'message': 'Spotify login successful', 'redirect_url': '/home'})
 
 
-@login_required
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def home(request):
     """Returns the home page data for the logged-in user"""
     user_profile = UserProfile.objects.get(user=request.user)
@@ -139,7 +159,6 @@ def home(request):
         'spotify_token': user_profile.spotify_token,
     }
     return JsonResponse({'status': 'success', 'data': profile_data})
-
 
 def get_spotify_token():
     """Fetches an access token using Client ID and Secret"""
@@ -171,40 +190,36 @@ def get_spotify_token():
     return access_token  # Return only the access token
 
 
-def refresh_spotify_token(refresh_token):
-    """Refreshes the access token using the refresh token"""
-    client_id = settings.SPOTIFY_CLIENT_ID
-    client_secret = settings.SPOTIFY_CLIENT_SECRET
-    token_url = "https://accounts.spotify.com/api/token"
+def get_access_token():
+    """Get a valid Spotify access token, re-fetch if expired"""
+    # Try getting a fresh token
+    access_token = get_spotify_token()
 
-    # Encode client credentials
-    client_creds = f"{client_id}:{client_secret}"
-    client_creds_b64 = base64.b64encode(client_creds.encode()).decode()
+    if not access_token:
+        return None  # Return None if unable to get the initial token
 
-    headers = {
-        "Authorization": f"Basic {client_creds_b64}",
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
+    # Now, attempt to use the token (make a request to Spotify API with the access token)
+    response = requests.get("https://api.spotify.com/v1/me", headers={"Authorization": f"Bearer {access_token}"})
 
-    data = {
-        "grant_type": "refresh_token",
-        "refresh_token": refresh_token
-    }
+    # Check if the access token has expired (401 Unauthorized)
+    if response.status_code == 401:
+        # If expired, fetch a new token
+        access_token = get_spotify_token()
 
-    # Make the request to Spotify API to refresh the token
-    response = requests.post(token_url, headers=headers, data=data)
+    return access_token  # Return the valid access token
 
-    if response.status_code != 200:
-        return None  # If refreshing fails, return None
+# Call the get_access_token function to get a valid token
+access_token = get_access_token()
 
-    # Extract the new access token from the response
-    token_info = response.json()
-    access_token = token_info.get("access_token")
-
-    return access_token
+if access_token:
+    print("Access Token:", access_token)
+else:
+    print("Failed to obtain a new access token.")
 
 
-@login_required
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def recommended_songs(request):
     """Returns recommended songs based on collaborative and content-based filtering"""
     # Call the recommendation functions from algorithms.py
@@ -224,7 +239,9 @@ def recommended_songs(request):
 
     return JsonResponse({'status': 'success', 'recommendations': recommendations_data})
 
-@csrf_exempt  
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_songs_by_popularity(request):
     """Fetch songs from Spotify API sorted by popularity, including album cover and track ID."""
     access_token = get_spotify_token()
@@ -283,3 +300,174 @@ def logout_view(request):
         return JsonResponse({'status': 'success', 'message': 'Logged out successfully', 'redirect_url': '/login'}, status=200)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def search_songs(request):
+    """Search for songs using Spotify API and include album cover & track ID"""
+    query = request.GET.get('q', '').strip()
+
+    if not query:
+        return JsonResponse({'status': 'error', 'message': 'Search query is required'}, status=400)
+
+    access_token = get_spotify_token()  
+    if not access_token:
+        return JsonResponse({"status": "error", "message": "Failed to get Spotify token"}, status=500)
+
+    search_url = "https://api.spotify.com/v1/search"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {
+        "q": query,
+        "type": "track",
+        "limit": 10
+    }
+
+    response = requests.get(search_url, headers=headers, params=params)
+    
+    if response.status_code != 200:
+        return JsonResponse({"status": "error", "message": "Failed to fetch search results"}, status=response.status_code)
+
+    results = response.json().get("tracks", {}).get("items", [])
+
+    # Extract relevant data including album cover & track ID
+    song_list = [
+        {
+            "track_id": song["id"],  # Spotify Track ID
+            "name": song["name"],  
+            "artist": song["artists"][0]["name"],  
+            "album_cover": song["album"]["images"][0]["url"] if song["album"]["images"] else None,  # Album Cover URL
+            "spotify_url": song["external_urls"]["spotify"]  
+        }
+        for song in results
+    ]
+
+    return JsonResponse({"status": "success", "songs": song_list})
+
+class GetSongView(View):
+    def get(self, request, id):
+        access_token = get_spotify_token()
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        # Fetch song details
+        song_url = f"https://api.spotify.com/v1/tracks/{id}"
+        song_response = requests.get(song_url, headers=headers)
+
+        if song_response.status_code != 200:
+            return JsonResponse(
+                {"error": f"Failed to fetch song details (Status Code: {song_response.status_code})"},
+                status=song_response.status_code
+            )
+
+        try:
+            song_data = song_response.json()
+        except requests.exceptions.JSONDecodeError:
+            return JsonResponse({"error": "Invalid response from Spotify API"}, status=500)
+
+        # Format the response
+        song_details = {
+            "track_id": song_data["id"],
+            "name": song_data["name"],
+            "artist": song_data["artists"][0]["name"],
+            "album": song_data["album"]["name"],
+            "album_cover": song_data["album"]["images"][0]["url"] if song_data["album"]["images"] else "",
+            "release_date": song_data["album"]["release_date"],
+            "duration": song_data["duration_ms"],
+            "popularity": song_data["popularity"],
+            "spotify_url": song_data["external_urls"]["spotify"],
+            "preview_url": song_data.get("preview_url", ""),
+        }
+
+        return JsonResponse(song_details, safe=False)
+    
+from datetime import datetime
+from .models import Action, Song
+import json
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def log_interaction(request):
+    if request.method == 'POST':
+        try:
+            # Parse the incoming JSON data
+            data = json.loads(request.body)
+            print(data)
+            track_id = data.get('track_id')  # Spotify track ID
+            interaction_type = data.get('interaction_type')
+            timestamp = data.get('timestamp', datetime.utcnow().isoformat())  # Use current timestamp if missing
+
+            # Check for missing required fields
+            if not track_id or not interaction_type:
+                return JsonResponse({'error': 'Missing required fields'}, status=400)
+
+            # Ensure the user is authenticated
+            user = request.user if request.user.is_authenticated else None
+            if not user:
+                return JsonResponse({'error': 'Cannot find user, please log in'}, status=401)
+
+            # Fetch the access token
+            access_token = get_spotify_token()
+
+            if not access_token:
+                return JsonResponse({'error': 'Failed to authenticate with Spotify'}, status=500)
+
+            # Fetch song details from Spotify API
+            spotify_url = f"https://api.spotify.com/v1/tracks/{track_id}"
+            headers = {
+                "Authorization": f"Bearer {access_token}",  # Use the token retrieved
+            }
+
+            response = requests.get(spotify_url, headers=headers)
+            if response.status_code != 200:
+                return JsonResponse({'error': 'Failed to fetch song details from Spotify'}, status=500)
+
+            track_data = response.json()
+
+            # Extract song details from the Spotify response
+            song_name = track_data['name']
+            song_artist = track_data['artists'][0]['name']
+            song_album = track_data['album']['name']
+            song_duration = track_data['duration_ms'] / 1000  # Convert milliseconds to seconds
+
+            # Create or get the song entry
+            song, created = Song.objects.get_or_create(
+                spotify_id=track_id,
+                defaults={
+                    'name': song_name,
+                    'artist': song_artist,
+                    'album': song_album,
+                    'duration': song_duration,
+                }
+            )
+
+            # Create the action entry
+            action = Action.objects.create(
+                user=user,
+                song=song,  # Pass the Song instance here
+                action_type=interaction_type,
+                timestamp=timestamp
+            )
+
+            # Return success response
+            return JsonResponse({'message': 'Interaction logged successfully'})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    # Handle invalid request methods
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+@csrf_exempt
+def session(request):
+    """Debug view to check session status"""
+    return JsonResponse({
+        'session_key': request.session.session_key,
+        'user_authenticated': request.user.is_authenticated,
+        'username': request.user.username if request.user.is_authenticated else None,
+        'session_data': dict(request.session)
+    })
+

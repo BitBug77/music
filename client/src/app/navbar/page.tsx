@@ -45,15 +45,27 @@ const Navbar: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/search-songs/?q=${encodeURIComponent(searchQuery)}`, {
-        method: 'GET',
-      });
+  // Retrieve the access token from localStorage
+  const accessToken = localStorage.getItem('access_token');
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+  if (!accessToken) {
+    throw new Error('Access token is missing. Please log in again.');
+  }
 
-      const data: { songs: Song[] } = await response.json();
+  // Make the GET request to search songs
+  const response = await fetch(`http://127.0.0.1:8000/search-songs/?q=${encodeURIComponent(searchQuery)}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,  // Add the access token here
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data: { songs: Song[] } = await response.json();
       const songs: Song[] = data.songs;
 
       setSearchResults(songs.slice(0, 10)); // Limit to 10 suggestions for better UX

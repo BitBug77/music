@@ -1,9 +1,9 @@
-// pages/discover.tsx
 'use client';
 import { useState, useEffect } from 'react';
-import { ChevronRight, Music, TrendingUp, Clock, Home, Search, Library, PlusCircle, Heart, Disc } from 'lucide-react';
+import { ChevronRight, TrendingUp, Clock } from 'lucide-react';
 import type { ReactNode } from 'react';
-
+import Navbar from '../navbar/page';
+import Sidebar from "../../components/ui/sidebar";
 // Define TypeScript interfaces for our data structures
 interface ApiResponse {
   songs?: any[];
@@ -23,11 +23,6 @@ interface ProcessedSong {
   coverUrl: string;
 }
 
-interface MenuItemProps {
-  icon: ReactNode;
-  label: string;
-}
-
 interface SongCardProps {
   song: ProcessedSong;
 }
@@ -42,16 +37,29 @@ export default function DiscoverPage() {
     const fetchPopularSongs = async () => {
       try {
         setIsLoading(true);
-        // Replace with your actual API endpoint
-        const response = await fetch('http://127.0.0.1:8000/popularity/');
-        
+    
+        // Retrieve the access token from localStorage
+        const accessToken = localStorage.getItem('access_token');
+    
+        if (!accessToken) {
+          throw new Error('Access token is missing. Please log in again.');
+        }
+    
+        // Set up the request headers with the Authorization header
+        const response = await fetch('http://127.0.0.1:8000/popularity/', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,  // Attach access token here
+          },
+        });
+    
         if (!response.ok) {
           throw new Error('Failed to fetch popular songs');
         }
-        
+    
         const responseData = await response.json();
         console.log('API Response:', responseData); // Log the API response for debugging
-        
         // Determine where the song array is in the response
         let songsArray: any[] = [];
         
@@ -199,36 +207,21 @@ export default function DiscoverPage() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      {/* Sidebar */}
-      <div className="w-64 bg-black p-6 flex flex-col h-full">
-        <div className="mb-8">
-          <h1 className="text-xl font-bold mb-6">MusicApp</h1>
-          
-          <div className="space-y-4">
-            <MenuItem icon={<Home size={20} />} label="Home" />
-            <MenuItem icon={<Search size={20} />} label="Search" />
-            <MenuItem icon={<Library size={20} />} label="Your Library" />
-          </div>
-        </div>
-        
-        <div className="mt-4 mb-6">
-          <MenuItem icon={<PlusCircle size={20} />} label="Create Playlist" />
-          <MenuItem icon={<Heart size={20} />} label="Liked Songs" />
-        </div>
-        
-        <div className="border-t border-gray-800 pt-4 mt-auto">
-          <a href="#" className="text-sm text-gray-400 hover:text-white transition duration-200">Cookies</a>
-          <a href="#" className="text-sm block mt-2 text-gray-400 hover:text-white transition duration-200">Privacy Policy</a>
-        </div>
+    <div className="flex flex-col h-screen text-black">
+      {/* Navbar */}
+      <div className='bg-[#74686e]'>
+        <Navbar />
       </div>
-
+      
+      {/* Sidebar component */}
+      <Sidebar />
+      
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto bg-[#151b27]">
         {/* Header */}
-        <div className="bg-gradient-to-b from-purple-900 to-gray-900 p-8">
-          <h1 className="text-3xl font-bold mb-4">Discover</h1>
-          <p className="text-gray-300">Find your next favorite track based on what's trending now</p>
+        <div className="p-8">
+          <h1 className="text-3xl text-blue-700 font-bold mb-4">Discover</h1>
+          <p className="text-pink-600">Find your next favorite track based on what's trending now</p>
         </div>
 
         {/* Content */}
@@ -236,21 +229,21 @@ export default function DiscoverPage() {
           {/* Top Trending Section */}
           <section className="mb-10">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold flex items-center">
+              <h2 className="text-xl font-bold flex items-center text-blue-700">
                 <TrendingUp size={20} className="mr-2" />
                 Top Trending
               </h2>
-              <a href="#" className="text-sm text-purple-400 hover:underline">See All</a>
+              <a href="#" className="text-sm text-pink-500 hover:underline">See All</a>
             </div>
 
             {isLoading ? (
               <div className="flex justify-center p-10">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-500"></div>
               </div>
             ) : error ? (
-              <div className="bg-red-900 bg-opacity-20 p-4 rounded-md">
-                <p className="text-red-400">Error: {error}</p>
-                <p className="text-gray-400 mt-2">Showing mock data as fallback</p>
+              <div className="bg-pink-100 p-4 rounded-md">
+                <p className="text-pink-600">Error: {error}</p>
+                <p className="text-blue-600 mt-2">Showing mock data as fallback</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -264,93 +257,63 @@ export default function DiscoverPage() {
           {/* Popular Tracks Section */}
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold flex items-center">
+              <h2 className="text-xl font-bold flex items-center text-blue-700">
                 <Clock size={20} className="mr-2" />
                 Popular Tracks
               </h2>
-              <a href="#" className="text-sm text-purple-400 hover:underline">See All</a>
+              <a href="#" className="text-sm text-pink-500 hover:underline">See All</a>
             </div>
 
             {isLoading ? (
               <div className="flex justify-center p-10">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-500"></div>
               </div>
             ) : error ? (
-              <div className="bg-red-900 bg-opacity-20 p-4 rounded-md mb-4">
-                <p className="text-red-400">Error: {error}</p>
-                <p className="text-gray-400 mt-2">Showing mock data as fallback</p>
+              <div className="bg-pink-100 p-4 rounded-md mb-4">
+                <p className="text-pink-600">Error: {error}</p>
+                <p className="text-blue-600 mt-2">Showing mock data as fallback</p>
               </div>
             ) : null}
             
             {(isLoading === false) && (
-              <div className="bg-gray-800 rounded-md overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-700 text-left text-gray-400 text-sm">
-                      <th className="p-4 w-12">#</th>
-                      <th className="p-4">Title</th>
-                      <th className="p-4 hidden md:table-cell">Artist</th>
-                      <th className="p-4 text-right">Popularity</th>
-                      <th className="p-4">Player</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {popularSongs.map((song, index) => (
-                      <tr key={song.id} className="hover:bg-gray-700 transition duration-200 group">
-                        <td className="p-4 text-gray-400 group-hover:text-white">{index + 1}</td>
-                        <td className="p-4">
-                          <div className="flex items-center">
-                            <img 
-                              src={song.coverUrl} 
-                              alt={`${song.title} cover`} 
-                              className="h-10 w-10 mr-4 rounded"
-                            />
-                            <div>
-                              <div className="font-medium">{song.title}</div>
-                              <div className="text-sm text-gray-400 md:hidden">{song.artist}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-4 text-gray-400 hidden md:table-cell">{song.artist}</td>
-                        <td className="p-4 text-gray-400 text-right">
-                          <div className="flex items-center justify-end">
-                            <div className="h-1 w-16 bg-gray-700 rounded-full mr-2">
-                              <div 
-                                className="h-1 bg-green-500 rounded-full" 
-                                style={{ width: `${song.popularity}%` }}
-                              ></div>
-                            </div>
-                            <span>{song.popularity}</span>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          {song.spotifyTrackId ? (
-                            <div>
-                              <h3 className="text-sm mb-2">{song.title} - {song.artist}</h3>
-                              <iframe 
-                                src={`https://open.spotify.com/embed/track/${song.spotifyTrackId}`} 
-                                width="300" 
-                                height="80" 
-                                frameBorder="0" 
-                                allow="encrypted-media" 
-                                className="w-full"
-                              ></iframe>
-                            </div>
-                          ) : (
-                            <a 
-                              href={song.spotifyUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-green-500 hover:text-green-400"
-                            >
-                              <Music size={18} />
-                            </a>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {popularSongs.map((song) => (
+                  <div key={song.id} className="bg-[#74686e] rounded-md p-4 shadow-md hover:shadow-lg transition duration-200">
+                    <div className="flex items-center mb-3">
+                      <img 
+                        src={song.coverUrl} 
+                        alt={`${song.title} cover`} 
+                        className="h-12 w-12 rounded mr-3"
+                      />
+                      <div>
+                        <h3 className="font-medium text-white">{song.title}</h3>
+                        <p className="text-sm text-white/80">{song.artist}</p>
+                      </div>
+                    </div>
+                    
+                    {song.spotifyTrackId ? (
+                      <div className="mt-2">
+                        <iframe 
+                          src={`https://open.spotify.com/embed/track/${song.spotifyTrackId}`} 
+                          width="100%" 
+                          height="152" 
+                          frameBorder="0" 
+                          allow="encrypted-media"
+                          className="w-full rounded-md"
+                        ></iframe>
+                      </div>
+                    ) : (
+                      <a 
+                        href={song.spotifyUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="block text-center py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 mt-2"
+                      >
+                        Listen on Spotify
+                      </a>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </section>
@@ -360,22 +323,9 @@ export default function DiscoverPage() {
   );
 }
 
-// Components
-function MenuItem({ icon, label }: MenuItemProps) {
-  return (
-    <a 
-      href="#" 
-      className="flex items-center py-2 text-gray-300 hover:text-white transition duration-200"
-    >
-      <span className="mr-4">{icon}</span>
-      <span>{label}</span>
-    </a>
-  );
-}
-
 function SongCard({ song }: SongCardProps) {
   return (
-    <div className="bg-gray-800 rounded-md p-4 hover:bg-gray-700 transition duration-200 cursor-pointer">
+    <div className="bg-[#74686e] rounded-md p-4 hover:shadow-md transition duration-200 cursor-pointer border border-blue-100">
       <div className="relative mb-4 group">
         <img 
           src={song.coverUrl}
@@ -387,34 +337,34 @@ function SongCard({ song }: SongCardProps) {
             href={song.spotifyUrl} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="bg-green-500 rounded-full p-3 shadow-lg"
+            className="bg-pink-500 rounded-full p-3 shadow-lg"
           >
-            <ChevronRight size={24} />
+            <ChevronRight size={24} className="text-white" />
           </a>
         </div>
       </div>
-      <h3 className="font-medium truncate">{song.title}</h3>
-      <p className="text-sm text-gray-400 truncate">{song.artist}</p>
+      <h3 className="font-medium truncate text-white">{song.title}</h3>
+      <p className="text-sm text-white/80 truncate">{song.artist}</p>
       <div className="mt-2 flex items-center">
-        <div className="h-1 w-full bg-gray-700 rounded-full mr-2">
+        <div className="h-1 w-full bg-yellow-100 rounded-full mr-2">
           <div 
-            className="h-1 bg-green-500 rounded-full" 
+            className="h-1 bg-pink-500 rounded-full" 
             style={{ width: `${song.popularity}%` }}
           ></div>
         </div>
-        <span className="text-xs text-gray-400">{song.popularity}</span>
+        <span className="text-xs text-white">{song.popularity}</span>
       </div>
       
       {/* Spotify Player Embed */}
       {song.spotifyTrackId && (
         <div className="mt-4">
-          <h3 className="text-sm font-medium mb-2">{song.title} - {song.artist}</h3>
           <iframe 
             src={`https://open.spotify.com/embed/track/${song.spotifyTrackId}`} 
             width="100%" 
             height="80" 
             frameBorder="0" 
             allow="encrypted-media"
+            className="rounded"
           ></iframe>
         </div>
       )}

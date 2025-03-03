@@ -39,7 +39,7 @@ export default function Signup() {
       const data: SignupResponse = await response.json();
 
       if (response.ok) {
-        router.push('/home');
+        router.push('/discover');
       } else {
         setError(data.message || 'Signup failed');
       }
@@ -52,7 +52,7 @@ export default function Signup() {
 
   const handleSpotifySignup = () => {
     // Redirect to your Spotify auth endpoint
-    window.location.href = '/api/auth/spotify';
+    window.location.href = 'http://127.0.0.1:8000/spotify-login';
   };
 
   return (

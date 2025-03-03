@@ -31,16 +31,28 @@ export default function Login() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
+        credentials: 'include',  // Ensure cookies are sent & received
       });
-
-      const data: LoginResponse = await response.json();
-
-      if (response.ok) {
-        router.push(data.redirect_url || '/home');
+    
+      const data = await response.json();
+      console.log('Login response:', data);
+    
+      if (response.ok && data.access && data.refresh) {
+        // Store access and refresh tokens in localStorage
+        localStorage.setItem('access_token', data.access);
+        localStorage.setItem('refresh_token', data.refresh);
+    
+        // Debug: Checking the access token and refresh token in localStorage
+        console.log('Access Token in LocalStorage:', localStorage.getItem('access_token'));
+        console.log('Refresh Token in LocalStorage:', localStorage.getItem('refresh_token'));
+    
+        // Redirect the user after successful login
+        router.push('/discover');
       } else {
         setError(data.message || 'Login failed');
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Login error:', error);
       setError('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -48,7 +60,7 @@ export default function Login() {
   };
 
   const handleSpotifyLogin = () => {
-    window.location.href = '/api/auth/spotify';
+    window.location.href = 'http://127.0.0.1:8000/spotify-login';
   };
 
   return (
