@@ -109,7 +109,7 @@ export default function SongPage() {
     try {
       // Retrieve the access token from localStorage
       let accessToken = localStorage.getItem('access_token');
-      
+      console.log('New access token:', accessToken);
       if (!accessToken) {
         throw new Error('Access token is missing. Please log in again.');
       }
@@ -140,6 +140,7 @@ export default function SongPage() {
         
         // Refresh the token
         accessToken = await refreshAccessToken(refreshToken);
+        console.log('New access token:', accessToken);
         localStorage.setItem('access_token', accessToken);
         
         // Retry the request with the new token

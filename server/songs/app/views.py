@@ -184,62 +184,74 @@ def home(request):
     }
     return JsonResponse({'status': 'success', 'data': profile_data})
 
+from datetime import datetime, timedelta
+
+# Cache for the access token
+access_token_cache = {
+    'token': None,
+    'expires_at': datetime.now()
+}
+
 def get_spotify_token():
-    """Fetches an access token using Client ID and Secret"""
-    client_id = settings.SPOTIFY_CLIENT_ID
-    client_secret = settings.SPOTIFY_CLIENT_SECRET
-    token_url = "https://accounts.spotify.com/api/token"
+    global access_token_cache
 
-    # Encode client credentials
-    client_creds = f"{client_id}:{client_secret}"
-    client_creds_b64 = base64.b64encode(client_creds.encode()).decode()
+    # Check if the token is already cached and still valid
+    if access_token_cache['token'] and access_token_cache['expires_at'] > datetime.now():
+        return access_token_cache['token']
 
+    # Token has expired or not available, get a new one using client credentials flow
+    auth_response = requests.post(
+        'https://accounts.spotify.com/api/token',
+        data={
+            'grant_type': 'client_credentials',
+        },
+        auth=(settings.SPOTIFY_CLIENT_ID, settings.SPOTIFY_CLIENT_SECRET)
+    )
+
+    if auth_response.status_code == 200:
+        auth_data = auth_response.json()
+        access_token = auth_data['access_token']
+        expires_in = auth_data['expires_in']
+
+        # Update the cache
+        access_token_cache['token'] = access_token
+        access_token_cache['expires_at'] = datetime.now() + timedelta(seconds=expires_in)
+
+        return access_token
+    else:
+        return None  # Return None in case of failure to get the token
+# Example CSRF exempt view using the token
+@csrf_exempt
+def spotify_search(request):
+    """
+    Example of a CSRF exempt view that uses the Spotify token
+    """
+    if request.method != 'GET':
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+    
+    query = request.GET.get('q')
+    if not query:
+        return JsonResponse({"error": "Search query required"}, status=400)
+    
+    token = get_spotify_token()
+    if not token:
+        return JsonResponse({"error": "Failed to get Spotify token"}, status=500)
+    
     headers = {
-        "Authorization": f"Basic {client_creds_b64}",
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Authorization": f"Bearer {token}"
     }
-
-    data = {"grant_type": "client_credentials"}
-
-    # Make the request to Spotify API
-    response = requests.post(token_url, headers=headers, data=data)
-
-    if response.status_code != 200:
-        return None  # Return None if request fails
-
-    # Extract the access token from the response
-    token_info = response.json()
-    access_token = token_info.get("access_token")
-
-    return access_token  # Return only the access token
-
-
-def get_access_token():
-    """Get a valid Spotify access token, re-fetch if expired"""
-    # Try getting a fresh token
-    access_token = get_spotify_token()
-
-    if not access_token:
-        return None  # Return None if unable to get the initial token
-
-    # Now, attempt to use the token (make a request to Spotify API with the access token)
-    response = requests.get("https://api.spotify.com/v1/me", headers={"Authorization": f"Bearer {access_token}"})
-
-    # Check if the access token has expired (401 Unauthorized)
-    if response.status_code == 401:
-        # If expired, fetch a new token
-        access_token = get_spotify_token()
-
-    return access_token  # Return the valid access token
-
-# Call the get_access_token function to get a valid token
-access_token = get_access_token()
-
-if access_token:
-    print("Access Token:", access_token)
-else:
-    print("Failed to obtain a new access token.")
-
+    
+    try:
+        response = requests.get(
+            "https://api.spotify.com/v1/search",
+            headers=headers,
+            params={"q": query, "type": "track", "limit": 10}
+        )
+        response.raise_for_status()
+        return JsonResponse(response.json())
+    
+    except requests.RequestException as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 
 @api_view(['GET'])
@@ -263,9 +275,9 @@ def recommended_songs(request):
 
     return JsonResponse({'status': 'success', 'recommendations': recommendations_data})
 
-@csrf_exempt
+
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def get_songs_by_popularity(request):
     """Fetch songs from Spotify API sorted by popularity, including album cover and track ID."""
     access_token = get_spotify_token()
@@ -756,6 +768,8 @@ def log_interaction(request):
             }
 
             response = requests.get(spotify_url, headers=headers)
+            
+
             if response.status_code != 200:
                 return JsonResponse({'error': 'Failed to fetch song details from Spotify'}, status=500)
 
@@ -763,9 +777,13 @@ def log_interaction(request):
 
             # Extract song details from the Spotify response
             song_name = track_data['name']
+            print(song_name)
             song_artist = track_data['artists'][0]['name']
+            print(song_artist)
             song_album = track_data['album']['name']
+            print(song_album)
             song_duration = track_data['duration_ms'] / 1000  # Convert milliseconds to seconds
+            print(song_duration)
 
             # Create or get the song entry
             song, created = Song.objects.get_or_create(
