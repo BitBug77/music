@@ -27,10 +27,9 @@ from django.db import connection
 from django.shortcuts import get_object_or_404
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-
-
-
 from .models import EsewaPayment
+
+
 
 def check_db(request):
     db_name = connection.settings_dict["NAME"]
