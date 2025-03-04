@@ -29,10 +29,14 @@ urlpatterns = [
     path('song/<int:song_id>/save/', views.save_song, name='save_song'),
     path('song/<int:song_id>/play/', views.play_song, name='play_song'),
     path('song/<int:song_id>/skip/', views.skip_song, name='skip_song'),
-    path('song/<str:track_id>/', views.fetch_song_data, name='fetch_song_data'),
+    
     path('song/<str:id>/', GetSongView.as_view(), name='get_song'),
     path('log-interaction/', views.log_interaction, name='log-interaction'),
     path('session/', views.session, name='get_session'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('get-access-token/', views.get_access_token, name='get-access-token'),
+    
+    
+
 ]

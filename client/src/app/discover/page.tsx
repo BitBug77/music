@@ -343,6 +343,8 @@ function SongCard({ song }: SongCardProps) {
           </a>
         </div>
       </div>
+
+      
       <h3 className="font-medium truncate text-white">{song.title}</h3>
       <p className="text-sm text-white/80 truncate">{song.artist}</p>
       <div className="mt-2 flex items-center">

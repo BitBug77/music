@@ -29,6 +29,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 
+
 from .models import EsewaPayment
 
 def check_db(request):
@@ -808,4 +809,3 @@ def session(request):
         'username': request.user.username if request.user.is_authenticated else None,
         'session_data': dict(request.session)
     })
-

@@ -39,7 +39,7 @@ class Action(models.Model):
         ('play', 'Play'),
         ('skip', 'Skip'),
     ]
-
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='actions')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     spotify_id = models.CharField(max_length=255, default="unkown")
     action_type = models.CharField(choices=ACTION_CHOICES, max_length=10)
