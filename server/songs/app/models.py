@@ -31,7 +31,6 @@ class Song(models.Model):
     def __str__(self):
         return f"{self.name} by {self.artist}"
 
-# Action Model
 class Action(models.Model):
     ACTION_CHOICES = [
         ('like', 'Like'),
@@ -41,7 +40,7 @@ class Action(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    spotify_id = models.CharField(max_length=255, default="unkown")
+    song = models.ForeignKey(Song, on_delete=models.CASCADE)  # Add ForeignKey to Song
     action_type = models.CharField(choices=ACTION_CHOICES, max_length=10)
     timestamp = models.DateTimeField(auto_now_add=True)
     class Meta:

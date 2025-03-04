@@ -35,4 +35,5 @@ urlpatterns = [
     path('session/', views.session, name='get_session'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('spotify-token/', views.get_spotify_token, name='get_spotify_token'),
 ]

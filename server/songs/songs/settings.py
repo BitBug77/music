@@ -71,7 +71,6 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',  # Session must be available before auth
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',  # Needs session to work properly
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -191,18 +190,7 @@ ESEWA_CONFIG = {
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-# CSRF Settings
-CSRF_COOKIE_HTTPONLY = False  # Set to False if you need JavaScript access to CSRF token
-CSRF_COOKIE_SECURE = False    # False for HTTP development environment
-CSRF_COOKIE_SAMESITE = 'Lax'  # Modern browsers use Lax as default
 
-# Session Settings
-SESSION_COOKIE_NAME = 'sessionid'
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default backend
-SESSION_COOKIE_SECURE = False  # False for HTTP development environment
-SESSION_COOKIE_HTTPONLY = True  # Prevents JavaScript access to session cookie
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds (default)
 
 # CORS Settings (if you're using django-cors-headers)
 CORS_ALLOW_CREDENTIALS = True
