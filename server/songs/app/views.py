@@ -25,8 +25,12 @@ from django.middleware.csrf import get_token
 from .models import FriendRequest
 from django.db import connection
 from django.shortcuts import get_object_or_404
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+import psycopg2
+
+
+
+
+
 
 
 from .models import EsewaPayment
@@ -650,7 +654,7 @@ def skip_song(request, song_id):
     else:
         return JsonResponse({'status': 'error', 'message': 'You need to be logged in to skip a song.'}, status=400)
 
-
+""""
 @csrf_exempt
 @login_required
 def fetch_song_data(request, track_id):
@@ -693,7 +697,7 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     redirect_uri="http://localhost:8000/callback/",  # Ensure it matches exactly
     scope=["user-library-read"]
 ))
-
+"""
 class GetSongView(View):
     def get(self, request, id):
         access_token = get_spotify_token()
