@@ -27,9 +27,9 @@ from django.db import connection
 from django.shortcuts import get_object_or_404
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+
+
 from .models import EsewaPayment
-
-
 
 def check_db(request):
     db_name = connection.settings_dict["NAME"]
@@ -585,22 +585,77 @@ def verify_payment(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 @csrf_exempt
-@login_required
-def like_song(request, song_id):
-    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
-
-    if request.user.is_authenticated:
-        # Track the "like" action
-        Action.objects.create(
-            user=request.user,
-            song=song,
-            action_type='like'
-        )
-        return JsonResponse({'status': 'success', 'message': 'Song liked successfully.'})
-    else:
-        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to like a song.'}, status=400)
+def like_song(request, spotify_track_id):
+    # Handle JWT authentication
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    print("Auth header:", auth_header)  # Debug print
     
-
+    if auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+        print("Token extracted:", token[:10] + "...")  # Print first part of token
+        
+        try:
+            # Verify the JWT token manually
+            import jwt
+            from django.conf import settings
+            from django.contrib.auth.models import User
+            
+            # Decode the JWT token
+            # Make sure to use the same secret key that was used to create the token
+            decoded_token = jwt.decode(
+                token, 
+                settings.SECRET_KEY,  # Use your project's SECRET_KEY
+                algorithms=["HS256"]
+            )
+            
+            print("Decoded token:", decoded_token)  # Debug print
+            
+            # Extract user_id from the decoded token
+            user_id = decoded_token.get('user_id')
+            if not user_id:
+                return JsonResponse({'status': 'error', 'message': 'Invalid token format'}, status=400)
+            
+            # Get the user from the database
+            try:
+                user = User.objects.get(id=user_id)
+                print(f"User found: {user.username}")  # Debug print
+            except User.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'User not found'}, status=400)
+            
+            # Get or create the song
+            try:
+                song = Song.objects.get(spotify_id=spotify_track_id)
+            except Song.DoesNotExist:
+                # Create the song if it doesn't exist
+                song = Song.objects.create(
+                    spotify_id=spotify_track_id,
+                    name="Unknown Song",  # Replace with actual data
+                    artist="Unknown Artist",
+                    album="Unknown Album"
+                )
+                print(f"Created new song with ID: {song.spotify_id}")  # Debug print
+            
+            # Track the like action
+            action, created = Action.objects.get_or_create(
+                user=user,
+                song=song,
+                action_type='like'
+            )
+            
+            message = 'Song liked successfully' if created else 'Song was already liked'
+            return JsonResponse({'status': 'success', 'message': message})
+            
+        except jwt.ExpiredSignatureError:
+            return JsonResponse({'status': 'error', 'message': 'Token has expired'}, status=401)
+        except jwt.InvalidTokenError as e:
+            print(f"Invalid token error: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': 'Invalid token'}, status=401)
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': f'Authentication error: {str(e)}'}, status=400)
+    
+    # If we get here, no valid Bearer token was provided
+    return JsonResponse({'status': 'error', 'message': 'You need to be logged in to like a song. Bearer token required.'}, status=400)
 @csrf_exempt
 @login_required
 def save_song(request, song_id):

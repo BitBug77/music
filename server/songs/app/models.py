@@ -25,11 +25,13 @@ class Song(models.Model):
     name = models.CharField(max_length=255)
     artist = models.CharField(max_length=255)
     album = models.CharField(max_length=255)
-    duration = models.IntegerField(null=True, blank=True)  # Duration in seconds
+    duration = models.IntegerField(null=True, blank=True)
     genre = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
+    
     def __str__(self):
         return f"{self.name} by {self.artist}"
+
 
 class Action(models.Model):
     ACTION_CHOICES = [
@@ -38,9 +40,8 @@ class Action(models.Model):
         ('play', 'Play'),
         ('skip', 'Skip'),
     ]
-    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='actions')
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='song_actions')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    song = models.ForeignKey(Song, on_delete=models.CASCADE)  # Add ForeignKey to Song
     action_type = models.CharField(choices=ACTION_CHOICES, max_length=10)
     timestamp = models.DateTimeField(auto_now_add=True)
     class Meta:
