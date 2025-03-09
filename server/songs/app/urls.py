@@ -29,7 +29,10 @@ urlpatterns = [
     path('songs/<str:spotify_track_id>/save/', views.save_song, name='save_song'),
     path('songs/<str:spotify_track_id>/play/', views.play_song, name='play_song'),
     path('songs/<str:spotify_track_id>/skip/', views.skip_song, name='skip_song'),
+<<<<<<< HEAD
     path('saved-playlist/', views.get_saved_playlist, name='saved_playlist'),
+=======
+>>>>>>> d7dcd82174bf8d8446b70e1ee5e030a736d46216
     path('song/<str:id>/', GetSongView.as_view(), name='get_song'),
     path('session/', views.session, name='get_session'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

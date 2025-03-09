@@ -29,26 +29,38 @@ export default function Signup() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          username, 
+        body: JSON.stringify({
+          username,
           password,
-          password_confirmation: passwordConfirmation 
+          password_confirmation: passwordConfirmation,
         }),
+        credentials: 'include',  // Ensure cookies are sent & received
       });
-
-      const data: SignupResponse = await response.json();
-
-      if (response.ok) {
-        router.push('/discover');
+    
+      const data = await response.json();
+      console.log('Signup response:', data);
+    
+      if (response.ok && data.access && data.refresh) {
+        // Store access and refresh tokens in localStorage
+        localStorage.setItem('access_token', data.access);
+        localStorage.setItem('refresh_token', data.refresh);
+    
+        // Debug: Checking the access token and refresh token in localStorage
+        console.log('Access Token in LocalStorage:', localStorage.getItem('access_token'));
+        console.log('Refresh Token in LocalStorage:', localStorage.getItem('refresh_token'));
+    
+        // Redirect the user after successful signup
+        router.push('/login');
       } else {
         setError(data.message || 'Signup failed');
       }
     } catch (err) {
+      console.error('Signup error:', err);
       setError('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }    
 
   const handleSpotifySignup = () => {
     // Redirect to your Spotify auth endpoint

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Heart, Share2, SkipBack, SkipForward, Music, BarChart2, Calendar, Clock } from 'lucide-react';
+import { Heart, Share2, SkipBack, SkipForward, Music, BarChart2, Calendar, Clock, BookmarkPlus } from 'lucide-react';
 import Navbar from './navbar';
 import Sidebar from "./sidebar";
 
@@ -31,23 +31,27 @@ interface RecommendedSong {
   album_cover: string;
   popularity: number;
 }
+
 interface RefreshTokenResponse {
   access: string;
 }
-interface InteractionRequestBody {
-  track_id: string;
-  interaction_type: string;
-  timestamp: string;
+
+interface SongStatusResponse {
+  is_liked: boolean;
+  is_saved: boolean;
 }
+
 export default function SongPage() {
   const params = useParams();
   const id = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : null;
   const [song, setSong] = useState<SongDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [recommendedSongs, setRecommendedSongs] = useState<RecommendedSong[]>([]);
   const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('details');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   useEffect(() => {
     const fetchSongDetails = async () => {
@@ -70,11 +74,15 @@ export default function SongPage() {
           
           // Log view interaction using the track_id from the API response
           if (formattedData.track_id) {
-            logUserInteraction(formattedData.track_id, 'song_view');
+            await handleSongAction(formattedData.track_id, 'view');
+            
+            // Fetch current like and save status
+            await fetchSongStatus(formattedData.track_id);
           }
         }
       } catch (error) {
         console.error("Error fetching song details:", error);
+        setErrorMessage("Failed to load song details. Please try again later.");
       } finally {
         setIsLoading(false);
       }
@@ -104,72 +112,59 @@ export default function SongPage() {
       fetchRecommendedSongs();
     }
   }, [id]);
-
-  const logUserInteraction = async (trackId: string, interactionType: string): Promise<void> => {
-    try {
-      // Retrieve the access token from localStorage
-      let accessToken = localStorage.getItem('access_token');
-      console.log('New access token:', accessToken);
-      if (!accessToken) {
-        throw new Error('Access token is missing. Please log in again.');
-      }
   
-      // First attempt to make the request with the current token
-      let response = await fetch('http://127.0.0.1:8000/log-interaction/', {
-        method: 'POST',
+  // Function to fetch the current like and save status for a song
+  const fetchSongStatus = async (trackId: string) => {
+    try {
+      let accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        console.log('No access token found, user might not be logged in');
+        return;
+      }
+      
+      // Endpoint to get song status (like/save)
+      const endpoint = `http://127.0.0.1:8000/songs/${trackId}/status/`;
+      
+      let response = await fetch(endpoint, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({
-          track_id: trackId,
-          interaction_type: interactionType,
-          timestamp: new Date().toISOString(),
-        } as InteractionRequestBody),
         credentials: 'include',
       });
-  
-      // If we get a 401 Unauthorized, the token might be expired
+      
+      // Handle token refresh if needed
       if (response.status === 401) {
-        console.log('Access token expired. Attempting to refresh...');
+        const newToken = await handleTokenRefresh();
+        if (!newToken) return;
         
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (!refreshToken) {
-          throw new Error('Refresh token is missing. Please log in again.');
-        }
-        
-        // Refresh the token
-        accessToken = await refreshAccessToken(refreshToken);
-        console.log('New access token:', accessToken);
-        localStorage.setItem('access_token', accessToken);
-        
-        // Retry the request with the new token
-        response = await fetch('http://127.0.0.1:8000/log-interaction/', {
-          method: 'POST',
+        // Retry with new token
+        response = await fetch(endpoint, {
+          method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
+            'Authorization': `Bearer ${newToken}`,
           },
-          body: JSON.stringify({
-            track_id: trackId,
-            interaction_type: interactionType,
-            timestamp: new Date().toISOString(),
-          } as InteractionRequestBody),
           credentials: 'include',
         });
       }
-  
+      
       if (!response.ok) {
-        throw new Error(`Failed to log interaction: ${response.status}`);
+        throw new Error(`Failed to fetch song status: ${response.status}`);
       }
-  
-      const data = await response.json();
-      console.log('Interaction logged successfully', data);
+      
+      const data: SongStatusResponse = await response.json();
+      console.log('Song status:', data);
+      
+      // Update state based on response
+      setIsFavorite(data.is_liked);
+      setIsSaved(data.is_saved);
+      
     } catch (error) {
-      console.error('Error logging interaction:', error);
+      console.error('Error fetching song status:', error);
+      // Don't show an error message here, just keep defaults
     }
   };
-  
+
   // Function to refresh the access token using the refresh token
   const refreshAccessToken = async (refreshToken: string): Promise<string> => {
     try {
@@ -179,7 +174,7 @@ export default function SongPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          refresh: refreshToken,  // Send the refresh token here
+          refresh: refreshToken,
         }),
       });
   
@@ -188,21 +183,109 @@ export default function SongPage() {
       }
   
       const data: RefreshTokenResponse = await response.json();
-      const newAccessToken = data.access;  // Get the new access token
-  
-      return newAccessToken;  // Return the new access token
+      return data.access;
     } catch (error) {
       console.error('Error refreshing access token:', error);
-      throw error;  // Handle errors (maybe redirect to login)
+      throw error;
+    }
+  };
+  
+  // Handle token refresh and return new access token if successful
+  const handleTokenRefresh = async (): Promise<string | null> => {
+    try {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) {
+        throw new Error('Refresh token is missing. Please log in again.');
+      }
+      
+      const accessToken = await refreshAccessToken(refreshToken);
+      localStorage.setItem('access_token', accessToken);
+      return accessToken;
+    } catch (error) {
+      console.error('Error during token refresh:', error);
+      setErrorMessage('Your session has expired. Please log in again.');
+      return null;
+    }
+  };
+  
+  // Function to handle API calls for specific song interactions
+  const handleSongAction = async (trackId: string, actionType: string) => {
+    try {
+      setErrorMessage(null);
+      let accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        throw new Error('Access token is missing. Please log in again.');
+      }
+      
+      // Determine endpoint based on action type
+      let endpoint = '';
+      switch(actionType) {
+        case 'like':
+          endpoint = `http://127.0.0.1:8000/songs/${trackId}/like/`;
+          break;
+        case 'save':
+          endpoint = `http://127.0.0.1:8000/songs/${trackId}/save/`;
+          break;
+        case 'play':
+          endpoint = `http://127.0.0.1:8000/songs/${trackId}/play/`;
+          break;
+        case 'skip':
+          endpoint = `http://127.0.0.1:8000/songs/${trackId}/skip/`;
+          break;
+        case 'view':
+          endpoint = `http://127.0.0.1:8000/songs/${trackId}/view/`;
+          break;
+        default:
+          throw new Error(`Unknown action type: ${actionType}`);
+      }
+      
+      // Make the API call
+      let response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        credentials: 'include',
+      });
+      
+      // Handle token refresh if needed
+      if (response.status === 401) {
+        const newToken = await handleTokenRefresh();
+        if (!newToken) return;
+        
+        // Retry the request with the new token
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${newToken}`,
+          },
+          credentials: 'include',
+        });
+      }
+      
+      if (!response.ok) {
+        throw new Error(`Failed to perform ${actionType} action: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log(`${actionType} action completed successfully`, data);
+      
+      return data;
+    } catch (error) {
+      console.error(`Error performing ${actionType} action:`, error);
+      setErrorMessage(`Failed to log ${actionType} interaction. Please try again.`);
+      throw error;
     }
   };
   
   const handleNextSong = () => {
     if (song?.similar_songs && song.similar_songs.length > 0) {
       const firstSimilarSong = song.similar_songs[0];
-      // Log interaction first
+      // Log skip action to specific endpoint
       if (song.track_id) {
-        logUserInteraction(song.track_id, 'song_skip_next');
+        handleSongAction(song.track_id, 'skip');
       }
       // Navigate to the first similar song
       window.location.href = `/song/${firstSimilarSong.track_id}`;
@@ -212,15 +295,41 @@ export default function SongPage() {
   const handlePreviousSong = () => {
     // For demonstration purposes - in a real app this would use browser history
     if (song?.track_id) {
-      logUserInteraction(song.track_id, 'song_skip_previous');
+      handleSongAction(song.track_id, 'skip');
     }
     window.history.back();
   };
 
-  const handleToggleFavorite = () => {
-    setIsFavorite(!isFavorite);
+  const handleToggleFavorite = async () => {
     if (song?.track_id) {
-      logUserInteraction(song.track_id, isFavorite ? 'song_unfavorite' : 'song_favorite');
+      try {
+        await handleSongAction(song.track_id, 'like');
+        setIsFavorite(!isFavorite);
+      } catch (error) {
+        console.error("Error toggling favorite:", error);
+      }
+    }
+  };
+  
+  const handleToggleSave = async () => {
+    if (song?.track_id) {
+      try {
+        await handleSongAction(song.track_id, 'save');
+        setIsSaved(!isSaved);
+      } catch (error) {
+        console.error("Error toggling save:", error);
+      }
+    }
+  };
+  
+  const handlePlaySong = async () => {
+    if (song?.track_id) {
+      try {
+        await handleSongAction(song.track_id, 'play');
+        console.log("Play action logged successfully");
+      } catch (error) {
+        console.error("Error logging play action:", error);
+      }
     }
   };
 
@@ -265,6 +374,11 @@ export default function SongPage() {
     const urlParts = spotifyUrl.split('/');
     return urlParts[urlParts.length - 1].split('?')[0];
   };
+  
+  // Dismiss error message
+  const dismissError = () => {
+    setErrorMessage(null);
+  };
 
   return (
     <div className="flex flex-col h-screen">
@@ -275,6 +389,19 @@ export default function SongPage() {
       <Sidebar />
       
       <div className="flex-1 overflow-auto bg-[#151b27] text-white p-8">
+        {/* Error Message Banner */}
+        {errorMessage && (
+          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-md shadow-lg z-50 flex items-center">
+            <span>{errorMessage}</span>
+            <button 
+              onClick={dismissError}
+              className="ml-4 text-white hover:text-white/80"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+      
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <div className="animate-spin h-12 w-12 border-4 border-pink-500 border-t-transparent rounded-full"></div>
@@ -331,7 +458,11 @@ export default function SongPage() {
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 text-sm bg-green-600 hover:bg-green-700 px-3 py-1 rounded-full"
-                    onClick={() => song.track_id && logUserInteraction(song.track_id, 'spotify_link_click')}
+                    onClick={() => {
+                      if (song.track_id) {
+                        handleSongAction(song.track_id, 'view');
+                      }
+                    }}
                   >
                     <span>Open in Spotify</span>
                   </a>
@@ -391,6 +522,7 @@ export default function SongPage() {
                         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
                         loading="lazy"
                         className="rounded-md"
+                        onLoad={() => handlePlaySong()}
                       ></iframe>
                     </div>
                   ) : (
@@ -413,10 +545,21 @@ export default function SongPage() {
                       <button 
                         onClick={handleToggleFavorite}
                         className={`p-2 rounded-full ${isFavorite ? 'text-pink-500 bg-pink-500/20' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+                        title={isFavorite ? "Unlike" : "Like"}
                       >
                         <Heart size={22} fill={isFavorite ? "#ec4899" : "none"} />
                       </button>
-                      <button className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10">
+                      <button 
+                        onClick={handleToggleSave}
+                        className={`p-2 rounded-full ${isSaved ? 'text-pink-500 bg-pink-500/20' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+                        title={isSaved ? "Unsave" : "Save"}
+                      >
+                        <BookmarkPlus size={22} fill={isSaved ? "#ec4899" : "none"} />
+                      </button>
+                      <button 
+                        className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10"
+                        title="Share"
+                      >
                         <Share2 size={22} />
                       </button>
                     </div>
@@ -425,12 +568,14 @@ export default function SongPage() {
                       <button 
                         onClick={handlePreviousSong}
                         className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10"
+                        title="Previous Song"
                       >
                         <SkipBack size={22} />
                       </button>
                       <button 
                         onClick={handleNextSong}
                         className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10"
+                        title="Next Song"
                       >
                         <SkipForward size={22} />
                       </button>
@@ -455,7 +600,7 @@ export default function SongPage() {
                       key={song.track_id}
                       href={`/song/${song.track_id}`}
                       className="bg-[#1d2433] p-4 rounded-lg hover:bg-[#2a3548] transition-colors group"
-                      onClick={() => logUserInteraction(song.track_id, 'recommendation_click')}
+                      onClick={() => handleSongAction(song.track_id, 'view')}
                     >
                       <div className="relative overflow-hidden rounded-md mb-3">
                         <img 
@@ -499,7 +644,7 @@ export default function SongPage() {
                       key={similarSong.track_id}
                       href={`/song/${similarSong.track_id}`}
                       className="bg-[#74686e]/30 p-4 rounded-lg hover:bg-[#74686e]/50 transition-colors group"
-                      onClick={() => logUserInteraction(similarSong.track_id, 'similar_song_click')}
+                      onClick={() => handleSongAction(similarSong.track_id, 'view')}
                     >
                       <div className="relative overflow-hidden rounded-md mb-3">
                         <img 

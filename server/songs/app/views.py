@@ -698,9 +698,17 @@ def like_song(request, spotify_track_id):
             url=song_details['url']
         )
 
-    action, created = Action.objects.get_or_create(user=user, song=song, action_type='like')
-    message = 'Song liked successfully' if created else 'Song was already liked'
-    return JsonResponse({'status': 'success', 'message': message})
+    if request.user.is_authenticated:
+        # Track the "save" action
+        Action.objects.create(
+            user=request.user,
+            song=song,
+            action_type='save'
+        )
+        return JsonResponse({'status': 'success', 'message': 'Song saved successfully.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to save a song.'}, status=400)
+    
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -853,15 +861,7 @@ class GetSongView(View):
 
         return JsonResponse(song_details, safe=False)
     
-@csrf_exempt
-def session(request):
-    """Debug view to check session status"""
-    return JsonResponse({
-        'session_key': request.session.session_key,
-        'user_authenticated': request.user.is_authenticated,
-        'username': request.user.username if request.user.is_authenticated else None,
-        'session_data': dict(request.session)
-    })
+
 
 
 @api_view(['GET'])
