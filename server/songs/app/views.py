@@ -583,126 +583,71 @@ def verify_payment(request):
         
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-@csrf_exempt
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from .models import Song, Action
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def like_song(request, spotify_track_id):
-    # Handle JWT authentication
-    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-    print("Auth header:", auth_header)  # Debug print
-    
-    if auth_header.startswith('Bearer '):
-        token = auth_header.split(' ')[1]
-        print("Token extracted:", token[:10] + "...")  # Print first part of token
-        
-        try:
-            # Verify the JWT token manually
-            import jwt
-            from django.conf import settings
-            from django.contrib.auth.models import User
-            
-            # Decode the JWT token
-            # Make sure to use the same secret key that was used to create the token
-            decoded_token = jwt.decode(
-                token, 
-                settings.SECRET_KEY,  # Use your project's SECRET_KEY
-                algorithms=["HS256"]
-            )
-            
-            print("Decoded token:", decoded_token)  # Debug print
-            
-            # Extract user_id from the decoded token
-            user_id = decoded_token.get('user_id')
-            if not user_id:
-                return JsonResponse({'status': 'error', 'message': 'Invalid token format'}, status=400)
-            
-            # Get the user from the database
-            try:
-                user = User.objects.get(id=user_id)
-                print(f"User found: {user.username}")  # Debug print
-            except User.DoesNotExist:
-                return JsonResponse({'status': 'error', 'message': 'User not found'}, status=400)
-            
-            # Get or create the song
-            try:
-                song = Song.objects.get(spotify_id=spotify_track_id)
-            except Song.DoesNotExist:
-                # Create the song if it doesn't exist
-                song = Song.objects.create(
-                    spotify_id=spotify_track_id,
-                    name="Unknown Song",  # Replace with actual data
-                    artist="Unknown Artist",
-                    album="Unknown Album"
-                )
-                print(f"Created new song with ID: {song.spotify_id}")  # Debug print
-            
-            # Track the like action
-            action, created = Action.objects.get_or_create(
-                user=user,
-                song=song,
-                action_type='like'
-            )
-            
-            message = 'Song liked successfully' if created else 'Song was already liked'
-            return JsonResponse({'status': 'success', 'message': message})
-            
-        except jwt.ExpiredSignatureError:
-            return JsonResponse({'status': 'error', 'message': 'Token has expired'}, status=401)
-        except jwt.InvalidTokenError as e:
-            print(f"Invalid token error: {str(e)}")
-            return JsonResponse({'status': 'error', 'message': 'Invalid token'}, status=401)
-        except Exception as e:
-            print(f"Unexpected error: {str(e)}")
-            return JsonResponse({'status': 'error', 'message': f'Authentication error: {str(e)}'}, status=400)
-    
-    # If we get here, no valid Bearer token was provided
-    return JsonResponse({'status': 'error', 'message': 'You need to be logged in to like a song. Bearer token required.'}, status=400)
-@csrf_exempt
-@login_required
-def save_song(request, song_id):
-    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
+    """Allows authenticated users to like a song."""
+    user = request.user
 
-    if request.user.is_authenticated:
-        # Track the "save" action
-        Action.objects.create(
-            user=request.user,
-            song=song,
-            action_type='save'
-        )
-        return JsonResponse({'status': 'success', 'message': 'Song saved successfully.'})
-    else:
-        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to save a song.'}, status=400)
-    
+    # Get or create the song
+    song, _ = Song.objects.get_or_create(
+        spotify_id=spotify_track_id,
+        defaults={'name': 'Unknown Song', 'artist': 'Unknown Artist', 'album': 'Unknown Album'}
+    )
 
-@csrf_exempt
-@login_required
-def play_song(request, song_id):
-    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
+    action, created = Action.objects.get_or_create(user=user, song=song, action_type='like')
+    message = 'Song liked successfully' if created else 'Song was already liked'
+    return JsonResponse({'status': 'success', 'message': message})
 
-    if request.user.is_authenticated:
-        # Track the "play" action
-        Action.objects.create(
-            user=request.user,
-            song=song,
-            action_type='play'
-        )
-        return JsonResponse({'status': 'success', 'message': 'Song played successfully.'})
-    else:
-        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to play a song.'}, status=400)
-    
-@csrf_exempt
-@login_required
-def skip_song(request, song_id):
-    song = get_object_or_404(Song, id=song_id)  # Get the song by its ID
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_song(request, spotify_track_id):
+    """Allows authenticated users to save a song."""
+    user = request.user
 
-    if request.user.is_authenticated:
-        # Track the "skip" action
-        Action.objects.create(
-            user=request.user,
-            song=song,
-            action_type='skip'
-        )
-        return JsonResponse({'status': 'success', 'message': 'Song skipped successfully.'})
-    else:
-        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to skip a song.'}, status=400)
+    song, _ = Song.objects.get_or_create(
+        spotify_id=spotify_track_id,
+        defaults={'name': 'Unknown Song', 'artist': 'Unknown Artist', 'album': 'Unknown Album'}
+    )
+
+    action, created = Action.objects.get_or_create(user=user, song=song, action_type='save')
+    message = 'Song saved successfully' if created else 'Song was already saved'
+    return JsonResponse({'status': 'success', 'message': message})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def play_song(request, spotify_track_id):
+    """Tracks when a user plays a song."""
+    user = request.user
+
+    song, _ = Song.objects.get_or_create(
+        spotify_id=spotify_track_id,
+        defaults={'name': 'Unknown Song', 'artist': 'Unknown Artist', 'album': 'Unknown Album'}
+    )
+
+    Action.objects.create(user=user, song=song, action_type='play')
+    return JsonResponse({'status': 'success', 'message': 'Song played successfully'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def skip_song(request, spotify_track_id):
+    """Tracks when a user skips a song."""
+    user = request.user
+
+    song, _ = Song.objects.get_or_create(
+        spotify_id=spotify_track_id,
+        defaults={'name': 'Unknown Song', 'artist': 'Unknown Artist', 'album': 'Unknown Album'}
+    )
+
+    Action.objects.create(user=user, song=song, action_type='skip')
+    return JsonResponse({'status': 'success', 'message': 'Song skipped successfully'})
+
 
 
 @csrf_exempt
@@ -748,6 +693,7 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     scope=["user-library-read"]
 ))
 
+
 class GetSongView(View):
     def get(self, request, id):
         access_token = get_spotify_token()
@@ -784,91 +730,6 @@ class GetSongView(View):
 
         return JsonResponse(song_details, safe=False)
     
-from datetime import datetime
-from .models import Action, Song
-import json
-@csrf_exempt
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def log_interaction(request):
-    if request.method == 'POST':
-        try:
-            # Parse the incoming JSON data
-            data = json.loads(request.body)
-            print(data)
-            track_id = data.get('track_id')  # Spotify track ID
-            interaction_type = data.get('interaction_type')
-            timestamp = data.get('timestamp', datetime.utcnow().isoformat())  # Use current timestamp if missing
-
-            # Check for missing required fields
-            if not track_id or not interaction_type:
-                return JsonResponse({'error': 'Missing required fields'}, status=400)
-
-            # Ensure the user is authenticated
-            user = request.user if request.user.is_authenticated else None
-            if not user:
-                return JsonResponse({'error': 'Cannot find user, please log in'}, status=401)
-
-            # Fetch the access token
-            access_token = get_spotify_token()
-
-            if not access_token:
-                return JsonResponse({'error': 'Failed to authenticate with Spotify'}, status=500)
-
-            # Fetch song details from Spotify API
-            spotify_url = f"https://api.spotify.com/v1/tracks/{track_id}"
-            headers = {
-                "Authorization": f"Bearer {access_token}",  # Use the token retrieved
-            }
-
-            response = requests.get(spotify_url, headers=headers)
-            
-
-            if response.status_code != 200:
-                return JsonResponse({'error': 'Failed to fetch song details from Spotify'}, status=500)
-
-            track_data = response.json()
-
-            # Extract song details from the Spotify response
-            song_name = track_data['name']
-            print(song_name)
-            song_artist = track_data['artists'][0]['name']
-            print(song_artist)
-            song_album = track_data['album']['name']
-            print(song_album)
-            song_duration = track_data['duration_ms'] / 1000  # Convert milliseconds to seconds
-            print(song_duration)
-
-            # Create or get the song entry
-            song, created = Song.objects.get_or_create(
-                spotify_id=track_id,
-                defaults={
-                    'name': song_name,
-                    'artist': song_artist,
-                    'album': song_album,
-                    'duration': song_duration,
-                }
-            )
-
-            # Create the action entry
-            action = Action.objects.create(
-                user=user,
-                song=song,  # Pass the Song instance here
-                action_type=interaction_type,
-                timestamp=timestamp
-            )
-
-            # Return success response
-            return JsonResponse({'message': 'Interaction logged successfully'})
-
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    
-    # Handle invalid request methods
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
-
 
 
 @csrf_exempt

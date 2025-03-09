@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { UserPlus, Check, X, Music, MessageCircle } from 'lucide-react';
+import { UserPlus, Check, X, Music, MessageCircle, Search } from 'lucide-react';
 import Sidebar from "../../components/ui/sidebar";
 import Navbar from "../../components/ui/navbar";
 
@@ -27,9 +27,12 @@ interface FriendRequest {
 
 export default function FindPeoplePage() {
   const [similarUsers, setSimilarUsers] = useState<User[]>([]);
+  const [searchResults, setSearchResults] = useState<User[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
-  const [activeTab, setActiveTab] = useState<'discover' | 'requests' | 'friends'>('discover');
+  const [activeTab, setActiveTab] = useState<'discover' | 'requests' | 'friends' | 'search'>('discover');
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     // Fetch similar users from backend
@@ -86,6 +89,47 @@ export default function FindPeoplePage() {
     fetchFriendRequests();
   }, []);
 
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    setActiveTab('search');
+    
+    try {
+      // Replace with actual API endpoint
+      const response = await fetch(`/api/users/search?username=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) throw new Error('Failed to search users');
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      // Fallback mock data for testing
+      setSearchResults([
+        {
+          id: 3,
+          name: searchQuery + " User",
+          avatar: "/api/placeholder/64/64",
+          matchPercentage: 75,
+          commonArtists: ["Taylor Swift"],
+          topSong: "Anti-Hero",
+          status: 'none'
+        }
+      ]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Clear search when switching tabs (except search tab)
+  useEffect(() => {
+    if (activeTab !== 'search') {
+      setSearchQuery('');
+      setSearchResults([]);
+    }
+  }, [activeTab]);
+
   const handleSendRequest = async (userId: number) => {
     try {
       // Replace with actual API endpoint
@@ -99,6 +143,13 @@ export default function FindPeoplePage() {
       
       // Update local state on success
       setSimilarUsers(users => 
+        users.map(user => 
+          user.id === userId ? {...user, status: 'pending'} : user
+        )
+      );
+      
+      // Also update search results if present
+      setSearchResults(users => 
         users.map(user => 
           user.id === userId ? {...user, status: 'pending'} : user
         )
@@ -146,6 +197,43 @@ export default function FindPeoplePage() {
     }
   };
 
+  const renderUserCard = (user: User) => (
+    <div key={user.id} className="bg-[#74686e] rounded-md p-4 shadow-md">
+      <div className="flex items-start">
+        <img 
+          src={user.avatar} 
+          alt={`${user.name}'s avatar`} 
+          className="w-16 h-16 rounded-full mr-4"
+        />
+        <div className="flex-1">
+          <div className="flex justify-between items-start">
+            <h3 className="font-semibold text-white text-lg">{user.name}</h3>
+            <span className="bg-pink-500 text-white px-2 py-1 rounded-full text-xs">
+              {user.matchPercentage}% Match
+            </span>
+          </div>
+          <div className="mt-2 text-white/80 text-sm">
+            <p className="flex items-center"><Music size={14} className="mr-1" /> Top song: {user.topSong}</p>
+            <p className="mt-1">Common artists: {user.commonArtists.join(', ')}</p>
+          </div>
+          <div className="mt-3 flex justify-end">
+            {user.status === 'none' ? (
+              <button 
+                onClick={() => handleSendRequest(user.id)}
+                className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition duration-200"
+              >
+                <UserPlus size={16} className="mr-1" />
+                Send Request
+              </button>
+            ) : user.status === 'pending' ? (
+              <span className="text-white/70 text-sm italic">Request Sent</span>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeTab) {
       case 'discover':
@@ -161,43 +249,53 @@ export default function FindPeoplePage() {
             ) : (
               similarUsers
                 .filter(user => user.status !== 'friends')
-                .map(user => (
-                  <div key={user.id} className="bg-[#74686e] rounded-md p-4 shadow-md">
-                    <div className="flex items-start">
-                      <img 
-                        src={user.avatar} 
-                        alt={`${user.name}'s avatar`} 
-                        className="w-16 h-16 rounded-full mr-4"
-                      />
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <h3 className="font-semibold text-white text-lg">{user.name}</h3>
-                          <span className="bg-pink-500 text-white px-2 py-1 rounded-full text-xs">
-                            {user.matchPercentage}% Match
-                          </span>
-                        </div>
-                        <div className="mt-2 text-white/80 text-sm">
-                          <p className="flex items-center"><Music size={14} className="mr-1" /> Top song: {user.topSong}</p>
-                          <p className="mt-1">Common artists: {user.commonArtists.join(', ')}</p>
-                        </div>
-                        <div className="mt-3 flex justify-end">
-                          {user.status === 'none' ? (
-                            <button 
-                              onClick={() => handleSendRequest(user.id)}
-                              className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition duration-200"
-                            >
-                              <UserPlus size={16} className="mr-1" />
-                              Send Request
-                            </button>
-                          ) : user.status === 'pending' ? (
-                            <span className="text-white/70 text-sm italic">Request Sent</span>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                .map(user => renderUserCard(user))
             )}
+          </div>
+        );
+      
+      case 'search':
+        return (
+          <div>
+            <div className="mb-6">
+              <form onSubmit={handleSearch} className="flex gap-2">
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Search size={18} className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by username..."
+                    className="w-full bg-[#74686e]/20 text-white pl-10 pr-4 py-2 rounded-md border border-[#74686e]/40 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSearching}
+                  className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-md transition duration-200 disabled:opacity-50"
+                >
+                  {isSearching ? 'Searching...' : 'Search'}
+                </button>
+              </form>
+            </div>
+            
+            {isSearching ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <div key={index} className="bg-[#74686e]/20 animate-pulse rounded-md p-6 h-48"></div>
+                ))}
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {searchResults.map(user => renderUserCard(user))}
+              </div>
+            ) : searchQuery ? (
+              <div className="bg-[#74686e] rounded-md p-6 text-center">
+                <p className="text-white">No users found matching "{searchQuery}"</p>
+              </div>
+            ) : null}
           </div>
         );
         
@@ -302,6 +400,31 @@ export default function FindPeoplePage() {
         <div className="p-8">
           <h1 className="text-3xl text-blue-700 font-bold mb-4">Find People Like You</h1>
           <p className="text-pink-600">Connect with users who share your music taste</p>
+          
+          {/* Global Search Bar */}
+          <div className="mt-6">
+            <form onSubmit={handleSearch} className="flex gap-2 max-w-md">
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Find users by username..."
+                  className="w-full bg-[#74686e]/30 text-white pl-10 pr-4 py-2 rounded-md border border-[#74686e]/50 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isSearching}
+                className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-md transition duration-200 disabled:opacity-50"
+              >
+                {isSearching ? 'Searching...' : 'Search'}
+              </button>
+            </form>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -316,6 +439,16 @@ export default function FindPeoplePage() {
               }`}
             >
               Discover People
+            </button>
+            <button 
+              onClick={() => setActiveTab('search')}
+              className={`py-2 px-4 font-medium transition-colors duration-200 ${
+                activeTab === 'search' 
+                  ? 'text-pink-500 border-b-2 border-pink-500' 
+                  : 'text-white/70 hover:text-white'
+              }`}
+            >
+              Search Results
             </button>
             <button 
               onClick={() => setActiveTab('requests')}

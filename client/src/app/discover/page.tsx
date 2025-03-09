@@ -4,6 +4,7 @@ import { ChevronRight, TrendingUp, Clock } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Navbar from '../navbar/page';
 import Sidebar from "../../components/ui/sidebar";
+import { useRouter } from 'next/navigation';
 // Define TypeScript interfaces for our data structures
 interface ApiResponse {
   songs?: any[];
@@ -31,6 +32,9 @@ export default function DiscoverPage() {
   const [popularSongs, setPopularSongs] = useState<ProcessedSong[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  
 
   useEffect(() => {
     // Fetch popular songs from your API
@@ -206,6 +210,8 @@ export default function DiscoverPage() {
     fetchPopularSongs();
   }, []);
 
+  
+
   return (
     <div className="flex flex-col h-screen text-black">
       {/* Navbar */}
@@ -278,7 +284,7 @@ export default function DiscoverPage() {
             {(isLoading === false) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {popularSongs.map((song) => (
-                  <div key={song.id} className="bg-[#74686e] rounded-md p-4 shadow-md hover:shadow-lg transition duration-200">
+                  <div key={song.id} className="bg-[#74686e] rounded-md p-4 shadow-md hover:shadow-lg transition duration-200 " onClick={() => router.push(`/song/${song.spotifyTrackId}`)}>
                     <div className="flex items-center mb-3">
                       <img 
                         src={song.coverUrl} 
@@ -324,8 +330,12 @@ export default function DiscoverPage() {
 }
 
 function SongCard({ song }: SongCardProps) {
+  const router = useRouter();
+  const handleSongClick = () => {
+    router.push(`/song/${song.spotifyTrackId}`);
+  };
   return (
-    <div className="bg-[#74686e] rounded-md p-4 hover:shadow-md transition duration-200 cursor-pointer border border-blue-100">
+    <div className="bg-[#74686e] rounded-md p-4 hover:shadow-md transition duration-200 cursor-pointer border border-blue-100" onClick={handleSongClick}>
       <div className="relative mb-4 group">
         <img 
           src={song.coverUrl}

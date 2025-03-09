@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { UserCircle, Search } from 'lucide-react';
+import { UserCircle, Search, LogOut, User, ChevronDown, AlertTriangle } from 'lucide-react';
 
 // Define TypeScript interfaces for our data structures
 interface Song {
@@ -11,6 +11,11 @@ interface Song {
   artist: string;
   album_cover?: string;
   spotify_url: string;
+}
+
+interface UserProfile {
+  username: string;
+  email: string;
 }
 
 const Navbar: React.FC = () => {
@@ -22,8 +27,13 @@ const Navbar: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSearchActive, setIsSearchActive] = useState<boolean>(true);
   const [activeSuggestion, setActiveSuggestion] = useState<number>(-1);
+  const [showProfileDropdown, setShowProfileDropdown] = useState<boolean>(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [tokenError, setTokenError] = useState<boolean>(false);
+  
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   
   // Debounce function to limit API calls
   const debounce = <T extends (...args: any[]) => any>(func: T, delay: number): ((...args: Parameters<T>) => void) => {
@@ -32,6 +42,92 @@ const Navbar: React.FC = () => {
       clearTimeout(timer);
       timer = setTimeout(() => func(...args), delay);
     };
+  };
+
+  // Get user profile information
+  const fetchUserProfile = async () => {
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      
+      if (!accessToken) {
+        setTokenError(true);
+        return;
+      }
+      
+      const response = await fetch('http://127.0.0.1:8000/user-profile/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch user profile');
+      }
+      
+      const profileData = await response.json();
+      setUserProfile(profileData);
+      setTokenError(false);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      console.log('Access Token:', accessToken);
+      
+      if (!accessToken) {
+        setTokenError(true);
+        return;
+      }
+      
+      const response = await fetch('http://127.0.0.1:8000/logout/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+      
+      // Clear local storage
+      localStorage.removeItem('access_token');
+      
+      // Reset user profile state
+      setUserProfile(null);
+      
+      // Close dropdown
+      setShowProfileDropdown(false);
+      
+      // Redirect to login page
+      router.push('/login');
+      
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  };
+
+  // Handle redirecting to login
+  const handleRedirectToLogin = () => {
+    setShowProfileDropdown(false);
+    router.push('/login');
+  };
+
+  // Toggle profile dropdown
+  const toggleProfileDropdown = () => {
+    setShowProfileDropdown(prev => !prev);
+    
+    // Fetch profile data when opening dropdown
+    if (!showProfileDropdown) {
+      fetchUserProfile();
+    }
   };
 
   // Fetch search results with debounce
@@ -45,8 +141,21 @@ const Navbar: React.FC = () => {
 
     setIsLoading(true);
     try {
+      // Retrieve the access token from localStorage
+      const accessToken = localStorage.getItem('access_token');
+
+      if (!accessToken) {
+        setTokenError(true);
+        throw new Error('Access token is missing. Please log in again.');
+      }
+
+      // Make the GET request to search songs
       const response = await fetch(`http://127.0.0.1:8000/search-songs/?q=${encodeURIComponent(searchQuery)}`, {
         method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,  // Add the access token here
+        },
       });
 
       if (!response.ok) {
@@ -106,6 +215,10 @@ const Navbar: React.FC = () => {
       setShowSuggestions(false);
       setIsSearchActive(false);
     }
+    
+    if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+      setShowProfileDropdown(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
@@ -125,6 +238,14 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
+    }
+    
+    // Check if user is logged in and fetch profile data
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) {
+      setTokenError(true);
+    } else {
+      fetchUserProfile();
     }
   }, []);
 
@@ -202,9 +323,60 @@ const Navbar: React.FC = () => {
             <Link href="/discover" className="bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Discover</Link>
             <Link href="/playlists" className="hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Playlists</Link>
             <Link href="/artists" className="hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Artists</Link>
-            <button className="ml-2 p-2 rounded-full text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-800 focus:ring-white">
-              <UserCircle size={24} />
-            </button>
+            
+            {/* Profile dropdown */}
+            <div className="relative" ref={profileDropdownRef}>
+              <button 
+                onClick={toggleProfileDropdown}
+                className="ml-2 p-2 rounded-full text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-800 focus:ring-white flex items-center"
+              >
+                <UserCircle size={24} />
+                <ChevronDown size={16} className={`ml-1 transition-transform duration-200 ${showProfileDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {showProfileDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+                  {tokenError ? (
+                    <div className="px-4 py-3">
+                      <div className="flex items-center text-amber-600 mb-2">
+                        <AlertTriangle size={16} className="mr-2" />
+                        <p className="text-sm font-medium">Access Token Not Found</p>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-2">Please log in to access your profile</p>
+                      <button
+                        onClick={handleRedirectToLogin}
+                        className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded text-sm"
+                      >
+                        Go to Login
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="px-4 py-3">
+                        <p className="text-sm font-medium text-gray-900">
+                          {userProfile ? userProfile.username : 'Loading...'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1 truncate">
+                          {userProfile ? userProfile.email : ''}
+                        </p>
+                      </div>
+                      <hr />
+                      <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left flex items-center">
+                        <User size={16} className="mr-2" />
+                        My Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left flex items-center"
+                      >
+                        <LogOut size={16} className="mr-2" />
+                        Log Out
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex md:hidden">
             <button
@@ -285,11 +457,46 @@ const Navbar: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className="mt-3 px-5 flex justify-center">
-              <button className="flex items-center py-2 px-4 rounded-md bg-blue-600 hover:bg-blue-700 transition duration-150">
-                <UserCircle size={20} className="mr-2" />
-                <span>My Profile</span>
-              </button>
+            
+            {/* Mobile profile section */}
+            <div className="mt-3 px-5">
+              {tokenError ? (
+                <div className="bg-amber-100 text-amber-800 rounded-md p-3 mb-3">
+                  <div className="flex items-center mb-2">
+                    <AlertTriangle size={16} className="mr-2" />
+                    <p className="font-medium">Access Token Not Found</p>
+                  </div>
+                  <p className="text-xs mb-2">Please log in to access your profile</p>
+                  <button
+                    onClick={handleRedirectToLogin}
+                    className="mt-1 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded text-sm"
+                  >
+                    Go to Login
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {userProfile && (
+                    <div className="bg-blue-800 rounded-md p-3 mb-3">
+                      <p className="text-sm font-medium">{userProfile.username}</p>
+                      <p className="text-xs text-blue-200 mt-1 truncate">{userProfile.email}</p>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <Link href="/profile" className="flex items-center py-2 px-4 rounded-md bg-blue-600 hover:bg-blue-700 transition duration-150">
+                      <User size={20} className="mr-2" />
+                      <span>My Profile</span>
+                    </Link>
+                    <button 
+                      onClick={handleLogout}
+                      className="flex items-center py-2 px-4 rounded-md bg-red-600 hover:bg-red-700 transition duration-150 text-white"
+                    >
+                      <LogOut size={20} className="mr-2" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

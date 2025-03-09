@@ -103,10 +103,10 @@ WSGI_APPLICATION = 'songs.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'music',  # Change to your database name
-        'USER': 'postgres',  # Change if you used a different username
-        'PASSWORD': '5787',  # Your PostgreSQL password
-        'HOST': '127.0.0.1',  # Use '127.0.0.1' if 'localhost' causes issues
+        'NAME': 'musicwebsite',  # Change to your database name
+        'USER': 'musicwebsite_user',  # Change if you used a different username
+        'PASSWORD': 'odsBTe1CPEozINyD21tCUNhkADUbKeQl',  # Your PostgreSQL password
+        'HOST': 'dpg-cv5vcjan91rc73b98mm0-a.singapore-postgres.render.com',  # Use '127.0.0.1' if 'localhost' causes issues
         'PORT': '5432',  # Default PostgreSQL port
     }
 }
