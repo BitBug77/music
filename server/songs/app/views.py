@@ -861,7 +861,15 @@ class GetSongView(View):
 
         return JsonResponse(song_details, safe=False)
     
-
+@csrf_exempt
+def session(request):
+    """Debug view to check session status"""
+    return JsonResponse({
+        'session_key': request.session.session_key,
+        'user_authenticated': request.user.is_authenticated,
+        'username': request.user.username if request.user.is_authenticated else None,
+        'session_data': dict(request.session)
+    })
 
 
 @api_view(['GET'])

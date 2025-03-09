@@ -3,7 +3,6 @@
 import os
 import sys
 
-
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'songs.settings')
@@ -17,6 +16,6 @@ def main():
         ) from exc
     execute_from_command_line(sys.argv)
 
-
-if _name_ == '_main_':
+# Corrected condition to check for the script being run directly
+if __name__ == '__main__':
     main()
