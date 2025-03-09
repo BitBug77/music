@@ -1,23 +1,37 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
 from django.contrib.auth.models import User
-from rest_framework import serializers
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    spotify_token = models.CharField(max_length=300, null=True, blank=True)
-    refresh_token = models.CharField(max_length=300, null=True, blank=True)
-    spotify_id = models.CharField(max_length=100, null=True, blank=True)
-    preferences = models.JSONField(default=dict)  # Store user preferences as a JSON field
-    history = models.JSONField(default=list)  # Store history of interacted songs as a list of song ids
-
-    def __str__(self):
-        return self.user.username
+    # Basic connection to auth user
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     
 
-from django.db import models
-from django.contrib.auth.models import User
+    
+    # Basic profile information
+    profile_picture = models.ImageField(upload_to='profile_pictures', blank=True, null=True)
+    bio = models.TextField(max_length=500, blank=True)
+    
+    # Join date
+    joined_date = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.user.username
+
+# Signal to create a UserProfile when a User is created
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+# Signal to save UserProfile when User is saved
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    try:
+        instance.profile.save()
+    except UserProfile.DoesNotExist:
+        UserProfile.objects.create(user=instance)
+    
 
 # Song Model
 class Song(models.Model):
@@ -33,23 +47,80 @@ class Song(models.Model):
         return f"{self.name} by {self.artist}"
 
 
+# Action Model
 class Action(models.Model):
     ACTION_CHOICES = [
         ('like', 'Like'),
         ('save', 'Save'),
         ('play', 'Play'),
         ('skip', 'Skip'),
+        ('view', 'View'),  # Track song views
+        ('share', 'Share'),  # Track song shares
+        ('complete', 'Complete'),  # Track complete listens
+        ('search', 'Search'),  # Track search actions
     ]
-    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='song_actions')
+    
+    # Main foreign keys
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='song_actions', blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    
+    # Action metadata
     action_type = models.CharField(choices=ACTION_CHOICES, max_length=10)
     timestamp = models.DateTimeField(auto_now_add=True)
+    
+    # Search-specific fields
+    search_query = models.CharField(max_length=255, blank=True, null=True)  # What the user searched for
+    search_type = models.CharField(max_length=20, blank=True, null=True)  # 'song', 'artist', 'album', 'general'
+    
+    # Context and engagement metrics
+    context = models.CharField(max_length=50, blank=True, null=True)  # e.g., 'recommended', 'search', 'playlist'
+    duration = models.PositiveIntegerField(blank=True, null=True)  # Time spent (for plays, views)
+    
     class Meta:
-        unique_together = ('user', 'song', 'action_type')  # Prevent duplicates
+        # Remove unique_together constraint for search actions (since they may not have a song)
+        constraints = [
+            # Only enforce uniqueness when it's not a search action
+            models.UniqueConstraint(
+                fields=['user', 'song', 'action_type'],
+                condition=~models.Q(action_type='search'),
+                name='unique_non_search_action'
+            )
+        ]
         indexes = [
-            models.Index(fields=['user', 'song', 'action_type']),  # Index for faster queries on these fields
+            models.Index(fields=['user', 'song', 'action_type']),
+            models.Index(fields=['user', 'action_type']),
+            models.Index(fields=['song', 'action_type']),
+            models.Index(fields=['timestamp']),
+            models.Index(fields=['search_query']),  # For analyzing popular searches
+            models.Index(fields=['search_type']),   # For analyzing search patterns
         ]
 
+# Add this to your models.py
+class Playlist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.title} by {self.user.username}"
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+        ]
+
+class PlaylistSong(models.Model):
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE, related_name='playlist_songs')
+    song = models.ForeignKey(Song, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('playlist', 'song')
+        indexes = [
+            models.Index(fields=['playlist']),
+            models.Index(fields=['song']),
+        ]
 # Recommendation Model
 class Recommendation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -60,6 +131,8 @@ class Recommendation(models.Model):
     def __str__(self):
         return f"Recommended {self.song.name} to {self.user.username}"
 
+
+# User Similarity Model
 class UserSimilarity(models.Model):
     user1 = models.ForeignKey(User, related_name='similarities_user1', on_delete=models.CASCADE)
     user2 = models.ForeignKey(User, related_name='similarities_user2', on_delete=models.CASCADE)
@@ -69,6 +142,7 @@ class UserSimilarity(models.Model):
         return f"Similarity between {self.user1.username} and {self.user2.username}"
 
 
+# Friend Request Model
 class FriendRequest(models.Model):
     STATUS_CHOICES = [
         ("pending", "Pending"),
@@ -85,6 +159,7 @@ class FriendRequest(models.Model):
         return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
 
 
+# Esewa Payment Model
 class EsewaPayment(models.Model):
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
@@ -99,5 +174,3 @@ class EsewaPayment(models.Model):
 
     def __str__(self):
         return f"{self.reference_id} - {self.status}"
-
-

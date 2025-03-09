@@ -8,7 +8,7 @@ import requests
 import base64
 import jwt
 import json
-from .models import UserProfile, Action, Song, Recommendation, UserSimilarity
+from .models import UserProfile, Action, Song, Recommendation, UserSimilarity, Playlist, PlaylistSong
 from django.views.decorators.csrf import csrf_exempt
 import math
 from collections import defaultdict
@@ -28,10 +28,12 @@ from django.db import connection
 from django.shortcuts import get_object_or_404
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-from .serializer import SavedSongSerializer
-
+from .serializer import SavedSongSerializer , LikedSongSerializer, PlaylistSerializer, PlaylistSongSerializer
+from django.db.models import Q
 from .models import EsewaPayment
-
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import time
 def check_db(request):
     db_name = connection.settings_dict["NAME"]
     return JsonResponse({"database_name": db_name})
@@ -325,18 +327,34 @@ def get_songs_by_popularity(request):
     return JsonResponse({"status": "success", "songs": song_list})
 
 
-
-@csrf_exempt
+@api_view(['POST'])
 def logout_view(request):
     """Handles user logout"""
-    if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return JsonResponse({'status': 'error', 'message': 'User not authenticated'}, status=401)
 
-        logout(request)
-        return JsonResponse({'status': 'success', 'message': 'Logged out successfully', 'redirect_url': '/login'}, status=200)
+    # Ensure the request is not empty and contains valid JSON
+    try:
+        if not request.body:
+            return JsonResponse({'status': 'error', 'message': 'Empty request body'}, status=400)
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
 
-    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+    # Check if the user is authenticated
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'User not authenticated'}, status=401)
+
+    # Blacklist the refresh token if provided (for JWT authentication)
+    refresh_token = data.get("refresh_token")
+    if refresh_token:
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()  # Blacklist the token (requires `rest_framework_simplejwt.token_blacklist` in settings)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': 'Invalid refresh token'}, status=400)
+
+    # Perform logout
+    logout(request)
+    return JsonResponse({'status': 'success', 'message': 'Logged out successfully'}, status=200)
 
 @api_view(['POST'])
 
@@ -369,61 +387,145 @@ def recommend_friends(request):
 
 
 @api_view(['POST'])
-
 @permission_classes([IsAuthenticated])
-def send_friend_request(request, user_id):
-    """Send a friend request to another user"""
-
-    if request.method != "POST":
-        return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
-
+def send_friend_request(request):
+    """Send a friend request to another user using username or user_id in request body"""
+    
+    # Get user identifier from request body
+    user_id = request.data.get('user_id')
+    username = request.data.get('username')
+    
+    if not user_id and not username:
+        return JsonResponse({"status": "error", "message": "Either user_id or username is required"}, status=400)
+    
     sender = request.user  # Logged-in user
+    
     try:
-        receiver = User.objects.get(id=user_id)
+        # Find the receiver by either ID or username
+        if user_id:
+            receiver = User.objects.get(id=user_id)
+        else:
+            receiver = User.objects.get(username=username)
+            
     except User.DoesNotExist:
         return JsonResponse({"status": "error", "message": "User not found"}, status=404)
-
+    
     if sender == receiver:
         return JsonResponse({"status": "error", "message": "You cannot send a friend request to yourself"}, status=400)
-
+    
     # Check if a request already exists
-    existing_request = FriendRequest.objects.filter(sender=sender, receiver=receiver, status="pending").exists()
+    existing_request = FriendRequest.objects.filter(
+        sender=sender, 
+        receiver=receiver,
+        status="pending"
+    ).exists()
+    
     if existing_request:
         return JsonResponse({"status": "error", "message": "Friend request already sent"}, status=400)
-
+    
+    # Check if already friends
+    already_friends = FriendRequest.objects.filter(
+        sender=sender, 
+        receiver=receiver,
+        status="accepted"
+    ).exists() or FriendRequest.objects.filter(
+        sender=receiver, 
+        receiver=sender,
+        status="accepted"
+    ).exists()
+    
+    if already_friends:
+        return JsonResponse({"status": "error", "message": "You are already friends with this user"}, status=400)
+    
     FriendRequest.objects.create(sender=sender, receiver=receiver)
-
-    return JsonResponse({"status": "success", "message": "Friend request sent successfully"})
+    
+    return JsonResponse({
+        "status": "success", 
+        "message": "Friend request sent successfully",
+        "request_details": {
+            "receiver": {
+                "id": receiver.id,
+                "username": receiver.username
+            }
+        }
+    })
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def respond_to_friend_request(request, request_id, action):  # Changed 'response' to 'action'
+def respond_to_friend_request(request):
     """Respond to a friend request (accept or reject)"""
+    # Get data from request body instead of URL parameters
+    request_id = request.data.get('request_id')
+    action = request.data.get('action')
+    
+    if not request_id or not action:
+        return JsonResponse({"status": "error", "message": "Missing request_id or action"}, status=400)
     
     try:
-        friend_request = FriendRequest.objects.get(id=request_id)
+        # Only allow users to respond to requests they've received
+        friend_request = FriendRequest.objects.get(
+            id=request_id,
+            receiver=request.user  # Ensure the logged-in user is the receiver
+        )
         
-        if action == "accept":  # Changed 'response' to 'action'
-            # Logic to accept the request (e.g., create a friendship)
+        if action == "accept":
             friend_request.status = "accepted"
             friend_request.save()
             return JsonResponse({"status": "success", "message": "Friend request accepted"})
-        
-        elif action == "reject":  # Changed 'response' to 'action'
-            # Logic to reject the request
+        elif action == "reject":
             friend_request.status = "rejected"
             friend_request.save()
             return JsonResponse({"status": "success", "message": "Friend request rejected"})
-        
         else:
-            return JsonResponse({"status": "error", "message": "Invalid response"}, status=400)
+            return JsonResponse({"status": "error", "message": "Invalid action. Use 'accept' or 'reject'"}, status=400)
     
     except FriendRequest.DoesNotExist:
-        return JsonResponse({"status": "error", "message": "Friend request not found"}, status=404)
-    
+        return JsonResponse({"status": "error", "message": "Friend request not found or you don't have permission"}, status=404)
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_friend_requests(request):
+    """Get all friend requests for the current user"""
+    # Get received requests
+    received_requests = FriendRequest.objects.filter(receiver=request.user)
+    # Get sent requests
+    sent_requests = FriendRequest.objects.filter(sender=request.user)
+    
+    # Serialize the requests
+    received_data = []
+    for req in received_requests:
+        received_data.append({
+            "id": req.id,
+            "sender": {
+                "id": req.sender.id,
+                "username": req.sender.username,
+                # Add other user fields as needed
+            },
+            "status": req.status,
+            "timestamp": req.timestamp
+        })
+    
+    sent_data = []
+    for req in sent_requests:
+        sent_data.append({
+            "id": req.id,
+            "receiver": {
+                "id": req.receiver.id,
+                "username": req.receiver.username,
+                # Add other user fields as needed
+            },
+            "status": req.status,
+            "timestamp": req.timestamp
+        })
+    
+    return JsonResponse({
+        "status": "success",
+        "received_requests": received_data,
+        "sent_requests": sent_data
+    })
 @api_view(['GET'])
 
 @permission_classes([IsAuthenticated])
@@ -698,17 +800,9 @@ def like_song(request, spotify_track_id):
             url=song_details['url']
         )
 
-    if request.user.is_authenticated:
-        # Track the "save" action
-        Action.objects.create(
-            user=request.user,
-            song=song,
-            action_type='save'
-        )
-        return JsonResponse({'status': 'success', 'message': 'Song saved successfully.'})
-    else:
-        return JsonResponse({'status': 'error', 'message': 'You need to be logged in to save a song.'}, status=400)
-    
+    action, created = Action.objects.get_or_create(user=user, song=song, action_type='like')
+    message = 'Song liked successfully' if created else 'Song was already liked'
+    return JsonResponse({'status': 'success', 'message': message})
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -740,6 +834,10 @@ def save_song(request, spotify_track_id):
 def play_song(request, spotify_track_id):
     """Tracks when a user plays a song, fetching details from Spotify if needed."""
     user = request.user
+    
+    # Get duration listened if provided
+    data = json.loads(request.body) if request.body else {}
+    duration = data.get('duration')  # Duration listened in seconds
 
     song = Song.objects.filter(spotify_id=spotify_track_id).first()
     if not song:
@@ -756,7 +854,13 @@ def play_song(request, spotify_track_id):
             url=song_details['url']
         )
 
-    Action.objects.create(user=user, song=song, action_type='play')
+    Action.objects.create(
+        user=user, 
+        song=song, 
+        action_type='play',
+        duration=duration,
+        context=data.get('context')  # e.g., 'playlist', 'search_results', 'recommendation'
+    )
     return JsonResponse({'status': 'success', 'message': 'Song played successfully'})
 
 @api_view(['POST'])
@@ -782,48 +886,113 @@ def skip_song(request, spotify_track_id):
 
     Action.objects.create(user=user, song=song, action_type='skip')
     return JsonResponse({'status': 'success', 'message': 'Song skipped successfully'})
-@csrf_exempt
-@login_required
-def fetch_song_data(request, track_id):
-    # Initialize the Spotify client
-    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id="your_client_id",
-                                                   client_secret="your_client_secret",
-                                                   redirect_uri="your_redirect_uri",
-                                                   scope=["user-library-read"]))
 
-    try:
-        # Fetch song data by Spotify track ID
-        track = sp.track(track_id)
 
-        # Extract relevant details
-        song_data = {
-            'spotify_id': track['id'],
-            'name': track['name'],
-            'artist': track['artists'][0]['name'],
-            'album': track['album']['name'],
-            'album_image': track['album']['images'][0]['url'],  # First image is usually the highest resolution
-            'release_date': track['album']['release_date'],
-            'url': track['external_urls']['spotify']
-        }
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def view_song(request, spotify_track_id):
+    """Tracks when a user views a song's details, fetching from Spotify if needed."""
+    user = request.user
 
-        # Store this data in your Django model (optional, based on your needs)
-        song = Song.objects.create(**song_data)
+    song = Song.objects.filter(spotify_id=spotify_track_id).first()
+    if not song:
+        song_details = get_spotify_track(spotify_track_id)
+        if not song_details:
+            return JsonResponse({'status': 'error', 'message': 'Unable to fetch song details'}, status=404)
 
-        # Return the song data as a JSON response
-        return JsonResponse({'status': 'success', 'song': song_data}, status=200)
+        song = Song.objects.create(
+            spotify_id=spotify_track_id,
+            name=song_details['name'],
+            artist=song_details['artist'],
+            album=song_details['album'],
+            duration=song_details['duration'],
+            url=song_details['url']
+        )
 
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    Action.objects.create(user=user, song=song, action_type='view')
+    return JsonResponse({'status': 'success', 'message': 'Song view recorded'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def share_song(request, spotify_track_id):
+    """Tracks when a user shares a song, fetching from Spotify if needed."""
+    user = request.user
     
+    # Optionally capture share context (e.g., platform shared to)
+    data = json.loads(request.body) if request.body else {}
+    context = data.get('context', 'general')  # e.g., 'facebook', 'twitter', 'email'
 
+    song = Song.objects.filter(spotify_id=spotify_track_id).first()
+    if not song:
+        song_details = get_spotify_track(spotify_track_id)
+        if not song_details:
+            return JsonResponse({'status': 'error', 'message': 'Unable to fetch song details'}, status=404)
 
+        song = Song.objects.create(
+            spotify_id=spotify_track_id,
+            name=song_details['name'],
+            artist=song_details['artist'],
+            album=song_details['album'],
+            duration=song_details['duration'],
+            url=song_details['url']
+        )
 
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
-    client_id="your_client_id",
-    client_secret="your_client_secret",
-    redirect_uri="http://localhost:8000/callback/",  # Ensure it matches exactly
-    scope=["user-library-read"]
-))
+    Action.objects.create(
+        user=user, 
+        song=song, 
+        action_type='share',
+        context=context
+    )
+    return JsonResponse({'status': 'success', 'message': 'Song share recorded'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def complete_song(request, spotify_track_id):
+    """Tracks when a user listens to a song completely, fetching from Spotify if needed."""
+    user = request.user
+
+    song = Song.objects.filter(spotify_id=spotify_track_id).first()
+    if not song:
+        song_details = get_spotify_track(spotify_track_id)
+        if not song_details:
+            return JsonResponse({'status': 'error', 'message': 'Unable to fetch song details'}, status=404)
+
+        song = Song.objects.create(
+            spotify_id=spotify_track_id,
+            name=song_details['name'],
+            artist=song_details['artist'],
+            album=song_details['album'],
+            duration=song_details['duration'],
+            url=song_details['url']
+        )
+
+    Action.objects.create(user=user, song=song, action_type='complete')
+    return JsonResponse({'status': 'success', 'message': 'Song completion recorded'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def track_search(request):
+    """Tracks user search queries for songs, artists, or albums."""
+    try:
+        data = json.loads(request.body)
+        query = data.get('query', '').strip()
+        search_type = data.get('type', 'general')  # 'song', 'artist', 'album', or 'general'
+        
+        if not query:
+            return JsonResponse({'status': 'error', 'message': 'Empty search query'}, status=400)
+        
+        # Record the search action - note this doesn't have a song associated with it
+        Action.objects.create(
+            user=request.user,
+            action_type='search',
+            search_query=query,
+            search_type=search_type
+        )
+        
+        return JsonResponse({'status': 'success', 'message': 'Search action tracked'})
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
 
 class GetSongView(View):
     def get(self, request, id):
@@ -872,10 +1041,252 @@ def session(request):
     })
 
 
+
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def user_playlists(request):
+    """
+    GET: Retrieve all playlists for the authenticated user.
+    POST: Create a new playlist with a title.
+    """
+    user = request.user
+    
+    if request.method == 'GET':
+        playlists = Playlist.objects.filter(user=user)
+        serializer = PlaylistSerializer(playlists, many=True)
+        return Response({"status": "success", "playlists": serializer.data})
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            title = data.get('title', 'My Playlist')
+            
+            playlist = Playlist.objects.create(
+                user=user,
+                title=title
+            )
+            
+            return Response({
+                "status": "success", 
+                "message": "Playlist created", 
+                "playlist_id": playlist.id
+            })
+            
+        except json.JSONDecodeError:
+            return Response({"status": "error", "message": "Invalid JSON"}, status=400)
+
+
+@api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def playlist_songs(request, playlist_id):
+    """
+    GET: Retrieve songs in a playlist.
+    POST: Add a song to the playlist.
+    DELETE: Remove a song from the playlist.
+    """
+    user = request.user
+    
+    try:
+        playlist = Playlist.objects.get(id=playlist_id, user=user)
+    except Playlist.DoesNotExist:
+        return Response({"status": "error", "message": "Playlist not found"}, status=404)
+    
+    if request.method == 'GET':
+        playlist_songs = PlaylistSong.objects.filter(playlist=playlist).select_related('song')
+        serializer = PlaylistSongSerializer(playlist_songs, many=True)
+        return Response({
+            "status": "success", 
+            "playlist_title": playlist.title,
+            "songs": serializer.data
+        })
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            spotify_track_id = data.get('spotify_track_id')
+            
+            if not spotify_track_id:
+                return Response({"status": "error", "message": "Missing spotify_track_id"}, status=400)
+            
+            # Find or create the song
+            song = Song.objects.filter(spotify_id=spotify_track_id).first()
+            if not song:
+                song_details = get_spotify_track(spotify_track_id)
+                if not song_details:
+                    return Response({'status': 'error', 'message': 'Unable to fetch song details'}, status=404)
+
+                song = Song.objects.create(
+                    spotify_id=spotify_track_id,
+                    name=song_details['name'],
+                    artist=song_details['artist'],
+                    album=song_details['album'],
+                    duration=song_details['duration'],
+                    url=song_details['url']
+                )
+            
+            # Add to playlist if not already there
+            _, created = PlaylistSong.objects.get_or_create(playlist=playlist, song=song)
+            
+            # Create a "save" action for tracking metrics
+            Action.objects.get_or_create(
+                user=user, 
+                song=song, 
+                action_type='save',
+                defaults={'context': f'playlist:{playlist.id}'}
+            )
+            
+            return Response({
+                "status": "success", 
+                "message": "Song added to playlist" if created else "Song already in playlist"
+            })
+            
+        except json.JSONDecodeError:
+            return Response({"status": "error", "message": "Invalid JSON"}, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+            spotify_track_id = data.get('spotify_track_id')
+            
+            if not spotify_track_id:
+                return Response({"status": "error", "message": "Missing spotify_track_id"}, status=400)
+            
+            try:
+                song = Song.objects.get(spotify_id=spotify_track_id)
+                playlist_song = PlaylistSong.objects.get(playlist=playlist, song=song)
+                playlist_song.delete()
+                return Response({"status": "success", "message": "Song removed from playlist"})
+            except (Song.DoesNotExist, PlaylistSong.DoesNotExist):
+                return Response({"status": "error", "message": "Song not found in playlist"}, status=404)
+                
+        except json.JSONDecodeError:
+            return Response({"status": "error", "message": "Invalid JSON"}, status=400)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_saved_playlist(request):
-    """Retrieve the playlist of saved songs for the authenticated user."""
-    saved_songs = Action.objects.filter(user=request.user, action_type="save").select_related("song")
-    serializer = SavedSongSerializer(saved_songs, many=True)
+def get_liked_songs(request):
+    """Retrieve the playlist of liked songs for the authenticated user."""
+    liked_songs = Action.objects.filter(user=request.user, action_type="like").select_related("song")
+    serializer = LikedSongSerializer(liked_songs, many=True)  # Use the LikedSongSerializer for liked songs
     return Response({"status": "success", "playlist": serializer.data})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_friends(request):
+    """List all the friends of the logged-in user."""
+    user = request.user  # Get the logged-in user
+
+    # Find accepted friend requests where the user is either the sender or receiver
+    friends = FriendRequest.objects.filter(
+        (Q(sender=user) & Q(status='accepted')) | (Q(receiver=user) & Q(status='accepted'))
+    )
+
+    # Get the list of friends by checking both sender and receiver
+    friend_users = []
+    for friend in friends:
+        if friend.sender == user:
+            friend_users.append(friend.receiver)
+        else:
+            friend_users.append(friend.sender)
+
+    # Return the list of friends' usernames
+    friend_usernames = [friend.username for friend in friend_users]
+
+    return JsonResponse({'status': 'success', 'friends': friend_usernames})
+
+
+@api_view(['POST', 'GET'])
+@permission_classes([IsAuthenticated])
+def update_profile(request):
+    """
+    GET: Retrieve user profile information
+    POST: Update user profile information (excluding profile picture)
+    """
+    # Get or create the user profile
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'GET':
+        # Return the current profile data
+        profile_data = {
+            'username': request.user.username,
+            'email': request.user.email,
+            'bio': profile.bio or '',
+            'spotify_id': profile.spotify_id or '',
+            'spotify_token': profile.spotify_token or '',
+            'refresh_token': profile.refresh_token or '',
+            'profile_picture': request.build_absolute_uri(profile.profile_picture.url) if profile.profile_picture else None,
+            'joined_date': profile.joined_date.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        return JsonResponse({'status': 'success', 'profile': profile_data})
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
+        
+        # Update bio if provided
+        if 'bio' in data:
+            profile.bio = data.get('bio', '').strip()
+        
+        # Update Spotify integration fields if provided
+        if 'spotify_token' in data:
+            profile.spotify_token = data.get('spotify_token')
+        if 'refresh_token' in data:
+            profile.refresh_token = data.get('refresh_token')
+        if 'spotify_id' in data:
+            profile.spotify_id = data.get('spotify_id')
+        
+        # Save changes
+        profile.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Profile updated successfully'
+        })
+
+# New dedicated endpoint for profile picture upload
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_profile_picture(request):
+    """Handle profile picture uploads"""
+    if 'picture' not in request.FILES:
+        return JsonResponse({'status': 'error', 'message': 'No image provided'}, status=400)
+    
+    # Get or create the user profile
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    # Handle the uploaded file
+    image = request.FILES['picture']
+    
+    # Validate file type
+    allowed_types = ['image/jpeg', 'image/png', 'image/gif']
+    if image.content_type not in allowed_types:
+        return JsonResponse({'status': 'error', 'message': 'Invalid file type. Only JPEG, PNG and GIF are allowed.'}, status=400)
+    
+    # Validate file size (e.g., limit to 5MB)
+    if image.size > 5 * 1024 * 1024:
+        return JsonResponse({'status': 'error', 'message': 'Image too large. Maximum size is 5MB.'}, status=400)
+    
+    # Remove old profile picture if exists
+    if profile.profile_picture:
+        try:
+            old_path = profile.profile_picture.path
+            if default_storage.exists(old_path):
+                default_storage.delete(old_path)
+        except Exception:
+            # Just log error if old file couldn't be deleted
+            pass
+    
+    # Generate a unique filename
+    filename = f"profile_{request.user.id}_{int(time.time())}.{image.name.split('.')[-1]}"
+    
+    # Save the new profile picture
+    profile.profile_picture.save(filename, image)
+    
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Profile picture updated successfully',
+        'picture_url': request.build_absolute_uri(profile.profile_picture.url)
+    })
