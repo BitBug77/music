@@ -6,6 +6,9 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 ) 
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 app_name = 'app'
 
 urlpatterns = [
@@ -46,3 +49,6 @@ urlpatterns = [
      path('profile/', views.update_profile, name='update_profile'),
      path('profile-picture/', views.update_profile_picture, name='update_profile_picture'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

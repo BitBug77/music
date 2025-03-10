@@ -34,6 +34,7 @@ from .models import EsewaPayment
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import time
+import os
 def check_db(request):
     db_name = connection.settings_dict["NAME"]
     return JsonResponse({"database_name": db_name})
@@ -1269,6 +1270,12 @@ def update_profile_picture(request):
     if image.size > 5 * 1024 * 1024:
         return JsonResponse({'status': 'error', 'message': 'Image too large. Maximum size is 5MB.'}, status=400)
     
+    # Define the upload folder path
+    upload_folder = 'profile_pictures'
+    
+    # Create the folder if it doesn't exist
+    os.makedirs(os.path.join(settings.MEDIA_ROOT, upload_folder), exist_ok=True)
+    
     # Remove old profile picture if exists
     if profile.profile_picture:
         try:
@@ -1280,10 +1287,13 @@ def update_profile_picture(request):
             pass
     
     # Generate a unique filename
-    filename = f"profile_{request.user.id}_{int(time.time())}.{image.name.split('.')[-1]}"
+    filename = f"{request.user.username}_{int(time.time())}.{image.name.split('.')[-1]}"
+    
+    # Set the full path including the folder
+    file_path = os.path.join(upload_folder, filename)
     
     # Save the new profile picture
-    profile.profile_picture.save(filename, image)
+    profile.profile_picture.save(file_path, image, save=True)
     
     return JsonResponse({
         'status': 'success',

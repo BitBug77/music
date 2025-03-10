@@ -198,3 +198,7 @@ CORS_ALLOW_CREDENTIALS = True
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Ensure this line is present
 ]
+
+# In settings.py
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
