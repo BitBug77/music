@@ -3,7 +3,7 @@ from django.db import models
 # Create your models here.
 from django.db import models
 from django.contrib.auth.models import User
-
+from rest_framework import serializers
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     spotify_token = models.CharField(max_length=300, null=True, blank=True)
@@ -100,3 +100,14 @@ class EsewaPayment(models.Model):
     def __str__(self):
         return f"{self.reference_id} - {self.status}"
 
+
+class SavedSongSerializer(serializers.ModelSerializer):
+    song_name = serializers.CharField(source='song.name')
+    artist = serializers.CharField(source='song.artist')
+    album = serializers.CharField(source='song.album')
+    duration = serializers.IntegerField(source='song.duration')
+    url = serializers.URLField(source='song.url')
+
+    class Meta:
+        model = Action
+        fields = ['id', 'song_name', 'artist', 'album', 'duration', 'url', 'timestamp']
