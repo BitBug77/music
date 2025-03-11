@@ -1213,9 +1213,6 @@ def update_profile(request):
             'username': request.user.username,
             'email': request.user.email,
             'bio': profile.bio or '',
-            'spotify_id': profile.spotify_id or '',
-            'spotify_token': profile.spotify_token or '',
-            'refresh_token': profile.refresh_token or '',
             'profile_picture': request.build_absolute_uri(profile.profile_picture.url) if profile.profile_picture else None,
             'joined_date': profile.joined_date.strftime("%Y-%m-%d %H:%M:%S")
         }
