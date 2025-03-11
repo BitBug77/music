@@ -332,30 +332,14 @@ def get_songs_by_popularity(request):
 def logout_view(request):
     """Handles user logout"""
 
-    # Ensure the request is not empty and contains valid JSON
-    try:
-        if not request.body:
-            return JsonResponse({'status': 'error', 'message': 'Empty request body'}, status=400)
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
-
     # Check if the user is authenticated
     if not request.user.is_authenticated:
         return JsonResponse({'status': 'error', 'message': 'User not authenticated'}, status=401)
 
-    # Blacklist the refresh token if provided (for JWT authentication)
-    refresh_token = data.get("refresh_token")
-    if refresh_token:
-        try:
-            token = RefreshToken(refresh_token)
-            token.blacklist()  # Blacklist the token (requires `rest_framework_simplejwt.token_blacklist` in settings)
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': 'Invalid refresh token'}, status=400)
-
     # Perform logout
     logout(request)
     return JsonResponse({'status': 'success', 'message': 'Logged out successfully'}, status=200)
+
 
 @api_view(['POST'])
 
@@ -457,8 +441,9 @@ def send_friend_request(request):
 def respond_to_friend_request(request):
     """Respond to a friend request (accept or reject)"""
     # Get data from request body instead of URL parameters
-    request_id = request.data.get('request_id')
+    request_id = request.data.get('requestId')
     action = request.data.get('action')
+    print(request.data)
     
     if not request_id or not action:
         return JsonResponse({"status": "error", "message": "Missing request_id or action"}, status=400)
@@ -474,7 +459,7 @@ def respond_to_friend_request(request):
             friend_request.status = "accepted"
             friend_request.save()
             return JsonResponse({"status": "success", "message": "Friend request accepted"})
-        elif action == "reject":
+        elif action == "decline":
             friend_request.status = "rejected"
             friend_request.save()
             return JsonResponse({"status": "success", "message": "Friend request rejected"})

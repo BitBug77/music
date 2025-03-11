@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { UserCircle, Search, LogOut, User, ChevronDown, AlertTriangle } from 'lucide-react';
+import { getAccessToken, isAuthenticated, clearTokens, getAuthHeader, refreshToken, withTokenRefresh } from '../../lib/jwt-utils';
 
 // Define TypeScript interfaces for our data structures
 interface Song {
@@ -47,28 +48,27 @@ const Navbar: React.FC = () => {
   // Get user profile information
   const fetchUserProfile = async () => {
     try {
-      const accessToken = localStorage.getItem('access_token');
-      
-      if (!accessToken) {
-        setTokenError(true);
-        return;
-      }
-      
-      const response = await fetch('http://127.0.0.1:8000/user-profile/', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
+      await withTokenRefresh(async () => {
+        const accessToken = getAccessToken();
+        
+        if (!accessToken) {
+          setTokenError(true);
+          return;
+        }
+        
+        const response = await fetch('http://127.0.0.1:8000/user-profile/', {
+          method: 'GET',
+          headers: getAuthHeader(),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch user profile');
+        }
+        
+        const profileData = await response.json();
+        setUserProfile(profileData);
+        setTokenError(false);
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch user profile');
-      }
-      
-      const profileData = await response.json();
-      setUserProfile(profileData);
-      setTokenError(false);
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }
@@ -77,38 +77,36 @@ const Navbar: React.FC = () => {
   // Handle logout
   const handleLogout = async () => {
     try {
-      const accessToken = localStorage.getItem('access_token');
-      console.log('Access Token:', accessToken);
-      
-      if (!accessToken) {
-        setTokenError(true);
-        return;
-      }
-      
-      const response = await fetch('http://127.0.0.1:8000/logout/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
+      await withTokenRefresh(async () => {
+        const accessToken = getAccessToken();
+        console.log('Access Token:', accessToken);
+        
+        if (!accessToken) {
+          setTokenError(true);
+          return;
+        }
+        
+        const response = await fetch('http://127.0.0.1:8000/logout/', {
+          method: 'POST',
+          headers: getAuthHeader(),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Logout failed');
+        }
+        
+        // Clear local storage
+        clearTokens();
+        
+        // Reset user profile state
+        setUserProfile(null);
+        
+        // Close dropdown
+        setShowProfileDropdown(false);
+        
+        // Redirect to login page
+        router.push('/login');
       });
-      
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
-      
-      // Clear local storage
-      localStorage.removeItem('access_token');
-      
-      // Reset user profile state
-      setUserProfile(null);
-      
-      // Close dropdown
-      setShowProfileDropdown(false);
-      
-      // Redirect to login page
-      router.push('/login');
-      
     } catch (error) {
       console.error('Error during logout:', error);
     }
@@ -141,32 +139,23 @@ const Navbar: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // Retrieve the access token from localStorage
-      const accessToken = localStorage.getItem('access_token');
+      await withTokenRefresh(async () => {
+        // Make the GET request to search songs
+        const response = await fetch(`http://127.0.0.1:8000/search-songs/?q=${encodeURIComponent(searchQuery)}`, {
+          method: 'GET',
+          headers: getAuthHeader(),
+        });
 
-      if (!accessToken) {
-        setTokenError(true);
-        throw new Error('Access token is missing. Please log in again.');
-      }
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
 
-      // Make the GET request to search songs
-      const response = await fetch(`http://127.0.0.1:8000/search-songs/?q=${encodeURIComponent(searchQuery)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,  // Add the access token here
-        },
+        const data: { songs: Song[] } = await response.json();
+        const songs: Song[] = data.songs;
+
+        setSearchResults(songs.slice(0, 10)); // Limit to 10 suggestions for better UX
+        setShowSuggestions(true);
       });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data: { songs: Song[] } = await response.json();
-      const songs: Song[] = data.songs;
-
-      setSearchResults(songs.slice(0, 10)); // Limit to 10 suggestions for better UX
-      setShowSuggestions(true);
     } catch (error) {
       console.error('Error during fetch:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
@@ -241,7 +230,7 @@ const Navbar: React.FC = () => {
     }
     
     // Check if user is logged in and fetch profile data
-    const accessToken = localStorage.getItem('access_token');
+    const accessToken = getAccessToken();
     if (!accessToken) {
       setTokenError(true);
     } else {
