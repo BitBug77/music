@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+print("Using settings file:", __file__)
 
 from pathlib import Path
 
@@ -102,7 +103,7 @@ WSGI_APPLICATION = 'songs.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+       'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'musicwebsite',  # Change to your database name
         'USER': 'musicwebsite_user',  # Change if you used a different username
         'PASSWORD': 'odsBTe1CPEozINyD21tCUNhkADUbKeQl',  # Your PostgreSQL password
@@ -111,6 +112,8 @@ DATABASES = {
     }
 }
 
+
+print("Database settings:", DATABASES)
 
 
 # Password validation
