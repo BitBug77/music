@@ -762,27 +762,41 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .models import Song, Action
 
+import requests
+
+import requests
+
 def get_spotify_track(spotify_track_id):
-    """Fetches track details from Spotify API using track ID."""
+    """Fetches track details from Spotify API using track ID, including album cover."""
+    import requests
+    
     access_token = get_spotify_token()
     if not access_token:
-        return None  # Handle API failure gracefully
-
+        return None  # Return None instead of JsonResponse
+    
     url = f"https://api.spotify.com/v1/tracks/{spotify_track_id}"
     headers = {"Authorization": f"Bearer {access_token}"}
     response = requests.get(url, headers=headers)
-
+    
     if response.status_code == 200:
         track_data = response.json()
-        return {
+        
+        # Get album cover (Spotify usually provides multiple sizes, selecting the largest one)
+        album_cover_url = track_data['album']['images'][0]['url'] if track_data['album']['images'] else None
+        
+        data = {
             "name": track_data['name'],
             "artist": ", ".join(artist['name'] for artist in track_data['artists']),
             "album": track_data['album']['name'],
-            "duration": track_data['duration_ms'] // 1000,  # Convert to seconds
-            "url": track_data['external_urls']['spotify']
+            "duration": track_data['duration_ms'] // 1000,  # Convert ms to seconds
+            "url": track_data['external_urls']['spotify'],
+            "album_cover": album_cover_url  # Add album cover
         }
+        
+        return data  # Return the dictionary directly
     
-    return None  # Return None if track not found
+    return None  # Return None instead of JsonResponse on error
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def like_song(request, spotify_track_id):
@@ -1067,11 +1081,21 @@ def playlist_songs(request, playlist_id):
     
     if request.method == 'GET':
         playlist_songs = PlaylistSong.objects.filter(playlist=playlist).select_related('song')
-        serializer = PlaylistSongSerializer(playlist_songs, many=True)
+        
+        # Serialize data with album cover
+        songs_data = [{
+            "id": ps.song.id,
+            "spotify_id": ps.song.spotify_id,
+            "name": ps.song.name,
+            "artist": ps.song.artist,
+            "album": ps.song.album,
+            "album_cover": ps.song.album_cover  # Include album cover URL
+        } for ps in playlist_songs]
+        
         return Response({
             "status": "success", 
             "playlist_title": playlist.title,
-            "songs": serializer.data
+            "songs": songs_data
         })
     
     elif request.method == 'POST':
@@ -1085,53 +1109,36 @@ def playlist_songs(request, playlist_id):
             # Find or create the song
             song = Song.objects.filter(spotify_id=spotify_track_id).first()
             if not song:
-                song_details = get_spotify_track(spotify_track_id)
+                song_details = get_spotify_track(spotify_track_id)  # Fetch details from Spotify API
                 if not song_details:
                     return Response({'status': 'error', 'message': 'Unable to fetch song details'}, status=404)
                 
+                # Save song with album cover
                 song = Song.objects.create(
                     spotify_id=spotify_track_id,
                     name=song_details['name'],
                     artist=song_details['artist'],
                     album=song_details['album'],
                     duration=song_details['duration'],
-                    url=song_details['url']
+                    url=song_details['url'],
+                    album_cover=song_details['album_cover']  # Store album cover URL
                 )
             
             # Add to playlist if not already there
             _, created = PlaylistSong.objects.get_or_create(playlist=playlist, song=song)
             
-            # Create a "save" action for tracking metrics
-            Action.objects.get_or_create(
-                user=user, 
-                song=song, 
-                action_type='save',
-                defaults={'context': f'playlist:{playlist.id}'}
-            )
-            
             return Response({
                 "status": "success", 
-                "message": "Song added to playlist" if created else "Song already in playlist"
+                "message": "Song added to playlist" if created else "Song already in playlist",
+                "song": {
+                    "id": song.id,
+                    "spotify_id": song.spotify_id,
+                    "name": song.name,
+                    "artist": song.artist,
+                    "album": song.album,
+                    "album_cover": song.album_cover  # Ensure album cover is returned
+                }
             })
-            
-        except json.JSONDecodeError:
-            return Response({"status": "error", "message": "Invalid JSON"}, status=400)
-    
-    elif request.method == 'DELETE':
-        try:
-            data = json.loads(request.body)
-            spotify_track_id = data.get('spotify_track_id')
-            
-            if not spotify_track_id:
-                return Response({"status": "error", "message": "Missing spotify_track_id"}, status=400)
-            
-            try:
-                song = Song.objects.get(spotify_id=spotify_track_id)
-                playlist_song = PlaylistSong.objects.get(playlist=playlist, song=song)
-                playlist_song.delete()
-                return Response({"status": "success", "message": "Song removed from playlist"})
-            except (Song.DoesNotExist, PlaylistSong.DoesNotExist):
-                return Response({"status": "error", "message": "Song not found in playlist"}, status=404)
             
         except json.JSONDecodeError:
             return Response({"status": "error", "message": "Invalid JSON"}, status=400)
