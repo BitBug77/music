@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
-import { UserPlus, Check, X, Music, MessageCircle, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import Sidebar from "../../components/ui/sidebar"
 import Navbar from "../../components/ui/navbar"
 import { getAuthHeader, isAuthenticated } from "../../lib/jwt-utils" // Import JWT utilities
@@ -126,32 +126,32 @@ export default function FindPeoplePage() {
 
       const data = await response.json()
       console.log("Friends data:", data)
-      
+
       // Check if data has the expected structure
       if (data && data.status === "success" && Array.isArray(data.friends)) {
         // Transform the string usernames into friend objects with required properties
-        const transformedFriends = data.friends.map((username:any, index:any) => ({
-          id: index + 1000, // Generate a temporary id 
+        const transformedFriends = data.friends.map((username: any, index: any) => ({
+          id: index + 1000, // Generate a temporary id
           username: username,
-          avatar: "/api/placeholder/64/64", 
+          avatar: "/api/placeholder/64/64",
           matchPercentage: Math.floor(Math.random() * 20) + 80, // Random match between 80-99%
-        }));
-        
+        }))
+
         setFriends(transformedFriends)
       } else if (Array.isArray(data)) {
         // Handle case where direct array is returned
         const transformedFriends = data.map((item, index) => {
-          if (typeof item === 'string') {
+          if (typeof item === "string") {
             return {
               id: index + 1000,
               username: item,
               avatar: "/api/placeholder/64/64",
               matchPercentage: Math.floor(Math.random() * 20) + 80,
-            };
+            }
           }
-          return item; // If already an object, return as is
-        });
-        
+          return item // If already an object, return as is
+        })
+
         setFriends(transformedFriends)
       } else {
         console.warn("Unexpected friends data format:", data)
@@ -171,38 +171,36 @@ export default function FindPeoplePage() {
       // Include auth headers in request
       const response = await fetch("http://127.0.0.1:8000/friend-requests/", {
         headers: getAuthHeader(),
-      });
-  
-      if (!response.ok) throw new Error("Failed to fetch friend requests");
-  
-      const data = await response.json();
-      console.log("Friend requests data:", data);
-  
-      let filteredRequests = [];
-  
+      })
+
+      if (!response.ok) throw new Error("Failed to fetch friend requests")
+
+      const data = await response.json()
+      console.log("Friend requests data:", data)
+
+      let filteredRequests = []
+
       // Check if the response contains the expected structure
       if (data && data.status === "success" && Array.isArray(data.received_requests)) {
-        console.log("Individual friend requests:", data.received_requests);
+        console.log("Individual friend requests:", data.received_requests)
         // Filter out accepted, rejected, or declined requests - only keep 'pending' ones
-        filteredRequests = data.received_requests.filter((req:any) => 
-          req.status === "pending" || req.status === "sent"
-        );
+        filteredRequests = data.received_requests.filter(
+          (req: any) => req.status === "pending" || req.status === "sent",
+        )
       } else if (Array.isArray(data)) {
-        console.log("Friend requests array:", data);
+        console.log("Friend requests array:", data)
         // Filter out accepted, rejected, or declined requests - only keep 'pending' ones
-        filteredRequests = data.filter((req) => 
-          req.status === "pending" || req.status === "sent"
-        );
+        filteredRequests = data.filter((req) => req.status === "pending" || req.status === "sent")
       } else {
-        console.warn("Unexpected friend requests data format:", data);
+        console.warn("Unexpected friend requests data format:", data)
       }
-  
-      setFriendRequests(filteredRequests);
+
+      setFriendRequests(filteredRequests)
     } catch (error) {
-      console.error("Error fetching friend requests:", error);
-      setFriendRequests([]);
+      console.error("Error fetching friend requests:", error)
+      setFriendRequests([])
     }
-  };
+  }
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -281,7 +279,7 @@ export default function FindPeoplePage() {
       setSearchQuery("")
       setSearchResults([])
     }
-    
+
     // Fetch friends data when the friends tab is selected
     if (activeTab === "friends") {
       fetchFriends()
@@ -375,45 +373,34 @@ export default function FindPeoplePage() {
 
   // Updated user card to handle search results which might have fewer details
   const renderUserCard = (user: User) => (
-    <div key={user.id} className="bg-[#74686e] rounded-md p-4 shadow-md">
-      <div className="flex items-start">
+    <div key={user.id} className="bg-gray-800 rounded-lg p-4 shadow-md">
+      <div className="flex items-center">
         <img
           src={user.avatar || "/placeholder.svg"}
           alt={`${user.name}'s avatar`}
-          className="w-16 h-16 rounded-full mr-4"
+          className="w-12 h-12 rounded-full mr-3"
         />
         <div className="flex-1">
-          <div className="flex justify-between items-start">
-            <h3 className="font-semibold text-white text-lg">{user.name}</h3>
-            {user.matchPercentage && (
-              <span className="bg-pink-500 text-white px-2 py-1 rounded-full text-xs">
-                {user.matchPercentage}% Match
-              </span>
-            )}
+          <h3 className="font-semibold text-white">{user.name}</h3>
+          <div className="flex items-center text-gray-400 text-xs mt-1">
+            <span className="mr-2">{Math.floor(Math.random() * 3) + 1} mutual friends</span>
           </div>
-          <div className="mt-2 text-white/80 text-sm">
-            {user.topSong && (
-              <p className="flex items-center">
-                <Music size={14} className="mr-1" /> Top song: {user.topSong}
-              </p>
-            )}
-            {user.commonArtists && user.commonArtists.length > 0 && (
-              <p className="mt-1">Common artists: {user.commonArtists.join(", ")}</p>
-            )}
+          <div className="text-gray-400 text-xs flex items-center">
+            <span className="mr-1">Favorite Genre:</span>
+            <span>{["Pop", "Rock", "Hip-Hop", "Lo-Fi", "Jazz"][Math.floor(Math.random() * 5)]}</span>
           </div>
-          <div className="mt-3 flex justify-end">
-            {user.status === "none" ? (
-              <button
-                onClick={() => handleSendRequest(user.id)}
-                className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition duration-200"
-              >
-                <UserPlus size={16} className="mr-1" />
-                Send Request
-              </button>
-            ) : user.status === "pending" ? (
-              <span className="text-white/70 text-sm italic">Request Sent</span>
-            ) : null}
-          </div>
+        </div>
+        <div className="ml-2">
+          {user.status === "none" ? (
+            <button
+              onClick={() => handleSendRequest(user.id)}
+              className="bg-[#3b82f6] hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+            >
+              Add Friend
+            </button>
+          ) : user.status === "pending" ? (
+            <span className="text-gray-400 text-xs">Request Sent</span>
+          ) : null}
         </div>
       </div>
     </div>
@@ -421,37 +408,36 @@ export default function FindPeoplePage() {
 
   // Simplified user card for search results with minimal data
   const renderSearchUserCard = (user: User) => (
-    <div key={user.id} className="bg-[#74686e] rounded-md p-4 shadow-md">
-      <div className="flex items-start">
+    <div key={user.id} className="bg-gray-800 rounded-lg p-4 shadow-md">
+      <div className="flex items-center">
         <img
           src={user.avatar || "/placeholder.svg"}
           alt={`${user.name}'s avatar`}
-          className="w-16 h-16 rounded-full mr-4"
+          className="w-12 h-12 rounded-full mr-3"
         />
         <div className="flex-1">
-          <div className="flex justify-between items-start">
-            <h3 className="font-semibold text-white text-lg">{user.name}</h3>
-            {user.matchPercentage && (
-              <span className="bg-pink-500 text-white px-2 py-1 rounded-full text-xs">
-                {user.matchPercentage}% Match
-              </span>
-            )}
+          <h3 className="font-semibold text-white">{user.name}</h3>
+          <div className="flex items-center text-gray-400 text-xs mt-1">
+            <span className="mr-2">{Math.floor(Math.random() * 3) + 1} mutual friends</span>
           </div>
-          <div className="mt-3 flex justify-end">
-            {user.status === "none" ? (
-              <button
-                onClick={() => handleSendRequest(user.id)}
-                className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition duration-200"
-              >
-                <UserPlus size={16} className="mr-1" />
-                Send Request
-              </button>
-            ) : user.status === "pending" ? (
-              <span className="text-white/70 text-sm italic">Request Sent</span>
-            ) : user.status === "friends" ? (
-              <span className="text-green-500 text-sm italic">Already Friends</span>
-            ) : null}
+          <div className="text-gray-400 text-xs flex items-center">
+            <span className="mr-1">Favorite Genre:</span>
+            <span>{["Pop", "Rock", "Hip-Hop", "Lo-Fi", "Jazz"][Math.floor(Math.random() * 5)]}</span>
           </div>
+        </div>
+        <div className="ml-2">
+          {user.status === "none" ? (
+            <button
+              onClick={() => handleSendRequest(user.id)}
+              className="bg-[#3b82f6] hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+            >
+              Add Friend
+            </button>
+          ) : user.status === "pending" ? (
+            <span className="text-gray-400 text-xs">Request Sent</span>
+          ) : user.status === "friends" ? (
+            <span className="text-green-500 text-xs">Already Friends</span>
+          ) : null}
         </div>
       </div>
     </div>
@@ -459,7 +445,7 @@ export default function FindPeoplePage() {
 
   // Friend card for displaying from friends API endpoint
   const renderFriendCard = (friend: Friend) => (
-    <div key={friend.id} className="flex items-center justify-between p-3 bg-[#543c43]/50 rounded-md">
+    <div key={friend.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
       <div className="flex items-center">
         <img
           src={friend.avatar || "/placeholder.svg"}
@@ -468,15 +454,154 @@ export default function FindPeoplePage() {
         />
         <div>
           <h4 className="font-medium text-white">{friend.username}</h4>
-          <p className="text-xs text-white/70">{friend.matchPercentage}% music match</p>
-          {friend.commonArtists && friend.commonArtists.length > 0 && (
-            <p className="text-xs text-white/70">Common: {friend.commonArtists.slice(0, 2).join(", ")}</p>
-          )}
+          <div className="flex items-center text-gray-400 text-xs mt-1">
+            <span className="mr-2">{Math.floor(Math.random() * 3) + 1} mutual friends</span>
+          </div>
+          <div className="text-gray-400 text-xs flex items-center">
+            <span className="mr-1">Favorite Song:</span>
+            <span>Eventually</span>
+          </div>
         </div>
       </div>
-      <button className="bg-blue-500 hover:bg-blue-600 p-2 rounded-full text-white transition duration-200">
-        <MessageCircle size={18} />
-      </button>
+      <button className="bg-[#3b82f6] hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">Message</button>
+    </div>
+  )
+
+  const renderFriendRequestsContent = () => (
+    <div className="bg-gray-800 rounded-lg p-6 shadow-md">
+      <h3 className="text-xl font-semibold text-[#3b82f6] mb-4">Friend Requests</h3>
+      <p className="text-gray-400 mb-4">Connect with users who share your music taste</p>
+
+      {friendRequests.length === 0 ? (
+        <p className="text-gray-400 text-center py-4">No pending friend requests</p>
+      ) : (
+        <div className="space-y-4">
+          {friendRequests.map((request) => (
+            <div key={request.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+              <div className="flex items-center">
+                <img src="/placeholder.svg" alt={`User avatar`} className="w-12 h-12 rounded-full mr-3" />
+                <div>
+                  <h4 className="font-medium text-white">
+                    {request.sender ? request.sender.username : "Unknown User"}
+                  </h4>
+                  <p className="text-xs text-gray-400">Request Pending</p>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleAcceptRequest(request.id)}
+                  className="bg-[#3b82f6] hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => handleDeclineRequest(request.id)}
+                  className="bg-transparent hover:bg-gray-700 text-gray-300 px-3 py-1 rounded text-sm border border-gray-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
+  const renderSuggestionsContent = () => (
+    <div className="bg-gray-800 rounded-lg p-6 shadow-md">
+      <h3 className="text-xl font-semibold text-[#3b82f6] mb-4">Suggestions</h3>
+      <p className="text-gray-400 mb-4">People you may know</p>
+
+      {isLoading
+        ? Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="bg-gray-700 animate-pulse rounded-lg p-6 h-16 mb-4"></div>
+          ))
+        : similarUsers
+            .slice(0, 3)
+            .filter((user) => user.status !== "friends")
+            .map((user) => (
+              <div key={user.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg mb-4">
+                <div className="flex items-center">
+                  <img
+                    src={user.avatar || "/placeholder.svg"}
+                    alt={`${user.name}'s avatar`}
+                    className="w-12 h-12 rounded-full mr-3"
+                  />
+                  <div>
+                    <h4 className="font-medium text-white">{user.name}</h4>
+                    <div className="flex items-center text-gray-400 text-xs mt-1">
+                      <span className="mr-2">{Math.floor(Math.random() * 3) + 1} mutual friends</span>
+                    </div>
+                    <div className="text-gray-400 text-xs flex items-center">
+                      <span className="mr-1">Favorite Genre:</span>
+                      <span>{["Pop", "Rock", "Hip-Hop", "Lo-Fi", "Jazz"][Math.floor(Math.random() * 5)]}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  {user.status === "none" ? (
+                    <button
+                      onClick={() => handleSendRequest(user.id)}
+                      className="bg-[#3b82f6] hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Add Friend
+                    </button>
+                  ) : user.status === "pending" ? (
+                    <span className="text-gray-400 text-xs">Request Sent</span>
+                  ) : null}
+                  <button className="bg-transparent hover:bg-gray-700 text-gray-300 px-3 py-1 rounded text-sm border border-gray-600">
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+    </div>
+  )
+
+  const renderRecentActivityContent = () => (
+    <div className="bg-gray-800 rounded-lg p-6 shadow-md mt-6">
+      <h3 className="text-xl font-semibold text-[#3b82f6] mb-4">Recent Activity</h3>
+      <div className="space-y-4">
+        <div className="p-3 bg-gray-700 rounded-lg">
+          <p className="text-sm text-white">
+            <span className="font-medium">New users</span> with similar music taste joined recently
+          </p>
+          <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
+        </div>
+        <div className="p-3 bg-gray-700 rounded-lg">
+          <p className="text-sm text-white">
+            <span className="font-medium">Music festival</span> recommendations updated
+          </p>
+          <p className="text-xs text-gray-400 mt-1">Yesterday</p>
+        </div>
+        <div className="p-3 bg-gray-700 rounded-lg">
+          <p className="text-sm text-white">
+            <span className="font-medium">New playlist matches</span> are available
+          </p>
+          <p className="text-xs text-gray-400 mt-1">3 days ago</p>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderMusicNewsContent = () => (
+    <div className="bg-gray-800 rounded-lg p-6 shadow-md mt-6">
+      <h3 className="text-xl font-semibold text-[#3b82f6] mb-4">Music News</h3>
+      <div className="space-y-4">
+        <div className="p-3 bg-gray-700 rounded-lg">
+          <p className="text-sm text-white font-medium">Top 10 Albums This Week</p>
+          <p className="text-xs text-gray-400 mt-1">Check out what everyone is listening to</p>
+        </div>
+        <div className="p-3 bg-gray-700 rounded-lg">
+          <p className="text-sm text-white font-medium">Upcoming Concerts Near You</p>
+          <p className="text-xs text-gray-400 mt-1">Find shows from artists you might like</p>
+        </div>
+        <div className="p-3 bg-gray-700 rounded-lg">
+          <p className="text-sm text-white font-medium">New Release Friday</p>
+          <p className="text-xs text-gray-400 mt-1">Fresh tracks from your favorite artists</p>
+        </div>
+      </div>
     </div>
   )
 
@@ -484,12 +609,8 @@ export default function FindPeoplePage() {
     switch (activeTab) {
       case "discover":
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {isLoading
-              ? Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="bg-[#74686e]/20 animate-pulse rounded-md p-6 h-48"></div>
-                ))
-              : similarUsers.filter((user) => user.status !== "friends").map((user) => renderUserCard(user))}
+          <div className="grid grid-cols-1 gap-4">
+            {similarUsers.filter((user) => user.status !== "friends").map((user) => renderUserCard(user))}
           </div>
         )
 
@@ -497,17 +618,15 @@ export default function FindPeoplePage() {
         return (
           <div>
             {isSearching ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4">
                 {Array.from({ length: 2 }).map((_, index) => (
-                  <div key={index} className="bg-[#74686e]/20 animate-pulse rounded-md p-6 h-48"></div>
+                  <div key={index} className="bg-gray-700 animate-pulse rounded-lg p-6 h-16"></div>
                 ))}
               </div>
             ) : searchResults.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {searchResults.map((user) => renderSearchUserCard(user))}
-              </div>
+              <div className="grid grid-cols-1 gap-4">{searchResults.map((user) => renderSearchUserCard(user))}</div>
             ) : searchQuery ? (
-              <div className="bg-[#74686e] rounded-md p-6 text-center">
+              <div className="bg-gray-800 rounded-lg p-6 text-center">
                 <p className="text-white">No users found matching "{searchQuery}"</p>
               </div>
             ) : null}
@@ -515,66 +634,48 @@ export default function FindPeoplePage() {
         )
 
       case "requests":
-        return (
-          <div className="bg-[#74686e] rounded-md p-6 shadow-md">
-            <h3 className="text-xl font-semibold text-white mb-4">Friend Requests</h3>
-
-            {friendRequests.length === 0 ? (
-              <p className="text-white/70 text-center py-4">No pending friend requests</p>
-            ) : (
-              <div className="space-y-4">
-                {friendRequests.map((request) => (
-                  <div key={request.id} className="flex items-center justify-between p-3 bg-[#543c43]/50 rounded-md">
-                    <div className="flex items-center">
-                      <img src="/placeholder.svg" alt={`User avatar`} className="w-12 h-12 rounded-full mr-3" />
-                      <div>
-                        <h4 className="font-medium text-white">
-                          {request.sender ? request.sender.username : "Unknown User"}
-                        </h4>
-                        <p className="text-xs text-white/70">
-                          Sent on{" "}
-                          {request.timestamp ? new Date(request.timestamp).toLocaleDateString() : "Unknown date"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleAcceptRequest(request.id)}
-                        className="bg-green-500 hover:bg-green-600 p-2 rounded-full text-white transition duration-200"
-                      >
-                        <Check size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDeclineRequest(request.id)}
-                        className="bg-red-500 hover:bg-red-600 p-2 rounded-full text-white transition duration-200"
-                      >
-                        <X size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )
+        return renderFriendRequestsContent()
 
       case "friends":
         return (
-          <div className="bg-[#74686e] rounded-md p-6 shadow-md">
-            <h3 className="text-xl font-semibold text-white mb-4">Your Friends</h3>
+          <div className="bg-gray-800 rounded-lg p-6 shadow-md">
+            <h3 className="text-xl font-semibold text-[#3b82f6] mb-4">Your Friends</h3>
 
             {isFriendsLoading ? (
               // Loading state for friends
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, index) => (
-                  <div key={index} className="bg-[#543c43]/30 animate-pulse rounded-md p-6 h-16"></div>
+                  <div key={index} className="bg-gray-700 animate-pulse rounded-lg p-6 h-16"></div>
                 ))}
               </div>
             ) : friends.length === 0 ? (
-              <p className="text-white/70 text-center py-4">You haven't connected with any music friends yet</p>
+              <p className="text-gray-400 text-center py-4">You haven't connected with any music friends yet</p>
             ) : (
               <div className="space-y-4">
-                {friends.map((friend) => renderFriendCard(friend))}
+                {friends.map((friend) => (
+                  <div key={friend.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                    <div className="flex items-center">
+                      <img
+                        src={friend.avatar || "/placeholder.svg"}
+                        alt={`${friend.username}'s avatar`}
+                        className="w-12 h-12 rounded-full mr-3"
+                      />
+                      <div>
+                        <h4 className="font-medium text-white">{friend.username}</h4>
+                        <div className="flex items-center text-gray-400 text-xs mt-1">
+                          <span className="mr-2">{Math.floor(Math.random() * 3) + 1} mutual friends</span>
+                        </div>
+                        <div className="text-gray-400 text-xs flex items-center">
+                          <span className="mr-1">Favorite Song:</span>
+                          <span>Eventually</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button className="bg-[#3b82f6] hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                      Message
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -588,7 +689,7 @@ export default function FindPeoplePage() {
   // If not authenticated, show a loading state (redirect happens in useEffect)
   if (!isUserAuthenticated) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#151b27]">
+      <div className="flex items-center justify-center h-screen bg-gray-800">
         <div className="text-white text-center">
           <p className="text-xl">Checking authentication...</p>
         </div>
@@ -599,7 +700,7 @@ export default function FindPeoplePage() {
   return (
     <div className="flex flex-col h-screen text-black">
       {/* Navbar */}
-      <div className="bg-[#74686e]">
+      <div className="bg-gray-800">
         <Navbar />
       </div>
 
@@ -607,11 +708,11 @@ export default function FindPeoplePage() {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto bg-[#151b27]">
+      <div className="flex-1 overflow-auto bg-gray-800">
         {/* Header */}
         <div className="p-8">
-          <h1 className="text-3xl text-blue-700 font-bold mb-4">Find People Like You</h1>
-          <p className="text-pink-600 mb-6">Connect with users who share your music taste</p>
+          <h1 className="text-3xl text-[#3b82f6] font-bold mb-4">Find People Like You</h1>
+          <p className="text-gray-400 mb-6">Connect with users who share your music taste</p>
 
           {/* Single Search Bar - positioned at the top level */}
           <div className="max-w-md">
@@ -624,7 +725,7 @@ export default function FindPeoplePage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Find users by username..."
-                className="w-full bg-[#74686e]/30 text-white pl-10 pr-4 py-2 rounded-md border border-[#74686e]/50 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="w-full bg-gray-800 text-white pl-10 pr-4 py-2 rounded-md border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -632,11 +733,13 @@ export default function FindPeoplePage() {
 
         {/* Tabs */}
         <div className="px-8 pb-4">
-          <div className="flex space-x-4 border-b border-[#74686e]/30">
+          <div className="flex space-x-4 border-b border-gray-600">
             <button
               onClick={() => setActiveTab("discover")}
               className={`py-2 px-4 font-medium transition-colors duration-200 ${
-                activeTab === "discover" ? "text-pink-500 border-b-2 border-pink-500" : "text-white/70 hover:text-white"
+                activeTab === "discover"
+                  ? "text-[#3b82f6] border-b-2 border-[#3b82f6]"
+                  : "text-white/70 hover:text-white"
               }`}
             >
               Discover People
@@ -644,12 +747,12 @@ export default function FindPeoplePage() {
             <button
               onClick={() => setActiveTab("search")}
               className={`py-2 px-4 font-medium transition-colors duration-200 ${
-                activeTab === "search" ? "text-pink-500 border-b-2 border-pink-500" : "text-white/70 hover:text-white"
+                activeTab === "search" ? "text-[#3b82f6] border-b-2 border-[#3b82f6]" : "text-white/70 hover:text-white"
               }`}
             >
               Search Results
               {searchResults.length > 0 && (
-                <span className="ml-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="ml-2 bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {searchResults.length}
                 </span>
               )}
@@ -660,7 +763,9 @@ export default function FindPeoplePage() {
                 fetchFriendRequests() // Refresh friend requests when tab is clicked
               }}
               className={`py-2 px-4 font-medium transition-colors duration-200 relative ${
-                activeTab === "requests" ? "text-pink-500 border-b-2 border-pink-500" : "text-white/70 hover:text-white"
+                activeTab === "requests"
+                  ? "text-[#3b82f6] border-b-2 border-[#3b82f6]"
+                  : "text-white/70 hover:text-white"
               }`}
             >
               Friend Requests
@@ -676,7 +781,9 @@ export default function FindPeoplePage() {
                 fetchFriends() // Added explicit call to fetch friends when tab is clicked
               }}
               className={`py-2 px-4 font-medium transition-colors duration-200 ${
-                activeTab === "friends" ? "text-pink-500 border-b-2 border-pink-500" : "text-white/70 hover:text-white"
+                activeTab === "friends"
+                  ? "text-[#3b82f6] border-b-2 border-[#3b82f6]"
+                  : "text-white/70 hover:text-white"
               }`}
             >
               Your Friends
@@ -685,8 +792,21 @@ export default function FindPeoplePage() {
         </div>
 
         {/* Content */}
-        <div className="p-8 pt-2">{renderContent()}</div>
+        <div className="p-8 pt-2 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main content - takes up 2/3 of the space */}
+          <div className="lg:col-span-2">
+            {activeTab === "requests" ? renderFriendRequestsContent() : renderContent()}
+          </div>
+
+          {/* Sidebar content - takes up 1/3 of the space */}
+          <div className="hidden lg:block">
+            {renderSuggestionsContent()}
+            {renderRecentActivityContent()}
+            {renderMusicNewsContent()}
+          </div>
+        </div>
       </div>
     </div>
   )
 }
+
