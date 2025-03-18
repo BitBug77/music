@@ -5,16 +5,23 @@ from django.dispatch import receiver
 class UserProfile(models.Model):
     # Basic connection to auth user
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    
 
-    
     # Basic profile information
+    name = models.CharField(max_length=100, blank=True, null=True)
+    pronoun = models.CharField(max_length=50, blank=True, null=True)
+    gender = models.CharField(max_length=50, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pictures', blank=True, null=True)
     bio = models.TextField(max_length=500, blank=True)
-    
+
+    # Spotify user identifier (without tokens)
+    spotify_id = models.CharField(max_length=100, blank=True, null=True)
+
+    # Preferences (e.g., favorite artists)
+    preferences = models.JSONField(default=dict, blank=True)  # Store user preferences
+
     # Join date
     joined_date = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return self.user.username
 
@@ -109,18 +116,18 @@ class Playlist(models.Model):
         indexes = [
             models.Index(fields=['user']),
         ]
-
 class PlaylistSong(models.Model):
     playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE, related_name='playlist_songs')
-    song = models.ForeignKey(Song, on_delete=models.CASCADE)
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='playlists')
     added_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         unique_together = ('playlist', 'song')
-        indexes = [
-            models.Index(fields=['playlist']),
-            models.Index(fields=['song']),
-        ]
+        ordering = ['-added_at']
+    
+    def __str__(self):
+        return f"{self.song.name} in {self.playlist.title}"
+
 # Recommendation Model
 class Recommendation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -174,3 +181,21 @@ class EsewaPayment(models.Model):
 
     def __str__(self):
         return f"{self.reference_id} - {self.status}"
+    
+
+
+
+class UserMusic(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='music')
+    spotify_track_id = models.CharField(max_length=100)
+    track_name = models.CharField(max_length=255)
+    artist_name = models.CharField(max_length=255)
+    album_name = models.CharField(max_length=255, blank=True, null=True)
+    added_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'spotify_track_id')
+        ordering = ['-added_at']
+    
+    def __str__(self):
+        return f"{self.track_name} by {self.artist_name} ({self.user.username})"

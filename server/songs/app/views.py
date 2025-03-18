@@ -8,12 +8,12 @@ import requests
 import base64
 import jwt
 import json
-from .models import UserProfile, Action, Song, Recommendation, UserSimilarity, Playlist, PlaylistSong
+from .models import UserProfile, Action, Song, Recommendation, UserSimilarity, Playlist, UserMusic, PlaylistSong
 from django.views.decorators.csrf import csrf_exempt
 import math
 from collections import defaultdict
 from django.db.models import Count
-from .algorithms import recommend_songs_collaborative, recommend_songs_content_based
+from .algorithms import recommend_songs_collaborative, recommend_songs_content_based, update_preferences_based_on_actions
 from .models import FriendRequest
 from django.views import View
 from rest_framework.decorators import api_view, permission_classes
@@ -28,12 +28,16 @@ from django.db import connection
 from django.shortcuts import get_object_or_404
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-from .serializer import SavedSongSerializer , LikedSongSerializer, PlaylistSerializer, PlaylistSongSerializer
+from .serializer import  LikedSongSerializer, PlaylistSerializer, PlaylistSongSerializer , SongSerializer
 from django.db.models import Q
 from .models import EsewaPayment
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-import time
+import time 
+from django.utils import timezone
+from django.db.models import F
+
+
 def check_db(request):
     db_name = connection.settings_dict["NAME"]
     return JsonResponse({"database_name": db_name})
@@ -83,47 +87,61 @@ def login_view(request):
 @csrf_exempt
 @api_view(['POST'])
 def signup_view(request):
-    """Handles user signup"""
-   
+    """Handles user signup and initial profile creation"""
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
-
-    username = data.get('username', '').strip()
-    password = data.get('password', '').strip()
-    password_confirmation = data.get('password_confirmation', '').strip()
-
-    if not username or not password or not password_confirmation:
-        return JsonResponse({'status': 'error', 'message': 'All fields are required'}, status=400)
-
-    if password != password_confirmation:
-        return JsonResponse({'status': 'error', 'message': 'Passwords do not match'}, status=400)
-
-    if User.objects.filter(username=username).exists():
-        return JsonResponse({'status': 'error', 'message': 'Username already taken'}, status=400)
-
-    user = User.objects.create_user(username=username, password=password)
-    user.save()
-
-    refresh = RefreshToken.for_user(user)
-    access_token = str(refresh.access_token)
-    refresh_token = str(refresh)
-
-    return JsonResponse({
-        'status': 'success',
-        'message': 'Account created successfully',
-        'access': access_token,
-        'refresh': refresh_token  # Send refresh token in response
-    }, status=201)
-
-
-
+        
+        # Extract basic user information
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+        password_confirmation = data.get('password_confirmation', '').strip()
+        email = data.get('email', '').strip()
+        
+        # Extract profile information
+        name = data.get('name', '').strip()
+        pronoun = data.get('pronoun', '').strip()
+        gender = data.get('gender', '').strip()
+        bio = data.get('bio', '').strip()
+        
+        # Validate required fields
+        if not username or not password or not password_confirmation:
+            return JsonResponse({'status': 'error', 'message': 'Username and password are required'}, status=400)
+        
+        # Check if passwords match
+        if password != password_confirmation:
+            return JsonResponse({'status': 'error', 'message': 'Passwords do not match'}, status=400)
+        
+        # Check if username already exists
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({'status': 'error', 'message': 'Username already taken'}, status=400)
+        
+        # Create user
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.save()
+        
+        # Create or update user profile
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        profile.name = name
+        profile.pronoun = pronoun
+        profile.gender = gender
+        profile.bio = bio
+        profile.save()
+        
+        # Generate tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Account created successfully',
+            'access': access_token,
+            'refresh': refresh_token
+        }, status=201)
+    
 def spotify_login(request):
     """Initiates Spotify OAuth login"""
     scope = 'user-read-private user-read-email user-top-read user-library-read'
@@ -511,41 +529,42 @@ def get_friend_requests(request):
         "received_requests": received_data,
         "sent_requests": sent_data
     })
-@api_view(['GET'])
 
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def search_user(request, username):
-    """Search for a user by username and return similar usernames with user IDs."""
-
-    try:
-        # Exact match for the username
-        exact_match_user = User.objects.get(username=username)
-
-        # Fetch similar users (case-insensitive match)
-        similar_users = User.objects.filter(username__icontains=username).exclude(id=exact_match_user.id)
-        
-        # Prepare the data to send back to the frontend
-        similar_user_data = [
-            {
-                "user_id": user.id,
-                "username": user.username
-            }
-            for user in similar_users
-        ]
-        
-        # Include the exact match user as well in the response
-        return JsonResponse({
-            "status": "success",
-            "exact_match": {
-                "user_id": exact_match_user.id,
-                "username": exact_match_user.username
-            },
-            "similar_users": similar_user_data
-        })
+    """Search for a user by username and return similar usernames with user IDs, excluding the current user."""
     
-    except User.DoesNotExist:
-        return JsonResponse({"status": "error", "message": "User not found"}, status=404)
-
+    if not username:
+        return Response({"status": "error", "message": "Username cannot be empty"}, status=400)
+    
+    # Get the currently authenticated user
+    current_user = request.user
+    
+    # Get users whose username **starts** with the search term, excluding the current user
+    similar_users = User.objects.filter(username__istartswith=username).exclude(id=current_user.id)
+    
+    # If no start matches, get users that **contain** the search term anywhere, excluding the current user
+    if not similar_users.exists():
+        similar_users = User.objects.filter(username__icontains=username).exclude(id=current_user.id)
+    
+    # Prepare the data to send back to the frontend
+    similar_user_data = [
+        {
+            "user_id": user.id,
+            "username": user.username
+        }
+        for user in similar_users
+    ]
+    
+    if not similar_user_data:
+        return Response({"status": "error", "message": "No users found"}, status=404)
+    
+    return Response({
+        "status": "success",
+        "similar_users": similar_user_data
+    })
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def search_songs(request):
@@ -1029,38 +1048,6 @@ def session(request):
 
 
 
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def user_playlists(request):
-    """
-    GET: Retrieve all playlists for the authenticated user.
-    POST: Create a new playlist with a title.
-    """
-    user = request.user
-    
-    if request.method == 'GET':
-        playlists = Playlist.objects.filter(user=user)
-        serializer = PlaylistSerializer(playlists, many=True)
-        return Response({"status": "success", "playlists": serializer.data})
-    
-    elif request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            title = data.get('title', 'My Playlist')
-            
-            playlist = Playlist.objects.create(
-                user=user,
-                title=title
-            )
-            
-            return Response({
-                "status": "success", 
-                "message": "Playlist created", 
-                "playlist_id": playlist.id
-            })
-            
-        except json.JSONDecodeError:
-            return Response({"status": "error", "message": "Invalid JSON"}, status=400)
 
 
 @api_view(['GET', 'POST', 'DELETE'])
@@ -1101,7 +1088,7 @@ def playlist_songs(request, playlist_id):
                 song_details = get_spotify_track(spotify_track_id)
                 if not song_details:
                     return Response({'status': 'error', 'message': 'Unable to fetch song details'}, status=404)
-
+                
                 song = Song.objects.create(
                     spotify_id=spotify_track_id,
                     name=song_details['name'],
@@ -1145,9 +1132,98 @@ def playlist_songs(request, playlist_id):
                 return Response({"status": "success", "message": "Song removed from playlist"})
             except (Song.DoesNotExist, PlaylistSong.DoesNotExist):
                 return Response({"status": "error", "message": "Song not found in playlist"}, status=404)
-                
+            
         except json.JSONDecodeError:
             return Response({"status": "error", "message": "Invalid JSON"}, status=400)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def playlists(request):
+    """
+    GET: List all playlists for the user
+    POST: Create a new playlist
+    """
+    user = request.user
+    
+    if request.method == 'GET':
+        playlists = Playlist.objects.filter(user=user)
+        serializer = PlaylistSerializer(playlists, many=True)
+        return Response({
+            "status": "success",
+            "playlists": serializer.data
+        })
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            title = data.get('title')
+            
+            if not title:
+                return Response({"status": "error", "message": "Missing playlist title"}, status=400)
+            
+            playlist = Playlist.objects.create(
+                user=user,
+                title=title
+            )
+            
+            serializer = PlaylistSerializer(playlist)
+            return Response({
+                "status": "success",
+                "message": "Playlist created",
+                "playlist": serializer.data
+            }, status=201)
+            
+        except json.JSONDecodeError:
+            return Response({"status": "error", "message": "Invalid JSON"}, status=400)
+        
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def playlist_detail(request, playlist_id):
+    """
+    GET: Get playlist details
+    PUT: Update playlist information (e.g., title)
+    DELETE: Delete a playlist
+    """
+    user = request.user
+    
+    try:
+        playlist = Playlist.objects.get(id=playlist_id, user=user)
+    except Playlist.DoesNotExist:
+        return Response({"status": "error", "message": "Playlist not found"}, status=404)
+    
+    if request.method == 'GET':
+        serializer = PlaylistSerializer(playlist)
+        return Response({
+            "status": "success",
+            "playlist": serializer.data
+        })
+    
+    elif request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            title = data.get('title')
+            
+            if title:
+                playlist.title = title
+                playlist.save()
+                
+            serializer = PlaylistSerializer(playlist)
+            return Response({
+                "status": "success",
+                "message": "Playlist updated",
+                "playlist": serializer.data
+            })
+            
+        except json.JSONDecodeError:
+            return Response({"status": "error", "message": "Invalid JSON"}, status=400)
+    
+    elif request.method == 'DELETE':
+        playlist.delete()
+        return Response({
+            "status": "success",
+            "message": "Playlist deleted"
+        })
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_liked_songs(request):
@@ -1180,7 +1256,6 @@ def list_friends(request):
 
     return JsonResponse({'status': 'success', 'friends': friend_usernames})
 
-
 @api_view(['POST', 'GET'])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
@@ -1196,6 +1271,9 @@ def update_profile(request):
         profile_data = {
             'username': request.user.username,
             'email': request.user.email,
+            'name': profile.name or '',
+            'pronoun': profile.pronoun or '',
+            'gender': profile.gender or '',
             'bio': profile.bio or '',
             'profile_picture': request.build_absolute_uri(profile.profile_picture.url) if profile.profile_picture else None,
             'joined_date': profile.joined_date.strftime("%Y-%m-%d %H:%M:%S")
@@ -1208,15 +1286,17 @@ def update_profile(request):
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
         
-        # Update bio if provided
+        # Update fields if provided
+        if 'name' in data:
+            profile.name = data.get('name', '').strip()
+        if 'pronoun' in data:
+            profile.pronoun = data.get('pronoun', '').strip()
+        if 'gender' in data:
+            profile.gender = data.get('gender', '').strip()
         if 'bio' in data:
             profile.bio = data.get('bio', '').strip()
         
-        # Update Spotify integration fields if provided
-        if 'spotify_token' in data:
-            profile.spotify_token = data.get('spotify_token')
-        if 'refresh_token' in data:
-            profile.refresh_token = data.get('refresh_token')
+
         if 'spotify_id' in data:
             profile.spotify_id = data.get('spotify_id')
         
@@ -1272,3 +1352,519 @@ def update_profile_picture(request):
         'message': 'Profile picture updated successfully',
         'picture_url': request.build_absolute_uri(profile.profile_picture.url)
     })
+
+
+
+  
+
+API_KEY = "your_api_key_here"
+
+def get_lyrics(track_name, artist_name):
+    url = "https://api.musixmatch.com/ws/1.1/matcher.lyrics.get"
+    params = {
+        "q_track": track_name,
+        "q_artist": artist_name,
+        "apikey": API_KEY
+    }
+    
+    response = requests.get(url, params=params)
+    data = response.json()
+
+    if data["message"]["header"]["status_code"] == 200:
+        lyrics = data["message"]["body"]["lyrics"]["lyrics_body"]
+        return lyrics
+    else:
+        return "Lyrics not found!"
+
+
+@api_view(['POST', 'GET', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def user_music(request):
+    """
+    GET: Retrieve music tracks added to user profile
+    POST: Add a Spotify track to user profile
+    DELETE: Remove a track from user profile
+    """
+    # Get the user profile
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    # We'll need a new model to store the music tracks
+    # Create it if you haven't already
+    
+    if request.method == 'GET':
+        # Get all tracks for the user
+        tracks = UserMusic.objects.filter(user=request.user).order_by('-added_at')
+        
+        tracks_data = [{
+            'id': track.id,
+            'spotify_track_id': track.spotify_track_id,
+            'track_name': track.track_name,
+            'artist_name': track.artist_name,
+            'album_name': track.album_name,
+            'added_at': track.added_at.strftime("%Y-%m-%d %H:%M:%S")
+        } for track in tracks]
+        
+        return JsonResponse({
+            'status': 'success',
+            'tracks': tracks_data
+        })
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
+        
+        # Get the Spotify track ID from the request
+        spotify_track_id = data.get('spotify_track_id', '').strip()
+        
+        if not spotify_track_id:
+            return JsonResponse({'status': 'error', 'message': 'Spotify track ID is required'}, status=400)
+        
+        # Check if track already exists for this user
+        if UserMusic.objects.filter(user=request.user, spotify_track_id=spotify_track_id).exists():
+            return JsonResponse({'status': 'error', 'message': 'This track is already in your profile'}, status=400)
+        
+        # Get track metadata from request
+        track_name = data.get('track_name', '').strip()
+        artist_name = data.get('artist_name', '').strip()
+        album_name = data.get('album_name', '').strip()
+        
+        # Create a new user music entry
+        user_music = UserMusic.objects.create(
+            user=request.user,
+            spotify_track_id=spotify_track_id,
+            track_name=track_name,
+            artist_name=artist_name,
+            album_name=album_name
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Track added to your profile',
+            'track': {
+                'id': user_music.id,
+                'spotify_track_id': user_music.spotify_track_id,
+                'track_name': user_music.track_name,
+                'artist_name': user_music.artist_name,
+                'album_name': user_music.album_name,
+                'added_at': user_music.added_at.strftime("%Y-%m-%d %H:%M:%S")
+            }
+        }, status=201)
+    
+    elif request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
+        
+        # Get track ID to remove
+        track_id = data.get('id')
+        spotify_track_id = data.get('spotify_track_id')
+        
+        if track_id:
+            # Remove by database ID
+            try:
+                track = UserMusic.objects.get(id=track_id, user=request.user)
+                track.delete()
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Track removed from your profile'
+                })
+            except UserMusic.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Track not found'}, status=404)
+        
+        elif spotify_track_id:
+            # Remove by Spotify track ID
+            try:
+                track = UserMusic.objects.get(spotify_track_id=spotify_track_id, user=request.user)
+                track.delete()
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Track removed from your profile'
+                })
+            except UserMusic.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Track not found'}, status=404)
+        
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Track ID is required'}, status=400)
+        
+from .algorithms import update_user_similarities, calculate_recommendation_scores
+from .serializer import RecommendationSerializer
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_recommendations(request):
+    """
+    Endpoint to get song recommendations for the current user
+    """
+    # Update user similarities in the background (could be moved to a periodic task)
+    update_user_similarities(request.user)
+    
+    # Calculate recommendations for the user
+    calculate_recommendation_scores(request.user)
+    
+    # Get top recommendations
+    limit = int(request.query_params.get('limit', 20))
+    recommendations = Recommendation.objects.filter(
+        user=request.user
+    ).order_by('-recommendation_score')[:limit]
+    
+    serializer = RecommendationSerializer(recommendations, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_recommendations_by_artist(request, artist_name):
+    """
+    Get recommendations filtered by artist name
+    """
+    limit = int(request.query_params.get('limit', 20))
+    
+    # First make sure recommendations are up to date
+    calculate_recommendation_scores(request.user)
+    
+    # Get recommendations filtered by artist
+    recommendations = Recommendation.objects.filter(
+        user=request.user,
+        song__artist__icontains=artist_name
+    ).order_by('-recommendation_score')[:limit]
+    
+    serializer = RecommendationSerializer(recommendations, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_similar_users(request):
+    """
+    Get users similar to the current user
+    """
+    limit = int(request.query_params.get('limit', 5))
+    
+    # Update similarities first
+    update_user_similarities(request.user)
+    
+    # Get similar users - using your existing model field names
+    similar_users = UserSimilarity.objects.filter(
+        user1=request.user
+    ).order_by('-similarity_score')[:limit]
+    
+    # Format the response
+    similar_users_data = [
+        {
+            'user_id': similarity.user2.id,
+            'username': similarity.user2.username,
+            'similarity_score': similarity.similarity_score
+        }
+        for similarity in similar_users
+    ]
+    
+    return Response(similar_users_data)
+
+
+
+
+
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_preferences(request):
+    """
+    Endpoint to retrieve the user's preferences (favorite artists, genres, etc.)
+    """
+    try:
+        user_profile = UserProfile.objects.get(user=request.user)
+        return Response(user_profile.preferences, status=200)
+    except UserProfile.DoesNotExist:
+        return Response({"detail": "User profile not found"}, status=404)
+    
+# Add this temporary code to your views.py or somewhere that gets executed
+from app.models import UserProfile
+print("UserProfile fields:", [f.name for f in UserProfile._meta.get_fields()])
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_advanced_recommendations(request):
+    """
+    Enhanced recommendation endpoint that provides multiple recommendation types
+    """
+    user = request.user
+    limit = int(request.query_params.get('limit', 10))
+    
+    # Update preferences first
+    update_preferences_based_on_actions(user)
+    
+    # Calculate recommendations for the user
+    calculate_recommendation_scores(user)
+    
+    # Prepare response with multiple recommendation sections
+    response = {
+        "personalized": get_personalized_recommendations(user, limit),
+        "trending": get_trending_recommendations(limit),
+        "discover_weekly": get_discovery_recommendations(user, limit),
+        "based_on_favorites": get_favorite_based_recommendations(user, limit),
+        "similar_users_picks": get_similar_users_recommendations(user, limit)
+    }
+    
+    return Response(response)
+
+def get_personalized_recommendations(user, limit=10):
+    """Get top personalized recommendations"""
+    recommendations = Recommendation.objects.filter(
+        user=user
+    ).order_by('-recommendation_score')[:limit]
+    
+    return RecommendationSerializer(recommendations, many=True).data
+
+def get_trending_recommendations(limit=10):
+    """Get trending songs based on recent activity"""
+    # Get songs with most actions in the last 7 days
+    recent_date = timezone.now() - timezone.timedelta(days=7)
+    
+    trending_songs = Action.objects.filter(
+        timestamp__gte=recent_date
+    ).values('song').annotate(
+        count=Count('id')
+    ).order_by('-count')[:limit]
+    
+    song_ids = [item['song'] for item in trending_songs]
+    songs = Song.objects.filter(id__in=song_ids)
+    
+    return SongSerializer(songs, many=True).data
+
+def get_discovery_recommendations(user, limit=10):
+    """Get recommendations for genres user rarely explores"""
+    # Get user's frequent genres
+    try:
+        profile = UserProfile.objects.get(user=user)
+        common_genres = profile.preferences.get('favorite_genres', [])
+    except UserProfile.DoesNotExist:
+        common_genres = []
+    
+    # Find songs from less-explored genres
+    user_action_songs = Action.objects.filter(user=user).values_list('song_id', flat=True)
+    
+    discovery_songs = Song.objects.exclude(
+        id__in=user_action_songs
+    ).exclude(
+        genres__overlap=common_genres
+    ).order_by('?')[:limit]  # Random selection
+    
+    return SongSerializer(discovery_songs, many=True).data
+
+def get_favorite_based_recommendations(user, limit=10):
+    """Get recommendations based on user's favorite artists"""
+    try:
+        profile = UserProfile.objects.get(user=user)
+        favorite_artists = profile.preferences.get('favorite_artists', [])
+    except UserProfile.DoesNotExist:
+        return []
+    
+    if not favorite_artists:
+        return []
+    
+    # Get songs from favorite artists that user hasn't interacted with
+    user_song_ids = Action.objects.filter(user=user).values_list('song_id', flat=True)
+    
+    artist_songs = Song.objects.filter(
+        artist__in=favorite_artists
+    ).exclude(
+        id__in=user_song_ids
+    )[:limit]
+    
+    return SongSerializer(artist_songs, many=True).data
+
+def get_similar_users_recommendations(user, limit=10):
+    """Get recommendations based on similar users' favorites"""
+    # Get similar users
+    similar_users = UserSimilarity.objects.filter(
+        user1=user
+    ).order_by('-similarity_score')[:5]
+    
+    if not similar_users:
+        return []
+    
+    # Get songs that similar users liked but current user hasn't interacted with
+    user_song_ids = set(Action.objects.filter(user=user).values_list('song_id', flat=True))
+    
+    similar_user_ids = [sim.user2.id for sim in similar_users]
+    similar_users_liked = Action.objects.filter(
+        user_id__in=similar_user_ids,
+        action_type='like'
+    ).exclude(
+        song_id__in=user_song_ids
+    ).values('song').annotate(
+        like_count=Count('id')
+    ).order_by('-like_count')[:limit]
+    
+    song_ids = [item['song'] for item in similar_users_liked]
+    songs = Song.objects.filter(id__in=song_ids)
+    
+    return SongSerializer(songs, many=True).data
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_recommendation_insights(request):
+    """
+    Provide insights into why certain songs are being recommended
+    """
+    user = request.user
+    
+    # Get top recommendations
+    top_recommendations = Recommendation.objects.filter(
+        user=user
+    ).order_by('-recommendation_score')[:10]
+    
+    insights = []
+    
+    for rec in top_recommendations:
+        song = rec.song
+        reasons = []
+        
+        # Check if by favorite artist
+        try:
+            profile = UserProfile.objects.get(user=user)
+            if song.artist in profile.preferences.get('favorite_artists', []):
+                reasons.append(f"By {song.artist}, one of your favorite artists")
+        except UserProfile.DoesNotExist:
+            pass
+            
+        # Check if similar users liked it
+        similar_users = UserSimilarity.objects.filter(user1=user).order_by('-similarity_score')[:5]
+        similar_user_ids = [sim.user2.id for sim in similar_users]
+        
+        similar_likes = Action.objects.filter(
+            user_id__in=similar_user_ids,
+            song=song,
+            action_type='like'
+        ).count()
+        
+        if similar_likes > 0:
+            reasons.append(f"Liked by {similar_likes} users with similar taste")
+            
+        # Add genre match
+        user_genres = profile.preferences.get('favorite_genres', [])
+        matching_genres = set(song.genres) & set(user_genres)
+        
+        if matching_genres:
+            reasons.append(f"Matches your preferred genres: {', '.join(matching_genres)}")
+            
+        insights.append({
+            'song': SongSerializer(song).data,
+            'score': rec.recommendation_score,
+            'reasons': reasons
+        })
+        
+    return Response(insights)
+
+
+def get_contextual_recommendations(user, limit=20):
+    """
+    Get recommendations based on current context (time of day, day of week)
+    """
+    now = timezone.now()
+    hour = now.hour
+    day_of_week = now.weekday()  # 0-6 (Monday-Sunday)
+    
+    # Define time contexts
+    context = None
+    if 6 <= hour < 10:
+        context = "morning"
+    elif 10 <= hour < 14:
+        context = "midday"
+    elif 14 <= hour < 18:
+        context = "afternoon"
+    elif 18 <= hour < 22:
+        context = "evening"
+    else:
+        context = "night"
+        
+    # Weekend vs weekday
+    is_weekend = day_of_week >= 5  # Saturday or Sunday
+    
+    # Get context-specific songs
+    # This is a simplified example - you'd need to tag songs with contexts
+    contextual_songs = Song.objects.filter(
+        context_tags__contains=[context]
+    )
+    
+    if is_weekend:
+        contextual_songs = contextual_songs.filter(
+            energy_level__gte=0.7  # More energetic on weekends
+        )
+    else:
+        if context == "morning":
+            contextual_songs = contextual_songs.filter(
+                energy_level__lte=0.5  # Calmer in weekday mornings
+            )
+    
+    # Combine with user preferences
+    user_song_ids = set(Action.objects.filter(user=user).values_list('song_id', flat=True))
+    
+    try:
+        profile = UserProfile.objects.get(user=user)
+        favorite_genres = profile.preferences.get('favorite_genres', [])
+        
+        if favorite_genres:
+            contextual_songs = contextual_songs.filter(
+                genres__overlap=favorite_genres
+            )
+    except UserProfile.DoesNotExist:
+        pass
+        
+    return contextual_songs.exclude(id__in=user_song_ids)[:limit]
+
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def provide_recommendation_feedback(request):
+    """
+    Allow users to provide feedback on recommendations
+    """
+    song_id = request.data.get('song_id')
+    feedback_type = request.data.get('feedback_type')  # 'like', 'dislike', 'not_interested'
+    
+    if not song_id or not feedback_type:
+        return Response({"detail": "Missing required parameters"}, status=400)
+        
+    try:
+        song = Song.objects.get(id=song_id)
+    except Song.DoesNotExist:
+        return Response({"detail": "Song not found"}, status=404)
+        
+    # Create or update recommendation feedback
+    if feedback_type == 'like':
+        # Create a like action
+        Action.objects.create(user=request.user, song=song, action_type='like')
+        
+        # Boost recommendation score
+        Recommendation.objects.update_or_create(
+            user=request.user,
+            song=song,
+            defaults={'recommendation_score': F('recommendation_score') + 5}
+        )
+    elif feedback_type == 'dislike':
+        # Reduce recommendation score substantially
+        Recommendation.objects.update_or_create(
+            user=request.user,
+            song=song,
+            defaults={'recommendation_score': F('recommendation_score') - 10}
+        )
+    elif feedback_type == 'not_interested':
+        # Reduce recommendation score moderately
+        Recommendation.objects.update_or_create(
+            user=request.user,
+            song=song,
+            defaults={'recommendation_score': F('recommendation_score') - 5}
+        )
+    
+    # Update user preferences based on this feedback
+    update_preferences_based_on_actions(request.user)
+    
+    return Response({"status": "success"})

@@ -6,6 +6,9 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 ) 
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 app_name = 'app'
 
 urlpatterns = [
@@ -15,7 +18,9 @@ urlpatterns = [
     path('spotify-callback/', views.spotify_callback, name='spotify_callback'),
     path('home/', views.home, name='home'),
     path('popularity/', views.get_songs_by_popularity, name='songs_by_popularity'),
-    path('recommend/', views.recommended_songs, name='recommend_songs'),
+    path('recommendations/', views.get_recommendations, name='get_recommendations'),
+    path('recommendations/artist/<str:artist_name>/', views.get_recommendations_by_artist, name='get_recommendations_by_artist'),
+    path('similar-users/', views.get_similar_users, name='get_similar_users'),
     path('logout/', views.logout_view, name='logout'),
     path('search-songs/', views.search_songs, name='search_songs'),
     path('recommend-friends/', views.recommend_friends, name='recommend_friends'),
@@ -33,7 +38,8 @@ urlpatterns = [
     path('songs/<str:spotify_track_id>/share/', views.share_song, name='share_song'),
     path('songs/<str:spotify_track_id>/complete/', views.complete_song, name='complete_song'),
     path('search/track/', views.track_search, name='track_search'),
-    path('playlists/', views.user_playlists, name='user_playlists'),
+    path('playlists/', views.playlists, name='playlists'),
+    path('playlists/<int:playlist_id>/', views.playlist_detail, name='playlist_detail'),
     path('playlists/<int:playlist_id>/songs/', views.playlist_songs, name='playlist_songs'),
     path('song/<str:id>/', GetSongView.as_view(), name='get_song'),
     path('session/', views.session, name='get_session'),
@@ -45,4 +51,9 @@ urlpatterns = [
     path('friend-requests/', views.get_friend_requests, name='get_friend_requests'),
      path('profile/', views.update_profile, name='update_profile'),
      path('profile-picture/', views.update_profile_picture, name='update_profile_picture'),
+     path('user/music/', views.user_music, name='user-music'),
+      path('preferences/', views.get_preferences, name='get_preferences'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
