@@ -53,6 +53,7 @@ urlpatterns = [
      path('profile-picture/', views.update_profile_picture, name='update_profile_picture'),
      path('user/music/', views.user_music, name='user-music'),
       path('preferences/', views.get_preferences, name='get_preferences'),
+       path('spotifytrack/<str:spotify_track_id>/', views.get_spotify_track, name='get_spotify'),
 ]
 
 if settings.DEBUG:

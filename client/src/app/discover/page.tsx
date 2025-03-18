@@ -1,9 +1,10 @@
 "use client"
 import { useState, useEffect } from "react"
-import { ChevronRight, TrendingUp, Clock } from "lucide-react"
+import { TrendingUp, Clock, Plus } from "lucide-react"
 import Navbar from "../navbar/page"
 import Sidebar from "../../components/ui/sidebar"
 import { useRouter } from "next/navigation"
+
 // Define TypeScript interfaces for our data structures
 interface ApiResponse {
   songs?: any[]
@@ -27,10 +28,20 @@ interface SongCardProps {
   song: ProcessedSong
 }
 
+interface Playlist {
+  id: number
+  title: string
+  created_at: string
+}
+
 export default function DiscoverPage() {
   const [popularSongs, setPopularSongs] = useState<ProcessedSong[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [playlists, setPlaylists] = useState<Playlist[]>([])
+  const [selectedPlaylist, setSelectedPlaylist] = useState<number | null>(null)
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false)
+  const [currentSong, setCurrentSong] = useState<ProcessedSong | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -199,9 +210,75 @@ export default function DiscoverPage() {
       }
     }
 
+    // Fetch playlists
+    const fetchPlaylists = async () => {
+      try {
+        const token = localStorage.getItem("access_token") || ""
+        const response = await fetch("http://127.0.0.1:8000/playlists/", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch playlists: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        if (data.status === "success" && Array.isArray(data.playlists)) {
+          setPlaylists(data.playlists)
+          // Select the first playlist automatically if available
+          if (data.playlists.length > 0) {
+            setSelectedPlaylist(data.playlists[0].id)
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching playlists:", error)
+      }
+    }
+
     // Fetch actual API data
     fetchPopularSongs()
+    fetchPlaylists()
   }, [])
+
+  const addSongToPlaylist = async (playlistId: number, spotifyTrackId: string) => {
+    try {
+      const token = localStorage.getItem("access_token") || ""
+
+      const response = await fetch(`http://127.0.0.1:8000/playlists/${playlistId}/songs/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ spotify_track_id: spotifyTrackId }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to add song: ${response.status}`)
+      }
+
+      const data = await response.json()
+      if (data.status === "success") {
+        alert("Song added to playlist successfully!")
+        setIsPlaylistModalOpen(false)
+        // Navigate to the playlist page instead of for-you
+        router.push("/playlist")
+      }
+    } catch (error) {
+      console.error("Error adding song:", error)
+      alert(error instanceof Error ? error.message : "Failed to add song")
+    }
+  }
+
+  const openAddToPlaylistModal = (song: ProcessedSong) => {
+    setCurrentSong(song)
+    setIsPlaylistModalOpen(true)
+  }
 
   return (
     <div className="flex flex-col h-screen text-black">
@@ -247,7 +324,7 @@ export default function DiscoverPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {popularSongs.slice(0, 4).map((song) => (
-                  <SongCard key={song.id} song={song} />
+                  <SongCard key={song.id} song={song} onAddToPlaylist={() => openAddToPlaylistModal(song)} />
                 ))}
               </div>
             )}
@@ -281,8 +358,7 @@ export default function DiscoverPage() {
                 {popularSongs.map((song) => (
                   <div
                     key={song.id}
-                    className="bg-[#74686e] rounded-md p-4 shadow-md hover:shadow-lg transition duration-200 "
-                    onClick={() => router.push(`/song/${song.spotifyTrackId}`)}
+                    className="bg-[#74686e] rounded-md p-4 shadow-md hover:shadow-lg transition duration-200 relative group"
                   >
                     <div className="flex items-center mb-3">
                       <img
@@ -294,30 +370,41 @@ export default function DiscoverPage() {
                         <h3 className="font-medium text-white">{song.title}</h3>
                         <p className="text-sm text-white/80">{song.artist}</p>
                       </div>
+
+                      {/* Add to Playlist button */}
+                      <button
+                        onClick={() => openAddToPlaylistModal(song)}
+                        className="ml-auto bg-pink-500 hover:bg-pink-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Add to playlist"
+                      >
+                        <Plus size={18} />
+                      </button>
                     </div>
 
-                    {song.spotifyTrackId ? (
-                      <div className="mt-2">
-                        <iframe
-                          src={`https://open.spotify.com/embed/track/${song.spotifyTrackId}`}
-                          width="100%"
-                          height="152"
-                          frameBorder="0"
-                          allow="encrypted-media"
-                          className="w-full rounded-md"
-                          style={{ position: "relative", zIndex: 0 }}
-                        ></iframe>
-                      </div>
-                    ) : (
-                      <a
-                        href={song.spotifyUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block text-center py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 mt-2"
-                      >
-                        Listen on Spotify
-                      </a>
-                    )}
+                    <div className="cursor-pointer" onClick={() => router.push(`/song/${song.spotifyTrackId}`)}>
+                      {song.spotifyTrackId ? (
+                        <div className="mt-2">
+                          <iframe
+                            src={`https://open.spotify.com/embed/track/${song.spotifyTrackId}`}
+                            width="100%"
+                            height="152"
+                            frameBorder="0"
+                            allow="encrypted-media"
+                            className="w-full rounded-md"
+                            style={{ position: "relative", zIndex: 0 }}
+                          ></iframe>
+                        </div>
+                      ) : (
+                        <a
+                          href={song.spotifyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-center py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 mt-2"
+                        >
+                          Listen on Spotify
+                        </a>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -325,61 +412,112 @@ export default function DiscoverPage() {
           </section>
         </div>
       </div>
+
+      {/* Add to Playlist Modal */}
+      {isPlaylistModalOpen && currentSong && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md text-white">
+            <h3 className="text-xl font-bold mb-4">Add to Playlist</h3>
+            <p className="mb-4">
+              Add <span className="font-semibold">{currentSong.title}</span> by {currentSong.artist} to:
+            </p>
+
+            {playlists.length === 0 ? (
+              <p className="text-gray-400 mb-4">You don't have any playlists yet.</p>
+            ) : (
+              <div className="max-h-60 overflow-y-auto mb-4">
+                {playlists.map((playlist) => (
+                  <button
+                    key={playlist.id}
+                    onClick={() => addSongToPlaylist(playlist.id, currentSong.spotifyTrackId)}
+                    className="w-full text-left p-3 hover:bg-gray-700 rounded-md mb-2 transition-colors"
+                  >
+                    {playlist.title}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => setIsPlaylistModalOpen(false)}
+                className="px-4 py-2 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              {playlists.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (selectedPlaylist !== null && currentSong) {
+                      addSongToPlaylist(selectedPlaylist, currentSong.spotifyTrackId)
+                    }
+                  }}
+                  className="px-4 py-2 bg-pink-600 rounded-md hover:bg-pink-700 transition-colors"
+                >
+                  Add to {playlists.find((p) => p.id === selectedPlaylist)?.title || "Selected"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-function SongCard({ song }: SongCardProps) {
+function SongCard({ song, onAddToPlaylist }: SongCardProps & { onAddToPlaylist: () => void }) {
   const router = useRouter()
   const handleSongClick = () => {
     router.push(`/song/${song.spotifyTrackId}`)
   }
   return (
-    <div
-      className="bg-[#74686e] rounded-md p-4 hover:shadow-md transition duration-200 cursor-pointer border border-blue-100"
-      onClick={handleSongClick}
-    >
+    <div className="bg-[#74686e] rounded-md p-4 hover:shadow-md transition duration-200 cursor-pointer border border-blue-100">
       <div className="relative mb-4 group">
         <img
           src={song.coverUrl || "/placeholder.svg"}
           alt={`${song.title} cover`}
           className="w-full aspect-square rounded-md relative z-0"
+          onClick={handleSongClick}
         />
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
-          <a
-            href={song.spotifyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-pink-500 rounded-full p-3 shadow-lg"
+          {/* Replace the pink arrow with an Add to Playlist button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onAddToPlaylist()
+            }}
+            className="bg-pink-500 rounded-full p-3 shadow-lg hover:bg-pink-600 transition-colors"
           >
-            <ChevronRight size={24} className="text-white" />
-          </a>
+            <Plus size={24} className="text-white" />
+          </button>
         </div>
       </div>
 
-      <h3 className="font-medium truncate text-white">{song.title}</h3>
-      <p className="text-sm text-white/80 truncate">{song.artist}</p>
-      <div className="mt-2 flex items-center">
-        <div className="h-1 w-full bg-yellow-100 rounded-full mr-2">
-          <div className="h-1 bg-pink-500 rounded-full" style={{ width: `${song.popularity}%` }}></div>
+      <div onClick={handleSongClick}>
+        <h3 className="font-medium truncate text-white">{song.title}</h3>
+        <p className="text-sm text-white/80 truncate">{song.artist}</p>
+        <div className="mt-2 flex items-center">
+          <div className="h-1 w-full bg-yellow-100 rounded-full mr-2">
+            <div className="h-1 bg-pink-500 rounded-full" style={{ width: `${song.popularity}%` }}></div>
+          </div>
+          <span className="text-xs text-white">{song.popularity}</span>
         </div>
-        <span className="text-xs text-white">{song.popularity}</span>
-      </div>
 
-      {/* Spotify Player Embed */}
-      {song.spotifyTrackId && (
-        <div className="mt-4">
-          <iframe
-            src={`https://open.spotify.com/embed/track/${song.spotifyTrackId}`}
-            width="100%"
-            height="80"
-            frameBorder="0"
-            allow="encrypted-media"
-            className="rounded"
-            style={{ position: "relative", zIndex: 0 }}
-          ></iframe>
-        </div>
-      )}
+        {/* Spotify Player Embed */}
+        {song.spotifyTrackId && (
+          <div className="mt-4">
+            <iframe
+              src={`https://open.spotify.com/embed/track/${song.spotifyTrackId}`}
+              width="100%"
+              height="80"
+              frameBorder="0"
+              allow="encrypted-media"
+              className="rounded"
+              style={{ position: "relative", zIndex: 0 }}
+            ></iframe>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

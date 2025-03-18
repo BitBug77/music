@@ -49,7 +49,7 @@ class Song(models.Model):
     duration = models.IntegerField(null=True, blank=True)
     genre = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
-    
+    album_cover = models.URLField(blank=True, null=True)
     def __str__(self):
         return f"{self.name} by {self.artist}"
 
