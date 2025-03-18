@@ -8,12 +8,15 @@ class SavedSongSerializer(serializers.ModelSerializer):
     album = serializers.CharField(source='song.album')
     duration = serializers.IntegerField(source='song.duration', allow_null=True)
     url = serializers.URLField(source='song.url', allow_null=True)
-    album_cover = serializers.URLField(source='song.album_cover', allow_null=True)  # Add this line
+    spotify_id = serializers.CharField(source='song.spotify_id', allow_null=True)  # Added spotify_id
+    album_cover = serializers.URLField(source='song.album_cover', allow_null=True)  
+    genre = serializers.CharField(source='song.genre', allow_null=True)  # Added genre
     action_type = serializers.CharField(default="save", read_only=True)
 
     class Meta:
         model = Action
-        fields = ['id', 'song_name', 'artist', 'album', 'duration', 'url', 'album_cover', 'timestamp', 'action_type']  # Added album_cover
+        fields = ['id', 'song_name', 'artist', 'album', 'duration', 'url', 'spotify_id', 'album_cover', 'genre', 'timestamp', 'action_type']
+
 
 
 class LikedSongSerializer(serializers.ModelSerializer):
@@ -22,12 +25,15 @@ class LikedSongSerializer(serializers.ModelSerializer):
     album = serializers.CharField(source='song.album')
     duration = serializers.IntegerField(source='song.duration', allow_null=True)
     url = serializers.URLField(source='song.url', allow_null=True)
-    album_cover = serializers.URLField(source='song.album_cover', allow_null=True)  # Add this line
+    spotify_id = serializers.CharField(source='song.spotify_id', allow_null=True)  # Added spotify_id
+    album_cover = serializers.URLField(source='song.album_cover', allow_null=True)  
+    genre = serializers.CharField(source='song.genre', allow_null=True)  # Added genre
     action_type = serializers.CharField(default="like", read_only=True)
 
     class Meta:
         model = Action
-        fields = ['id', 'song_name', 'artist', 'album', 'duration', 'url', 'album_cover', 'timestamp', 'action_type']  # Added album_cover
+        fields = ['id', 'song_name', 'artist', 'album', 'duration', 'url', 'spotify_id', 'album_cover', 'genre', 'timestamp', 'action_type']
+
 
 
 
@@ -54,7 +60,8 @@ class PlaylistSerializer(serializers.ModelSerializer):
 class SongSerializer(serializers.ModelSerializer):
     class Meta:
         model = Song
-        fields = ['id', 'name', 'artist', 'album', 'duration', 'url', 'spotify_id', 'album_cover']  # Added album_cover
+        fields = ['id', 'name', 'artist', 'album', 'duration', 'url', 'spotify_id', 'album_cover', 'genre']  # Added genre
+
 
 class PlaylistSongSerializer(serializers.ModelSerializer):
     song_name = serializers.CharField(source='song.name')
@@ -63,11 +70,13 @@ class PlaylistSongSerializer(serializers.ModelSerializer):
     duration = serializers.IntegerField(source='song.duration', allow_null=True)
     url = serializers.URLField(source='song.url', allow_null=True)
     spotify_id = serializers.CharField(source='song.spotify_id')
-    album_cover = serializers.URLField(source='song.album_cover', allow_null=True)  # Add this line
+    album_cover = serializers.URLField(source='song.album_cover', allow_null=True)  
+    genre = serializers.CharField(source='song.genre', allow_null=True)  # Added genre
     
     class Meta:
         model = PlaylistSong
-        fields = ['id', 'song_name', 'artist', 'album', 'duration', 'url', 'spotify_id', 'album_cover', 'added_at']  # Added album_cover
+        fields = ['id', 'song_name', 'artist', 'album', 'duration', 'url', 'spotify_id', 'album_cover', 'genre', 'added_at']  # Included genre
+
 class RecommendationSerializer(serializers.ModelSerializer):
     song_name = serializers.CharField(source='song.name')
     artist = serializers.CharField(source='song.artist')
@@ -75,12 +84,14 @@ class RecommendationSerializer(serializers.ModelSerializer):
     duration = serializers.IntegerField(source='song.duration', allow_null=True)
     url = serializers.URLField(source='song.url', allow_null=True)
     spotify_id = serializers.CharField(source='song.spotify_id', allow_null=True)
-    album_cover = serializers.URLField(source='song.album_cover', allow_null=True)  # Add this line
+    album_cover = serializers.URLField(source='song.album_cover', allow_null=True)  
+    genre = serializers.CharField(source='song.genre', allow_null=True)  # Added genre
     recommendation_score = serializers.FloatField()
     
     class Meta:
         model = Recommendation
-        fields = ['id', 'song_name', 'artist', 'album', 'duration', 'url', 'spotify_id', 'album_cover', 'recommendation_score', 'timestamp']  # Added album_cover
+        fields = ['id', 'song_name', 'artist', 'album', 'duration', 'url', 'spotify_id', 'album_cover', 'genre', 'recommendation_score', 'timestamp']  # Included genre
+ # Added album_cover
 class RecommendationSerializers(serializers.ModelSerializer):
     song = SongSerializer()
     reason = serializers.SerializerMethodField()
