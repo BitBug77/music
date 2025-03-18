@@ -300,35 +300,56 @@ def recommended_songs(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_songs_by_popularity(request):
-    """Fetch songs from Spotify API sorted by popularity, including album cover and track ID."""
+    """Fetch songs from Spotify API with randomization to provide variety."""
     access_token = get_spotify_token()
-
+    
     if not access_token:
         return JsonResponse({"status": "error", "message": "Failed to get Spotify token"}, status=500)
-
+    
     # Spotify search API to fetch songs
     search_url = "https://api.spotify.com/v1/search"
     headers = {"Authorization": f"Bearer {access_token}"}
     
+    # Add randomization by using different search terms
+    search_terms = [
+        "a", "e", "i", "o", "u",  # Vowels for broader results
+        "top", "hit", "new", "popular", "trending",
+        "year", "dance", "rock", "pop", "hip"
+    ]
+    
+    # Randomly select a search term
+    import random
+    random_term = random.choice(search_terms)
+    
+    # Randomly select offset to get different results each time
+    random_offset = random.randint(0, 950)  # Spotify max offset is 1000
+    
     params = {
-        "q": "*",         # Wildcard to fetch all songs
-        "type": "track",  # Search for tracks
-        "limit": 50       # Maximum allowed per request
+        "q": random_term,
+        "type": "track",
+        "limit": 50,  # Maximum allowed per request
+        "offset": random_offset
     }
-
+    
     response = requests.get(search_url, headers=headers, params=params)
-
+    
     if response.status_code != 200:
         return JsonResponse({"status": "error", "message": "Failed to fetch songs"}, status=response.status_code)
-
+    
     songs = response.json().get("tracks", {}).get("items", [])
-
+    
     if not songs:
         return JsonResponse({"status": "error", "message": "No songs found"}, status=404)
-
+    
     # Sort songs by popularity in descending order
     sorted_songs = sorted(songs, key=lambda x: x["popularity"], reverse=True)
-
+    
+    # For additional randomness, shuffle a portion of the top songs
+    # This ensures you still get popular songs but in a different order each time
+    top_portion = sorted_songs[:30]  # Take the top 30 songs
+    random.shuffle(top_portion)  # Shuffle them
+    sorted_songs = top_portion + sorted_songs[30:]  # Combine with the rest
+    
     # Extract relevant song details including album cover and track ID
     song_list = [
         {
@@ -341,7 +362,7 @@ def get_songs_by_popularity(request):
         }
         for song in sorted_songs
     ]
-
+    
     return JsonResponse({"status": "success", "songs": song_list})
 
 
@@ -766,36 +787,53 @@ import requests
 
 import requests
 
+import requests
+
 def get_spotify_track(spotify_track_id):
-    """Fetches track details from Spotify API using track ID, including album cover."""
-    import requests
+    """Fetches track details from Spotify API using track ID, including album cover and genre."""
     
     access_token = get_spotify_token()
     if not access_token:
-        return None  # Return None instead of JsonResponse
+        return None  # Return None if token is missing
     
-    url = f"https://api.spotify.com/v1/tracks/{spotify_track_id}"
+    # Fetch track details
+    track_url = f"https://api.spotify.com/v1/tracks/{spotify_track_id}"
     headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(url, headers=headers)
+    response = requests.get(track_url, headers=headers)
     
     if response.status_code == 200:
         track_data = response.json()
         
-        # Get album cover (Spotify usually provides multiple sizes, selecting the largest one)
+        # Get album cover (selecting the largest image if available)
         album_cover_url = track_data['album']['images'][0]['url'] if track_data['album']['images'] else None
         
+        # Extract artist details (Spotify allows multiple artists per song, take the first one)
+        artist_id = track_data['artists'][0]['id'] if track_data['artists'] else None
+        
+        genre = None
+        if artist_id:
+            # Fetch artist details to get genre
+            artist_url = f"https://api.spotify.com/v1/artists/{artist_id}"
+            artist_response = requests.get(artist_url, headers=headers)
+            if artist_response.status_code == 200:
+                artist_data = artist_response.json()
+                genre = ", ".join(artist_data.get("genres", []))  # Join multiple genres
+        
+        # Construct final track details
         data = {
             "name": track_data['name'],
             "artist": ", ".join(artist['name'] for artist in track_data['artists']),
             "album": track_data['album']['name'],
             "duration": track_data['duration_ms'] // 1000,  # Convert ms to seconds
             "url": track_data['external_urls']['spotify'],
-            "album_cover": album_cover_url  # Add album cover
+            "album_cover": album_cover_url,  # Add album cover
+            "genre": genre  # Add genre
         }
         
-        return data  # Return the dictionary directly
+        return data  # Return the dictionary with complete details
     
-    return None  # Return None instead of JsonResponse on error
+    return None  # Return None if track not found
+# Return None instead of JsonResponse on error
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -1654,11 +1692,18 @@ def get_discovery_recommendations(user, limit=10):
     # Find songs from less-explored genres
     user_action_songs = Action.objects.filter(user=user).values_list('song_id', flat=True)
     
-    discovery_songs = Song.objects.exclude(
-        id__in=user_action_songs
-    ).exclude(
-        genres__overlap=common_genres
-    ).order_by('?')[:limit]  # Random selection
+    # Modified to use genre instead of genres
+    # Depending on how genre is stored, you might need to adjust this query
+    if common_genres:
+        discovery_songs = Song.objects.exclude(
+            id__in=user_action_songs
+        ).exclude(
+            genre__in=common_genres  # Changed from genres__overlap to genre__in
+        ).order_by('?')[:limit]  # Random selection
+    else:
+        discovery_songs = Song.objects.exclude(
+            id__in=user_action_songs
+        ).order_by('?')[:limit]  # Random selection if no common genres
     
     return SongSerializer(discovery_songs, many=True).data
 
@@ -1875,3 +1920,33 @@ def provide_recommendation_feedback(request):
     update_preferences_based_on_actions(request.user)
     
     return Response({"status": "success"})
+
+
+from rest_framework import status
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def trigger_preferences_update(request):
+    """
+    Trigger automatic update of user preferences based on their action history
+    """
+    user = request.user
+    
+    # Call the algorithm function to update preferences based on user actions
+    update_preferences_based_on_actions(user)
+    
+    # Retrieve the updated preferences to return in the response
+    try:
+        user_profile = UserProfile.objects.get(user=user)
+        updated_preferences = user_profile.preferences
+        
+        return Response({
+            "status": "success",
+            "message": "User preferences automatically updated based on action history",
+            "preferences": updated_preferences
+        }, status=status.HTTP_200_OK)
+    except UserProfile.DoesNotExist:
+        return Response({
+            "status": "error",
+            "message": "User profile not found"
+        }, status=status.HTTP_404_NOT_FOUND)

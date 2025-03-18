@@ -357,10 +357,23 @@ def update_preferences_based_on_actions(user):
     for action in actions:
         song = action.song
         # Count favorite artists
-        artist_count[song.artist] += 1
+        if song.artist:  # Check if artist exists
+            artist_count[song.artist] += 1
 
-        # Count favorite genres
-        for genre in song.genres:
+        # Count favorite genres - fix the error here
+        # The issue is that you're trying to access song.genre, but in your model
+        # the field might be called song.genres (plural) or it's None
+        # Let's handle both cases:
+        
+        genres = getattr(song, 'genres', None) or getattr(song, 'genre', None) or []
+        
+        # Make sure genres is iterable even if it's a string or None
+        if isinstance(genres, str):
+            genres = [genres]
+        elif genres is None:
+            genres = []
+            
+        for genre in genres:
             genre_count[genre] += 1
 
     # Identify top artists and genres based on the user's interaction frequency
@@ -373,13 +386,16 @@ def update_preferences_based_on_actions(user):
     except UserProfile.DoesNotExist:
         user_profile = UserProfile.objects.create(user=user)
 
+    # Initialize preferences if it doesn't exist
+    if not hasattr(user_profile, 'preferences') or user_profile.preferences is None:
+        user_profile.preferences = {}
+
     # Update the preferences field with the updated favorites
     user_profile.preferences['favorite_artists'] = favorite_artists
     user_profile.preferences['favorite_genres'] = favorite_genres
 
     # Save the updated user profile
     user_profile.save()
-
 
 
 def diversify_recommendations(recommendations, diversity_factor=0.2):
@@ -444,3 +460,11 @@ def assign_recommendation_strategy(user):
         
     except UserProfile.DoesNotExist:
         return 'A'  # Default group
+    
+
+
+    
+
+
+
+

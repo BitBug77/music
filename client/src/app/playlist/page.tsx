@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ArrowLeft, Plus, Music2 } from "lucide-react"
 import Sidebar from "../../components/ui/sidebar"
 import Navbar from "../../components/ui/navbar"
+import { useRouter } from "next/navigation"
 
 // Define interfaces for type safety
 interface Song {
@@ -30,6 +31,7 @@ export default function SavedPage() {
   const [error, setError] = useState<string | null>(null)
   const [isCreatePlaylistModalOpen, setIsCreatePlaylistModalOpen] = useState(false)
   const [newPlaylistTitle, setNewPlaylistTitle] = useState("")
+  const router = useRouter()
 
   useEffect(() => {
     fetchPlaylists()
@@ -210,14 +212,15 @@ export default function SavedPage() {
 
         // Refresh the songs list
         fetchPlaylistSongs(selectedPlaylist)
-
-        // Navigate to the "For You" page
-        window.location.href = "/for-you"
       }
     } catch (error) {
       console.error("Error adding song:", error)
       alert(error instanceof Error ? error.message : "Failed to add song")
     }
+  }
+
+  const navigateToSong = (spotifyId: string) => {
+    router.push(`/song/${spotifyId}`)
   }
 
   return (
@@ -301,27 +304,28 @@ export default function SavedPage() {
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
                     {playlistSongs.map((song) => (
                       <div key={song.id} className="bg-gray-800 rounded-md overflow-hidden relative group">
-                        <Link href={`/song/${song.id}`} passHref>
-                          <div className="cursor-pointer hover:bg-gray-700 transition-colors">
-                            <div className="aspect-square relative overflow-hidden">
-                              {song.album_cover ? (
-                                <img
-                                  src={song.album_cover || "/placeholder.svg"}
-                                  alt={song.album}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-                                  <Music2 size={32} className="text-gray-500" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="p-2">
-                              <p className="font-medium truncate">{song.name}</p>
-                              <p className="text-xs text-gray-400 truncate">{song.artist}</p>
-                            </div>
+                        <div
+                          className="cursor-pointer hover:bg-gray-700 transition-colors"
+                          onClick={() => navigateToSong(song.spotify_id)}
+                        >
+                          <div className="aspect-square relative overflow-hidden">
+                            {song.album_cover ? (
+                              <img
+                                src={song.album_cover || "/placeholder.svg"}
+                                alt={song.album}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+                                <Music2 size={32} className="text-gray-500" />
+                              </div>
+                            )}
                           </div>
-                        </Link>
+                          <div className="p-2">
+                            <p className="font-medium truncate">{song.name}</p>
+                            <p className="text-xs text-gray-400 truncate">{song.artist}</p>
+                          </div>
+                        </div>
 
                         {/* Add to Playlist button that appears on hover */}
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -54,6 +54,9 @@ urlpatterns = [
      path('user/music/', views.user_music, name='user-music'),
       path('preferences/', views.get_preferences, name='get_preferences'),
        path('spotifytrack/<str:spotify_track_id>/', views.get_spotify_track, name='get_spotify'),
+     path('preferences/update/', views.trigger_preferences_update, name='update_preferences'),
+    path('recommendations/advanced/', views.get_advanced_recommendations, name='advanced-recommendations'),
+
 ]
 
 if settings.DEBUG:
