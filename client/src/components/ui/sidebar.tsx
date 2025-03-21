@@ -48,7 +48,7 @@ export default function Sidebar() {
         </div>
         
         <div className="mt-4 mb-6">
-          <MenuItem icon={<PlusCircle size={20} />} label="Create Playlist" href="/create-playlist" />
+          <MenuItem icon={<PlusCircle size={20} />} label="Create Playlist" href="/playlist" />
           <MenuItem icon={<Heart size={20} />} label="Liked Songs" href="/liked-songs" />
         </div>
         
