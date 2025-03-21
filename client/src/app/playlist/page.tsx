@@ -21,114 +21,87 @@ interface Playlist {
   id: number
   title: string
   created_at: string
+  songs?: Song[]
+  isLoading?: boolean
+  error?: string | null
 }
 
 export default function SavedPage() {
   const [playlists, setPlaylists] = useState<Playlist[]>([])
-  const [playlistSongs, setPlaylistSongs] = useState<Song[]>([])
-  const [selectedPlaylist, setSelectedPlaylist] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isCreatePlaylistModalOpen, setIsCreatePlaylistModalOpen] = useState(false)
   const [newPlaylistTitle, setNewPlaylistTitle] = useState("")
   const router = useRouter()
 
+  // Fetch playlists on component mount
   useEffect(() => {
-    fetchPlaylists()
-  }, [])
+    async function fetchData() {
+      try {
+        setIsLoading(true)
+        const token = localStorage.getItem("access_token") || ""
 
-  // Fetch songs when a playlist is selected
-  useEffect(() => {
-    if (selectedPlaylist !== null) {
-      fetchPlaylistSongs(selectedPlaylist)
-    }
-  }, [selectedPlaylist])
+        const response = await fetch("http://127.0.0.1:8000/playlists/", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
 
-  const fetchPlaylists = async () => {
-    try {
-      setIsLoading(true)
-      const token = localStorage.getItem("access_token") || ""
-      const response = await fetch("http://127.0.0.1:8000/playlists/", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Unauthorized. Please login again.")
-        } else {
+        if (!response.ok) {
           throw new Error(`Failed to fetch playlists: ${response.status}`)
         }
-      }
 
-      const data = await response.json()
-      console.log("Playlists response:", data)
+        const data = await response.json()
+        console.log("Playlists response:", data)
 
-      // Based on your backend code, the playlists are in data.playlists
-      if (data.status === "success" && Array.isArray(data.playlists)) {
-        setPlaylists(data.playlists)
-        // Select the first playlist automatically if available
-        if (data.playlists.length > 0) {
-          setSelectedPlaylist(data.playlists[0].id)
+        if (data.status === "success" && Array.isArray(data.playlists)) {
+          // Get all playlists
+          const fetchedPlaylists = data.playlists.map((playlist: Playlist) => ({
+            ...playlist,
+            songs: [],
+          }))
+
+          setPlaylists(fetchedPlaylists)
+
+          // Now fetch songs for each playlist
+          for (const playlist of fetchedPlaylists) {
+            try {
+              const songsResponse = await fetch(`http://127.0.0.1:8000/playlists/${playlist.id}/songs/`, {
+                method: "GET",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              })
+
+              if (songsResponse.ok) {
+                const songsData = await songsResponse.json()
+                console.log(`Songs for playlist ${playlist.id}:`, songsData)
+
+                if (songsData.status === "success" && Array.isArray(songsData.songs)) {
+                  // Update this specific playlist with its songs
+                  setPlaylists((prevPlaylists) =>
+                    prevPlaylists.map((p) => (p.id === playlist.id ? { ...p, songs: songsData.songs } : p)),
+                  )
+                }
+              }
+            } catch (err) {
+              console.error(`Error fetching songs for playlist ${playlist.id}:`, err)
+            }
+          }
         }
-      } else {
-        throw new Error("Unexpected response format")
+      } catch (err) {
+        console.error("Error fetching data:", err)
+        setError(err instanceof Error ? err.message : "An unknown error occurred")
+      } finally {
+        setIsLoading(false)
       }
-
-      setError(null)
-    } catch (error) {
-      console.error("Error fetching playlists:", error)
-      setError(error instanceof Error ? error.message : "An unknown error occurred")
-    } finally {
-      setIsLoading(false)
     }
-  }
 
-  const fetchPlaylistSongs = async (playlistId: number) => {
-    try {
-      setIsLoading(true)
-
-      const token = localStorage.getItem("access_token") || ""
-
-      const response = await fetch(`http://127.0.0.1:8000/playlists/${playlistId}/songs/`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Unauthorized. Please login again.")
-        } else if (response.status === 404) {
-          throw new Error("Playlist not found.")
-        } else {
-          throw new Error(`API error: ${response.status}`)
-        }
-      }
-
-      const data = await response.json()
-      console.log("Playlist songs:", data)
-
-      if (data.status === "success") {
-        setPlaylistSongs(data.songs || [])
-      } else {
-        throw new Error("Unexpected response format")
-      }
-
-      setError(null)
-    } catch (error) {
-      console.error("Error fetching playlist songs:", error)
-      setError(error instanceof Error ? error.message : "An unknown error occurred")
-      setPlaylistSongs([])
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    fetchData()
+  }, [])
 
   const createNewPlaylist = async () => {
     if (!newPlaylistTitle.trim()) return
@@ -153,11 +126,8 @@ export default function SavedPage() {
       console.log("New playlist:", data)
 
       if (data.status === "success") {
-        // Refresh playlists
-        fetchPlaylists()
-        // Reset form
-        setNewPlaylistTitle("")
-        setIsCreatePlaylistModalOpen(false)
+        // Refresh the page to show the new playlist
+        window.location.reload()
       }
     } catch (error) {
       console.error("Error creating playlist:", error)
@@ -165,34 +135,11 @@ export default function SavedPage() {
     }
   }
 
-  const addSongToPlaylist = async () => {
-    if (selectedPlaylist === null) return
-
-    try {
-      // Navigate to the "For You" page
-      window.location.href = "/for-you"
-    } catch (error) {
-      console.error("Error adding song:", error)
-      alert(error instanceof Error ? error.message : "Failed to add song")
-    }
-  }
-
-  const getSelectedPlaylistTitle = () => {
-    if (selectedPlaylist === null) return ""
-    const playlist = playlists.find((p) => p.id === selectedPlaylist)
-    return playlist ? playlist.title : ""
-  }
-
-  const addSongToCurrentPlaylist = async (spotifyId: string) => {
-    if (selectedPlaylist === null) {
-      alert("Please select a playlist first")
-      return
-    }
-
+  const addSongToCurrentPlaylist = async (playlistId: number, spotifyId: string) => {
     try {
       const token = localStorage.getItem("access_token") || ""
 
-      const response = await fetch(`http://127.0.0.1:8000/playlists/${selectedPlaylist}/songs/`, {
+      const response = await fetch(`http://127.0.0.1:8000/playlists/${playlistId}/songs/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -207,11 +154,9 @@ export default function SavedPage() {
 
       const data = await response.json()
       if (data.status === "success") {
-        // Show a success message
         alert("Song added to playlist successfully!")
-
-        // Refresh the songs list
-        fetchPlaylistSongs(selectedPlaylist)
+        // Refresh the page to show the updated playlist
+        window.location.reload()
       }
     } catch (error) {
       console.error("Error adding song:", error)
@@ -241,7 +186,6 @@ export default function SavedPage() {
                 <ArrowLeft size={24} />
               </button>
             </Link>
-            <h1 className="text-2xl font-bold">My Playlists</h1>
             <button className="p-2" onClick={() => setIsCreatePlaylistModalOpen(true)}>
               <Plus size={24} />
             </button>
@@ -249,14 +193,16 @@ export default function SavedPage() {
 
           {/* Content */}
           <div className="px-4 pb-8">
-            {isLoading && playlists.length === 0 ? (
+            {isLoading ? (
               <div className="flex justify-center items-center h-64">
                 <p>Loading playlists...</p>
               </div>
-            ) : error && playlists.length === 0 ? (
+            ) : error ? (
               <div className="flex flex-col justify-center items-center h-64">
                 <p className="text-red-400 mb-2">Error: {error}</p>
-                <p className="text-gray-400">Try refreshing the page</p>
+                <button onClick={() => window.location.reload()} className="text-blue-400 hover:text-blue-300">
+                  Refresh
+                </button>
               </div>
             ) : playlists.length === 0 ? (
               <div className="flex flex-col justify-center items-center h-64">
@@ -266,84 +212,72 @@ export default function SavedPage() {
               </div>
             ) : (
               <div className="flex flex-col">
-                {/* Playlist selector */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between">
-                    <select
-                      className="bg-gray-800 text-white p-2 rounded-md w-48"
-                      value={selectedPlaylist || ""}
-                      onChange={(e) => setSelectedPlaylist(Number(e.target.value))}
-                    >
-                      {playlists.map((playlist) => (
-                        <option key={playlist.id} value={playlist.id}>
-                          {playlist.title}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      className="p-2 bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                      onClick={addSongToPlaylist}
-                    >
-                      Add Song
-                    </button>
-                  </div>
-                  <h2 className="text-xl font-medium mt-4">{getSelectedPlaylistTitle()}</h2>
+                {/* Playlist header */}
+                <div className="mb-8">
+                  <h1 className="text-3xl font-bold">My Saved Items</h1>
                 </div>
 
-                {/* Songs list */}
-                {isLoading && selectedPlaylist !== null ? (
-                  <div className="flex justify-center items-center h-40">
-                    <p>Loading songs...</p>
-                  </div>
-                ) : playlistSongs.length === 0 ? (
-                  <div className="flex flex-col justify-center items-center h-40">
-                    <Music2 size={36} className="text-gray-500 mb-3" />
-                    <p>No songs in this playlist</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-                    {playlistSongs.map((song) => (
-                      <div key={song.id} className="bg-gray-800 rounded-md overflow-hidden relative group">
-                        <div
-                          className="cursor-pointer hover:bg-gray-700 transition-colors"
-                          onClick={() => navigateToSong(song.spotify_id)}
-                        >
-                          <div className="aspect-square relative overflow-hidden">
-                            {song.album_cover ? (
-                              <img
-                                src={song.album_cover || "/placeholder.svg"}
-                                alt={song.album}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-                                <Music2 size={32} className="text-gray-500" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-2">
-                            <p className="font-medium truncate">{song.name}</p>
-                            <p className="text-xs text-gray-400 truncate">{song.artist}</p>
-                          </div>
+                {/* Songs by playlist sections */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {playlists.map((playlist) => (
+                    <div key={playlist.id} className="mb-4">
+                      <div className="p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/60 transition-colors duration-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <h2 className="text-xl font-bold">{playlist.title}</h2>
+                          <Link href={`/playlist/${playlist.id}`}>
+                            <span className="text-sm text-gray-400 hover:text-white">See all</span>
+                          </Link>
                         </div>
 
-                        {/* Add to Playlist button that appears on hover */}
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              addSongToCurrentPlaylist(song.spotify_id)
-                            }}
-                            className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-lg"
-                            title="Add to playlist"
-                          >
-                            <Plus size={16} />
-                          </button>
-                        </div>
+                        {/* Display songs for this playlist */}
+                        {!playlist.songs || playlist.songs.length === 0 ? (
+                          <div className="flex flex-col justify-center items-center h-40">
+                            <Music2 size={36} className="text-gray-500 mb-3" />
+                            <p>No songs in this playlist</p>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-2">
+                            {playlist.songs.slice(0, 4).map((song, index) => (
+                              <div
+                                key={`${song.id || index}`}
+                                className="bg-gray-700 rounded-md overflow-hidden relative group cursor-pointer"
+                                onClick={() => navigateToSong(song.spotify_id)}
+                              >
+                                <div className="aspect-square relative overflow-hidden">
+                                  {song.album_cover ? (
+                                    <>
+                                      <img
+                                        src={song.album_cover || "/placeholder.svg"}
+                                        alt={song.name || "Song"}
+                                        className="h-full w-full object-cover transition-all duration-200"
+                                        onError={(e) => {
+                                          e.currentTarget.src = "/placeholder.svg"
+                                        }}
+                                      />
+                                      <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-200"></div>
+                                    </>
+                                  ) : (
+                                    <div className="w-full h-full bg-gray-600 flex items-center justify-center">
+                                      <Music2 size={32} className="text-gray-400" />
+                                    </div>
+                                  )}
+
+                                  {/* Song info overlay */}
+                                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-2">
+                                    <div className="text-xs font-medium truncate">{song.name || "Unknown"}</div>
+                                    <div className="text-xs text-gray-300 truncate">
+                                      {song.artist || "Unknown artist"}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
