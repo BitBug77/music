@@ -18,9 +18,8 @@ urlpatterns = [
     path('spotify-callback/', views.spotify_callback, name='spotify_callback'),
     path('home/', views.home, name='home'),
     path('popularity/', views.get_songs_by_popularity, name='songs_by_popularity'),
-    path('recommendations/', views.get_recommendations, name='get_recommendations'),
-    path('recommendations/artist/<str:artist_name>/', views.get_recommendations_by_artist, name='get_recommendations_by_artist'),
-    path('similar-users/', views.get_similar_users, name='get_similar_users'),
+    
+
     path('logout/', views.logout_view, name='logout'),
     path('search-songs/', views.search_songs, name='search_songs'),
     path('recommend-friends/', views.recommend_friends, name='recommend_friends'),
@@ -55,8 +54,14 @@ urlpatterns = [
       path('preferences/', views.get_preferences, name='get_preferences'),
        path('spotifytrack/<str:spotify_track_id>/', views.get_spotify_track, name='get_spotify'),
      path('preferences/update/', views.trigger_preferences_update, name='update_preferences'),
-    path('recommendations/advanced/', views.get_advanced_recommendations, name='advanced-recommendations'),
-
+    path('recommendations/personalized/', views.get_personalized_recommendations_view, name='personalized_recommendations'),
+    
+    path('recommendations/songs/', views.get_song_recommendations, name='song-recommendations'),
+    path('spotify/tracks/<str:track_id>/', views.fetch_and_store_spotify_track, name='fetch-spotify-track'),
+    path('recommendations/similar/<str:spotify_track_id>/', views.recommend_similar_songs, name='recommend_similar_songs'),
+    path('recommendations/for-you/', views.get_for_you_recommendations, name='for_you_recommendations'),
+    path('recommend-friends/', views.recommend_friends, name='recommend_friends'),
+    path('recommendations/friends/', views.recommend_songs_from_friends, name='recommend_songs_from_friends'),
 ]
 
 if settings.DEBUG:

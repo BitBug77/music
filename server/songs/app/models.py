@@ -45,7 +45,7 @@ class Song(models.Model):
     spotify_id = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
     artist = models.CharField(max_length=255)
-    album = models.CharField(max_length=255)
+    album = models.CharField(max_length=255,null=True, blank=True)
     duration = models.IntegerField(null=True, blank=True)
     genre = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
