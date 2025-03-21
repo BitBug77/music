@@ -461,6 +461,7 @@ def assign_recommendation_strategy(user):
     except UserProfile.DoesNotExist:
         return 'A'  # Default group
     
+    
 
 
     
