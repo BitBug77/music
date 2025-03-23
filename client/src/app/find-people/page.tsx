@@ -101,7 +101,18 @@ export default function FindPeoplePage() {
       if (!response.ok) throw new Error("Failed to fetch similar users")
 
       const data = await response.json()
-      setSimilarUsers(data)
+      console.log("Similar users data:", data) // Add logging to see the structure
+
+      // Ensure data is an array before setting state
+      if (Array.isArray(data)) {
+        setSimilarUsers(data)
+      } else if (data && typeof data === "object" && Array.isArray(data.users)) {
+        // If the API returns an object with a users array
+        setSimilarUsers(data.users)
+      } else {
+        console.error("Unexpected data format for similar users:", data)
+        setSimilarUsers([]) // Set to empty array as fallback
+      }
     } catch (error) {
       console.error("Error fetching similar users:", error)
       setSimilarUsers([])
@@ -610,7 +621,8 @@ export default function FindPeoplePage() {
       case "discover":
         return (
           <div className="grid grid-cols-1 gap-4">
-            {similarUsers.filter((user) => user.status !== "friends").map((user) => renderUserCard(user))}
+            {Array.isArray(similarUsers) &&
+              similarUsers.filter((user) => user && user.status !== "friends").map((user) => renderUserCard(user))}
           </div>
         )
 

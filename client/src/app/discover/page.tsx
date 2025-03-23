@@ -183,7 +183,7 @@ export default function DiscoverPage() {
             spotifyUrl: spotifyUrl,
             spotifyTrackId: spotifyTrackId,
             // Use a fallback if album_cover is not available
-            coverUrl: song.album_cover || song.cover || song.image || "/api/placeholder/40/40",
+            coverUrl: song.album_cover || song.cover || song.image || "",
           }
         })
 
@@ -217,7 +217,7 @@ export default function DiscoverPage() {
             popularity: 95,
             spotifyUrl: "https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b",
             spotifyTrackId: "0VjIjW4GlUZAMYd2vXMi3b",
-            coverUrl: "/api/placeholder/40/40",
+            coverUrl: "",
           },
           {
             id: 2,
@@ -226,7 +226,7 @@ export default function DiscoverPage() {
             popularity: 92,
             spotifyUrl: "https://open.spotify.com/track/4Dvkj6JhhA12EX05fT7y2e",
             spotifyTrackId: "4Dvkj6JhhA12EX05fT7y2e",
-            coverUrl: "/api/placeholder/40/40",
+            coverUrl: "",
           },
           // More fallback songs could be added here
         ])
@@ -378,6 +378,58 @@ export default function DiscoverPage() {
     setIsCreatePlaylistModalOpen(false)
   }
 
+  const renderSongSection = (
+    title: string,
+    icon: React.ReactNode,
+    songs: ProcessedSong[],
+    isLoading: boolean,
+    error: string | null,
+    emptyMessage: string,
+  ) => {
+    // Filter out songs with null/empty coverUrl
+    const filteredSongs = songs.filter((song) => song.coverUrl)
+
+    return (
+      <section className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold flex items-center text-blue-700">
+            {icon}
+            {title}
+          </h2>
+          <a href="#" className="text-sm text-pink-500 hover:underline">
+            See All
+          </a>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center p-10">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-500"></div>
+          </div>
+        ) : error ? (
+          <div className="bg-pink-100 p-4 rounded-md">
+            <p className="text-pink-600">Error: {error}</p>
+            <p className="text-blue-600 mt-2">Showing mock data as fallback</p>
+          </div>
+        ) : filteredSongs.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {filteredSongs.map((song) => (
+              <SongCard
+                key={song.id}
+                song={song}
+                onAddToPlaylist={() => openAddToPlaylistModal(song)}
+                onPreview={handlePreview}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-gray-100 p-4 rounded-md">
+            <p className="text-gray-600">{emptyMessage}</p>
+          </div>
+        )}
+      </section>
+    )
+  }
+
   return (
     <div className="flex flex-col h-screen text-black">
       {/* Navbar */}
@@ -392,81 +444,74 @@ export default function DiscoverPage() {
       <div className="flex-1 overflow-auto bg-[#151b27]">
         {/* Header */}
         <div className="p-8">
-          <h1 className="text-3xl text-blue-700 font-bold mb-4">Discover</h1>
+          <div className="mb-4">
+            <h1 className="text-3xl text-blue-700 font-bold">Discover</h1>
+          </div>
           <p className="text-pink-600">Find your next favorite track based on what's trending now</p>
         </div>
 
         {/* Content */}
         <div className="p-8">
-          {/* Top Trending Section */}
-          <section className="mb-10">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold flex items-center text-blue-700">
-                <TrendingUp size={20} className="mr-2" />
-                Top Trending
-              </h2>
-              <a href="#" className="text-sm text-pink-500 hover:underline">
-                See All
-              </a>
+          {/* Loading Skeleton */}
+          {isLoading ? (
+            <div className="space-y-8">
+              {/* Top Trending Skeleton */}
+              <section className="mb-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="h-8 w-48 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="h-4 w-16 bg-gray-300 rounded animate-pulse"></div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-gray-300 rounded-md p-4 animate-pulse">
+                      <div className="w-full aspect-square rounded-md bg-gray-400 mb-4"></div>
+                      <div className="h-5 bg-gray-400 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-400 rounded w-1/2"></div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Popular Tracks Skeleton */}
+              <section className="mb-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="h-8 w-48 bg-gray-300 rounded animate-pulse"></div>
+                  <div className="h-4 w-16 bg-gray-300 rounded animate-pulse"></div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-gray-300 rounded-md p-4 animate-pulse">
+                      <div className="w-full aspect-square rounded-md bg-gray-400 mb-4"></div>
+                      <div className="h-5 bg-gray-400 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-400 rounded w-1/2"></div>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </div>
+          ) : (
+            <>
+              {/* Top Trending Section */}
+              {renderSongSection(
+                "Top Trending",
+                <TrendingUp size={20} className="mr-2" />,
+                popularSongs.slice(0, 4),
+                isLoading,
+                error,
+                "No trending songs available at the moment.",
+              )}
 
-            {isLoading ? (
-              <div className="flex justify-center p-10">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-500"></div>
-              </div>
-            ) : error ? (
-              <div className="bg-pink-100 p-4 rounded-md">
-                <p className="text-pink-600">Error: {error}</p>
-                <p className="text-blue-600 mt-2">Showing mock data as fallback</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {popularSongs.slice(0, 4).map((song) => (
-                  <SongCard
-                    key={song.id}
-                    song={song}
-                    onAddToPlaylist={() => openAddToPlaylistModal(song)}
-                    onPreview={handlePreview}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Popular Tracks Section */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold flex items-center text-blue-700">
-                <Clock size={20} className="mr-2" />
-                Popular Tracks
-              </h2>
-              <a href="#" className="text-sm text-pink-500 hover:underline">
-                See All
-              </a>
-            </div>
-
-            {isLoading ? (
-              <div className="flex justify-center p-10">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-500"></div>
-              </div>
-            ) : error ? (
-              <div className="bg-pink-100 p-4 rounded-md">
-                <p className="text-pink-600">Error: {error}</p>
-                <p className="text-blue-600 mt-2">Showing mock data as fallback</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {popularSongs.slice(4).map((song) => (
-                  <SongCard
-                    key={song.id}
-                    song={song}
-                    onAddToPlaylist={() => openAddToPlaylistModal(song)}
-                    onPreview={handlePreview}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
+              {/* Popular Tracks Section */}
+              {renderSongSection(
+                "Popular Tracks",
+                <Clock size={20} className="mr-2" />,
+                popularSongs.slice(4),
+                isLoading,
+                error,
+                "No popular tracks available at the moment.",
+              )}
+            </>
+          )}
         </div>
       </div>
 

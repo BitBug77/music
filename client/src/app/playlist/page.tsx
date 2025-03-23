@@ -214,7 +214,7 @@ export default function SavedPage() {
               <div className="flex flex-col">
                 {/* Playlist header */}
                 <div className="mb-8">
-                  <h1 className="text-3xl font-bold">My Saved Items</h1>
+                  <h1 className="text-3xl font-bold">My playlist</h1>
                 </div>
 
                 {/* Songs by playlist sections */}
