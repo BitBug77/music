@@ -55,10 +55,11 @@ urlpatterns = [
        path('spotifytrack/<str:spotify_track_id>/', views.get_spotify_track, name='get_spotify'),
      path('preferences/update/', views.trigger_preferences_update, name='update_preferences'),
     path('recommendations/personalized/', views.get_personalized_recommendations_view, name='personalized_recommendations'),
-    
+      path('history/recent/', views.get_recently_played, name='recently_played'),
+    path('history/most-played/', views.get_most_played, name='most_played'),
     path('recommendations/songs/', views.get_song_recommendations, name='song-recommendations'),
     path('spotify/tracks/<str:track_id>/', views.fetch_and_store_spotify_track, name='fetch-spotify-track'),
-    path('recommendations/similar/<str:spotify_track_id>/', views.recommend_similar_songs, name='recommend_similar_songs'),
+    path('recommendations/', views.recommend_songs, name='backend_recommendations'),
     path('recommendations/for-you/', views.get_for_you_recommendations, name='for_you_recommendations'),
     path('recommend-friends/', views.recommend_friends, name='recommend_friends'),
     path('recommendations/friends/', views.recommend_songs_from_friends, name='recommend_songs_from_friends'),

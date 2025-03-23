@@ -148,7 +148,6 @@ def signup_view(request):
             'access': access_token,
             'refresh': refresh_token
         }, status=201)
-    
 def spotify_login(request):
     """Initiates Spotify OAuth login"""
     scope = 'user-read-private user-read-email user-top-read user-library-read'
@@ -2147,40 +2146,295 @@ def fetch_and_store_spotify_track(request, track_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def recommend_similar_songs(request, spotify_track_id):
+def recommend_songs(request):
     """
-    Recommend similar songs when a user likes or saves a song.
+    Recommend songs based on user's recent activity without requiring a specific track ID.
+    Automatically analyzes user behavior to provide personalized recommendations.
     """
     user = request.user
     limit = int(request.query_params.get('limit', 20))
     
-    # Fetch the song details from Spotify
-    song_details = get_spotify_track(spotify_track_id)
-    if not song_details:
-        return Response({
-            'status': 'error',
-            'message': 'Failed to fetch song details from Spotify'
-        }, status=status.HTTP_404_NOT_FOUND)
+    # 1. Determine the base song for recommendations from user's recent activity
+    base_track = get_user_base_track(user)
+    if not base_track:
+        # If we can't determine a base track, return a general recommendation
+        return get_general_recommendations(request, limit)
     
-    # Get similar songs from Spotify based on the liked/saved song's artist and genre
-    similar_songs = get_related_spotify_tracks(artist=song_details['artist'], genre=song_details['genre'], limit=limit)
+    # Calculate how many new vs. existing songs to include
+    new_song_ratio = 0.6  # 60% new songs, 40% existing songs
+    new_song_limit = int(limit * new_song_ratio)
+    existing_song_limit = limit - new_song_limit
+    
+    # 2. Get similar songs from Spotify based on the base song's artist and genre
+    artist = base_track.get('artist')
+    genre = base_track.get('genre')
+    
+    # Handle potential None values
+    if artist and genre:
+        similar_songs = get_related_spotify_tracks(
+            artist=artist, 
+            genre=genre, 
+            limit=new_song_limit * 2  # Get more than needed to ensure variety
+        )
+    elif artist:
+        similar_songs = get_related_spotify_tracks(
+            artist=artist,
+            limit=new_song_limit * 2
+        )
+    elif genre:
+        similar_songs = get_related_spotify_tracks(
+            genre=genre,
+            limit=new_song_limit * 2
+        )
+    else:
+        # If neither artist nor genre are available, get trending tracks
+        similar_songs = get_trending_spotify_tracks(limit=new_song_limit * 2)
     
     # Filter out songs that are already in the Song table
     existing_song_ids = set(Song.objects.values_list('spotify_id', flat=True))
-    new_songs = [song for song in similar_songs if song['spotify_id'] not in existing_song_ids]
+    new_songs = [song for song in similar_songs if song.get('spotify_id') and song['spotify_id'] not in existing_song_ids]
     
     # Store the new songs in the database
-    stored_new_songs = store_spotify_tracks(new_songs)
+    stored_new_songs = store_spotify_tracks(new_songs[:new_song_limit])
     
-    # If not enough new songs, fill the rest with songs from the Song table
-    if len(stored_new_songs) < limit:
-        additional_songs_needed = limit - len(stored_new_songs)
-        additional_songs = Song.objects.exclude(spotify_id__in=[song.spotify_id for song in stored_new_songs]).order_by('?')[:additional_songs_needed]
-        stored_new_songs.extend(additional_songs)
+    # 3. Get relevant existing songs from the database
+    matching_songs = []
+    
+    # Find songs with matching artist or genre (safely handle None values)
+    query = Q()
+    if artist:
+        query |= Q(artist__icontains=artist)
+    if genre:
+        query |= Q(genre__icontains=genre)
+    
+    if query:
+        # Only filter if we have valid criteria
+        matching_songs = list(Song.objects.filter(query))
+        
+        # Exclude the base song and newly added songs
+        if base_track.get('spotify_id'):
+            matching_songs = [song for song in matching_songs if song.spotify_id != base_track['spotify_id']]
+        
+        # Exclude newly added songs
+        new_song_ids = [song.spotify_id for song in stored_new_songs]
+        matching_songs = [song for song in matching_songs if song.spotify_id not in new_song_ids]
+    
+    # If we don't have enough matching songs, add some based on user preferences
+    if len(matching_songs) < existing_song_limit:
+        # Get user's favorite genres and artists from their profile or action history
+        try:
+            profile = UserProfile.objects.get(user=user)
+            favorite_artists = profile.preferences.get('favorite_artists', []) or []
+            favorite_genres = profile.preferences.get('favorite_genres', []) or []
+            
+            pref_query = Q()
+            if favorite_artists:
+                pref_query |= Q(artist__in=favorite_artists)
+            if favorite_genres:
+                pref_query |= Q(genre__in=favorite_genres)
+                
+            if pref_query:
+                # Find additional songs based on user preferences
+                additional_matches = list(Song.objects.filter(pref_query))
+                
+                # Exclude songs already in matching_songs
+                matching_song_ids = [song.id for song in matching_songs]
+                additional_matches = [song for song in additional_matches if song.id not in matching_song_ids]
+                
+                # Exclude the base song
+                if base_track.get('spotify_id'):
+                    additional_matches = [song for song in additional_matches if song.spotify_id != base_track['spotify_id']]
+                
+                # Exclude newly added songs
+                additional_matches = [song for song in additional_matches if song.spotify_id not in new_song_ids]
+                
+                matching_songs.extend(additional_matches)
+        except UserProfile.DoesNotExist:
+            # If no user profile, just get popular songs
+            pass
+    
+    # If we still don't have enough, add some random popular songs
+    if len(matching_songs) < existing_song_limit:
+        # Get popular songs based on play counts
+        popular_songs = Action.objects.filter(
+            action_type='play'
+        ).values('song').annotate(
+            count=Count('id')
+        ).order_by('-count')[:existing_song_limit * 2]  # Get more than needed in case of duplicates
+        
+        if popular_songs:
+            popular_song_ids = [item['song'] for item in popular_songs if item.get('song')]
+            if popular_song_ids:
+                popular_song_objects = list(Song.objects.filter(id__in=popular_song_ids))
+                
+                # Exclude songs already in matching_songs
+                matching_song_ids = [song.id for song in matching_songs]
+                popular_song_objects = [song for song in popular_song_objects if song.id not in matching_song_ids]
+                
+                matching_songs.extend(popular_song_objects)
+    
+    # Take only the number of existing songs we need
+    existing_recommendations = matching_songs[:existing_song_limit]
+    
+    # Combine both new and existing song recommendations
+    all_recommendations = list(stored_new_songs) + list(existing_recommendations)
+    
+    # Shuffle the recommendations to mix new and existing songs
+    random.shuffle(all_recommendations)
     
     # Format the response
     recommendations = []
-    for song in stored_new_songs:
+    for song in all_recommendations:
+        recommendation = {
+            'id': song.id,
+            'spotify_id': song.spotify_id,
+            'name': song.name,
+            'artist': song.artist,
+            'album': song.album,
+            'duration': song.duration,
+            'genre': song.genre,
+            'url': song.url,
+            'album_cover': song.album_cover,
+            'is_new_discovery': song in stored_new_songs  # Flag to indicate if this is a new discovery
+        }
+        
+        # Only add recommendation basis if we have a valid base track
+        if base_track:
+            recommendation['recommendation_basis'] = {
+                'song': base_track.get('name', 'Unknown'),
+                'artist': base_track.get('artist', 'Unknown'),
+                'genre': base_track.get('genre', 'Unknown')
+            }
+            
+        recommendations.append(recommendation)
+    
+    response_data = {
+        'status': 'success',
+        'count': len(recommendations),
+        'new_discoveries': len(stored_new_songs),
+        'from_library': len(existing_recommendations),
+        'recommendations': recommendations
+    }
+    
+    # Add recommendation basis to response if available
+    if base_track:
+        response_data['recommendation_basis'] = {
+            'song': base_track.get('name', 'Unknown'),
+            'artist': base_track.get('artist', 'Unknown')
+        }
+    
+    return Response(response_data, status=status.HTTP_200_OK)
+
+def get_user_base_track(user):
+    """
+    Determine which track to use as the basis for recommendations.
+    Analyzes user's recent activity to find the most relevant track.
+    """
+    # Strategy 1: Last liked/saved song
+    last_liked = Action.objects.filter(
+        user=user, 
+        action_type__in=['like', 'save'],
+        song__isnull=False  # Ensure the song is not null
+    ).order_by('-timestamp').first()
+    
+    if last_liked and last_liked.song:
+        song = last_liked.song
+        return {
+            'spotify_id': song.spotify_id,
+            'name': song.name,
+            'artist': song.artist,
+            'genre': song.genre
+        }
+    
+    # Strategy 2: Most played song in the last week
+    one_week_ago = timezone.now() - timezone.timedelta(days=7)
+    most_played = Action.objects.filter(
+        user=user,
+        action_type='play',
+        timestamp__gte=one_week_ago,
+        song__isnull=False  # Ensure the song is not null
+    ).values('song').annotate(
+        play_count=Count('id')
+    ).order_by('-play_count').first()
+    
+    if most_played and most_played.get('song'):
+        try:
+            song = Song.objects.get(id=most_played['song'])
+            return {
+                'spotify_id': song.spotify_id,
+                'name': song.name,
+                'artist': song.artist,
+                'genre': song.genre
+            }
+        except Song.DoesNotExist:
+            pass
+    
+    # Strategy 3: Check user's preferred genres/artists and pick a popular song
+    try:
+        profile = UserProfile.objects.get(user=user)
+        favorite_genres = profile.preferences.get('favorite_genres', []) or []
+        favorite_artists = profile.preferences.get('favorite_artists', []) or []
+        
+        query = Q()
+        if favorite_genres:
+            query |= Q(genre__in=favorite_genres)
+        if favorite_artists:
+            query |= Q(artist__in=favorite_artists)
+            
+        if query:
+            popular_match = Song.objects.filter(query).annotate(
+                play_count=Count('action', filter=Q(action__action_type='play'))
+            ).order_by('-play_count').first()
+            
+            if popular_match:
+                return {
+                    'spotify_id': popular_match.spotify_id,
+                    'name': popular_match.name,
+                    'artist': popular_match.artist,
+                    'genre': popular_match.genre
+                }
+    except UserProfile.DoesNotExist:
+        pass
+    
+    # Strategy 4: Fall back to a generally popular song
+    popular_song = Song.objects.annotate(
+        play_count=Count('action', filter=Q(action__action_type='play'))
+    ).order_by('-play_count').first()
+    
+    if popular_song:
+        return {
+            'spotify_id': popular_song.spotify_id,
+            'name': popular_song.name,
+            'artist': popular_song.artist,
+            'genre': popular_song.genre
+        }
+    
+    # If all else fails, return None
+    return None
+
+def get_general_recommendations(request, limit):
+    """
+    Fallback function to get general recommendations when no base track can be determined.
+    Returns popular and trending songs.
+    """
+    user = request.user
+    
+    # Get popular songs from our database
+    popular_songs = Song.objects.annotate(
+        play_count=Count('action', filter=Q(action__action_type='play'))
+    ).order_by('-play_count')[:limit//2]
+    
+    # Get some trending songs from Spotify
+    trending_songs = get_trending_spotify_tracks(limit=limit//2)
+    stored_trending = store_spotify_tracks(trending_songs)
+    
+    # Combine recommendations
+    all_recommendations = list(popular_songs) + list(stored_trending)
+    random.shuffle(all_recommendations)
+    
+    # Format the response
+    recommendations = []
+    for song in all_recommendations:
         recommendations.append({
             'id': song.id,
             'spotify_id': song.spotify_id,
@@ -2190,14 +2444,30 @@ def recommend_similar_songs(request, spotify_track_id):
             'duration': song.duration,
             'genre': song.genre,
             'url': song.url,
-            'album_cover': song.album_cover
+            'album_cover': song.album_cover,
+            'is_new_discovery': song in stored_trending
         })
     
     return Response({
         'status': 'success',
         'count': len(recommendations),
+        'new_discoveries': len(stored_trending),
+        'from_library': len(popular_songs),
+        'recommendation_type': 'general',  # Indicate these are general recommendations
         'recommendations': recommendations
     }, status=status.HTTP_200_OK)
+
+# You'll need to implement this function to get trending tracks from Spotify
+def get_trending_spotify_tracks(limit=10):
+    """
+    Get trending tracks from Spotify.
+    This is a placeholder - implement the actual API call to Spotify.
+    """
+    # Implement Spotify API call to get trending tracks
+    # This would typically use the Spotify API to get new releases or trending tracks
+    
+    # Placeholder implementation - should be replaced with actual API call
+    return []
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -2455,4 +2725,125 @@ def recommend_songs_from_friends(request, limit=20):
         'status': 'success',
         'count': len(response_data),
         'recommendations': response_data
+    }, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_recently_played(request):
+    """
+    Returns a list of songs recently played by the user.
+    """
+    user = request.user
+    limit = int(request.query_params.get('limit', 10))
+    days = int(request.query_params.get('days', 30))  # Default to last 30 days
+    
+    # Calculate the date range
+    start_date = timezone.now() - timezone.timedelta(days=days)
+    
+    # Get distinct songs played by the user in the given time period
+    # Order by most recent play
+    recent_plays = Action.objects.filter(
+        user=user,
+        action_type='play',
+        song__isnull=False,
+        timestamp__gte=start_date
+    ).order_by('-timestamp').select_related('song')
+    
+    # Get distinct songs (the first occurrence of each song is the most recent play)
+    seen_songs = set()
+    distinct_recent_songs = []
+    
+    for action in recent_plays:
+        if action.song.id not in seen_songs:
+            seen_songs.add(action.song.id)
+            distinct_recent_songs.append({
+                'song': action.song,
+                'last_played': action.timestamp
+            })
+        
+        if len(distinct_recent_songs) >= limit:
+            break
+    
+    # Format the response
+    song_list = []
+    for item in distinct_recent_songs:
+        song = item['song']
+        song_list.append({
+            'id': song.id,
+            'spotify_id': song.spotify_id,
+            'name': song.name,
+            'artist': song.artist,
+            'album': song.album,
+            'duration': song.duration,
+            'genre': song.genre,
+            'url': song.url,
+            'album_cover': song.album_cover,
+            'last_played': item['last_played'].isoformat()
+        })
+    
+    return Response({
+        'status': 'success',
+        'count': len(song_list),
+        'time_period': f"Last {days} days",
+        'songs': song_list
+    }, status=status.HTTP_200_OK)
+
+from django.db.models import Max
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_most_played(request):
+    """
+    Returns a list of the user's most played songs.
+    """
+    user = request.user
+    limit = int(request.query_params.get('limit', 10))
+    days = int(request.query_params.get('days', 90))  # Default to last 90 days
+    
+    # Calculate the date range
+    start_date = timezone.now() - timezone.timedelta(days=days)
+    
+    # Get songs played by the user in the given time period
+    # Group by song and count plays
+    most_played = Action.objects.filter(
+        user=user,
+        action_type='play',
+        song__isnull=False,
+        timestamp__gte=start_date
+    ).values('song').annotate(
+        play_count=Count('id'),
+        last_played=Max('timestamp')
+    ).order_by('-play_count')[:limit]
+    
+    # Get the actual song objects
+    song_ids = [item['song'] for item in most_played]
+    songs = {song.id: song for song in Song.objects.filter(id__in=song_ids)}
+    
+    # Format the response
+    song_list = []
+    for item in most_played:
+        song_id = item['song']
+        if song_id in songs:
+            song = songs[song_id]
+            song_list.append({
+                'id': song.id,
+                'spotify_id': song.spotify_id,
+                'name': song.name,
+                'artist': song.artist,
+                'album': song.album,
+                'duration': song.duration,
+                'genre': song.genre,
+                'url': song.url,
+                'album_cover': song.album_cover,
+                'play_count': item['play_count'],
+                'last_played': item['last_played'].isoformat()
+            })
+    
+    return Response({
+        'status': 'success',
+        'count': len(song_list),
+        'time_period': f"Last {days} days",
+        'songs': song_list
     }, status=status.HTTP_200_OK)
