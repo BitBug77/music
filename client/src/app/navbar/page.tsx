@@ -374,7 +374,7 @@ const Navbar: React.FC = () => {
   }, [])
 
   return (
-    <nav className="text-white shadow-lg z-10 w-full bg-[#74686e]">
+    <nav className="text-white shadow-lg z-9999 w-full bg-[#74686e]">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0 pl-0">
@@ -383,7 +383,7 @@ const Navbar: React.FC = () => {
             </Link>
           </div>
           <div className="hidden md:block flex-grow mx-8">
-            <div className="relative w-full" ref={searchRef}>
+            <div className="relative w-full z-[9999]" ref={searchRef}>
               <div
                 className={`relative w-2/4 transition-all duration-300 ${isSearchActive ? "w-3/4 scale-105" : "w-2/4"}`}
               >
@@ -409,7 +409,7 @@ const Navbar: React.FC = () => {
                   </div>
                 )}
                 {showSuggestions && (
-                  <div className="absolute mt-1 w-full bg-white rounded-md shadow-lg z-10 overflow-hidden">
+                  <div className="absolute mt-1 w-full bg-white rounded-md shadow-lg z-[10000] overflow-hidden">
                     {searchResults.length > 0 ? (
                       <ul className="max-h-60 overflow-y-auto py-1 text-sm">
                         {searchResults.map((result, index) => (
@@ -752,7 +752,7 @@ const Navbar: React.FC = () => {
                   </div>
                 )}
                 {showSuggestions && (
-                  <div className="absolute mt-1 w-full bg-white rounded-md shadow-lg z-10 overflow-hidden">
+                  <div className="absolute mt-1 w-full bg-white rounded-md shadow-lg z-50 overflow-hidden">
                     {searchResults.length > 0 ? (
                       <ul className="max-h-60 overflow-y-auto py-1 text-sm">
                         {searchResults.map((result, index) => (

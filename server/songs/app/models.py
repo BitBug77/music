@@ -199,3 +199,22 @@ class UserMusic(models.Model):
     
     def __str__(self):
         return f"{self.track_name} by {self.artist_name} ({self.user.username})"
+    
+    
+    
+class Notification(models.Model):
+    NOTIFICATION_TYPES = (
+        ('friend_request', 'Friend Request'),
+        ('request_accepted', 'Request Accepted'),
+        ('request_rejected', 'Request Rejected'),
+    )
+    
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications')
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']

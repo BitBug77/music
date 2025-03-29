@@ -538,13 +538,20 @@ def recommend_friends(request):
 
     return JsonResponse({"status": "success", "recommended_friends": recommended_friends})
 
+# views.py
+
+from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from .models import User, FriendRequest
+from .kafka_producer import send_kafka_message
+from django.conf import settings
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_friend_request(request):
     """Send a friend request to another user using username or user_id in request body"""
     
-    # Get user identifier from request body
     user_id = request.data.get('user_id')
     username = request.data.get('username')
     
@@ -592,6 +599,16 @@ def send_friend_request(request):
     
     FriendRequest.objects.create(sender=sender, receiver=receiver)
     
+    # Send Kafka message
+    message = {
+        'event': 'friend_request_sent',
+        'sender_id': sender.id,
+        'receiver_id': receiver.id,
+        'sender_username': sender.username,
+        'receiver_username': receiver.username
+    }
+    send_kafka_message(settings.KAFKA_TOPIC, message)
+    
     return JsonResponse({
         "status": "success", 
         "message": "Friend request sent successfully",
@@ -603,15 +620,13 @@ def send_friend_request(request):
         }
     })
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def respond_to_friend_request(request):
     """Respond to a friend request (accept or reject)"""
-    # Get data from request body instead of URL parameters
+    
     request_id = request.data.get('requestId')
     action = request.data.get('action')
-    print(request.data)
     
     if not request_id or not action:
         return JsonResponse({"status": "error", "message": "Missing request_id or action"}, status=400)
@@ -626,11 +641,35 @@ def respond_to_friend_request(request):
         if action == "accept":
             friend_request.status = "accepted"
             friend_request.save()
+            
+            # Send Kafka message for accepted request
+            message = {
+                'event': 'friend_request_accepted',
+                'sender_id': friend_request.sender.id,
+                'receiver_id': friend_request.receiver.id,
+                'sender_username': friend_request.sender.username,
+                'receiver_username': friend_request.receiver.username
+            }
+            send_kafka_message(settings.KAFKA_TOPIC, message)
+            
             return JsonResponse({"status": "success", "message": "Friend request accepted"})
+        
         elif action == "decline":
             friend_request.status = "rejected"
             friend_request.save()
+            
+            # Send Kafka message for declined request
+            message = {
+                'event': 'friend_request_rejected',
+                'sender_id': friend_request.sender.id,
+                'receiver_id': friend_request.receiver.id,
+                'sender_username': friend_request.sender.username,
+                'receiver_username': friend_request.receiver.username
+            }
+            send_kafka_message(settings.KAFKA_TOPIC, message)
+            
             return JsonResponse({"status": "success", "message": "Friend request rejected"})
+        
         else:
             return JsonResponse({"status": "error", "message": "Invalid action. Use 'accept' or 'reject'"}, status=400)
     
@@ -638,6 +677,42 @@ def respond_to_friend_request(request):
         return JsonResponse({"status": "error", "message": "Friend request not found or you don't have permission"}, status=404)
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    
+from .models import Notification
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_notifications(request):
+    """Get all notifications for the current user"""
+    notifications = Notification.objects.filter(recipient=request.user)
+    
+    data = []
+    for notification in notifications:
+        data.append({
+            'id': notification.id,
+            'sender': {
+                'id': notification.sender.id,
+                'username': notification.sender.username
+            },
+            'type': notification.notification_type,
+            'message': notification.message,
+            'is_read': notification.is_read,
+            'created_at': notification.created_at
+        })
+    
+    return JsonResponse({'notifications': data})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_notification_read(request, notification_id):
+    """Mark a notification as read"""
+    try:
+        notification = Notification.objects.get(id=notification_id, recipient=request.user)
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'status': 'success', 'message': 'Notification marked as read'})
+    except Notification.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Notification not found'}, status=404)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -2550,7 +2625,175 @@ def get_for_you_recommendations(request):
         'recommendations': response_data
     }, status=status.HTTP_200_OK)
 
+# recommendations/views.py
+import logging
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+import requests
+import re
+import urllib.parse
 
+# Configure logging
+logger = logging.getLogger(__name__)
+
+@require_http_methods(["GET"])
+def get_recommendations(request, spotify_id):
+    """
+    Get song recommendations by searching with artist name or genre
+    """
+    # Validate Spotify ID
+    if not re.match(r'^[a-zA-Z0-9]{22}$', spotify_id):
+        return JsonResponse({
+            'error': 'Invalid Spotify Track ID',
+            'details': 'The provided ID does not match the expected Spotify ID format'
+        }, status=400)
+
+    # Get access token
+    access_token = get_spotify_token()
+    if not access_token:
+        return JsonResponse({
+            'error': 'Authentication Failed',
+            'details': 'Unable to obtain Spotify access token'
+        }, status=401)
+
+    # Headers for Spotify API requests
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    try:
+        # Fetch track details
+        track_response = requests.get(
+            f'https://api.spotify.com/v1/tracks/{spotify_id}', 
+            headers=headers
+        )
+        track_response.raise_for_status()
+        track = track_response.json()
+
+        # Extract artist information
+        if not track.get('artists'):
+            return JsonResponse({
+                'error': 'No Artist Information',
+                'details': 'The track does not have artist information'
+            }, status=400)
+
+        artist_id = track['artists'][0]['id']
+        artist_name = track['artists'][0]['name']
+        track_name = track['name']
+
+        # Get album cover (use the largest available image)
+        original_album_cover = max(track['album'].get('images', [{'url': None}]), key=lambda x: x.get('width', 0))['url']
+
+        # Log track and artist details
+        logger.info(f"Processing track: {spotify_id}")
+        logger.info(f"Artist Name: {artist_name}")
+
+        # Recommendations strategies
+        recommendations = []
+
+        # Strategy 1: Search by Artist Name
+        try:
+            # URL encode the artist name for search
+            encoded_artist = urllib.parse.quote(artist_name)
+            search_response = requests.get(
+                f'https://api.spotify.com/v1/search',
+                params={
+                    'q': encoded_artist,
+                    'type': 'track',
+                    'limit': 10
+                },
+                headers=headers
+            )
+            search_response.raise_for_status()
+            search_results = search_response.json().get('tracks', {}).get('items', [])
+
+            # Filter out the original track
+            recommendations = [{
+                'id': track['id'],
+                'name': track['name'],
+                'artist': track['artists'][0]['name'],
+                'album': track['album']['name'],
+                'preview_url': track.get('preview_url'),
+                'album_cover': max(track['album'].get('images', [{'url': None}]), key=lambda x: x.get('width', 0))['url']
+            } for track in search_results if track['id'] != spotify_id][:5]
+
+            logger.info(f"Found {len(recommendations)} recommendations by artist search")
+        except Exception as e:
+            logger.warning(f"Artist name search failed: {e}")
+
+        # Strategy 2: Fetch Artist Details for Genre
+        if not recommendations:
+            try:
+                # Get artist details to get genres
+                artist_response = requests.get(
+                    f'https://api.spotify.com/v1/artists/{artist_id}', 
+                    headers=headers
+                )
+                artist_response.raise_for_status()
+                artist_details = artist_response.json()
+                genres = artist_details.get('genres', [])
+
+                # If genres exist, search by genre
+                if genres:
+                    # Use the first genre for search
+                    encoded_genre = urllib.parse.quote(genres[0])
+                    genre_search_response = requests.get(
+                        f'https://api.spotify.com/v1/search',
+                        params={
+                            'q': f'genre:"{encoded_genre}"',
+                            'type': 'track',
+                            'limit': 10
+                        },
+                        headers=headers
+                    )
+                    genre_search_response.raise_for_status()
+                    genre_search_results = genre_search_response.json().get('tracks', {}).get('items', [])
+
+                    # Filter out the original track
+                    recommendations = [{
+                        'id': track['id'],
+                        'name': track['name'],
+                        'artist': track['artists'][0]['name'],
+                        'album': track['album']['name'],
+                        'preview_url': track.get('preview_url'),
+                        'album_cover': max(track['album'].get('images', [{'url': None}]), key=lambda x: x.get('width', 0))['url']
+                    } for track in genre_search_results if track['id'] != spotify_id][:5]
+
+                    logger.info(f"Found {len(recommendations)} recommendations by genre search")
+            except Exception as e:
+                logger.warning(f"Genre search failed: {e}")
+
+        # Prepare response
+        response_data = {
+            'original_track': {
+                'id': spotify_id,
+                'name': track_name,
+                'artist': artist_name,
+                'album_cover': original_album_cover
+            },
+            'recommendations': recommendations
+        }
+        
+        # Log recommendation status
+        if not recommendations:
+            logger.warning(f"No recommendations found for track {spotify_id}")
+        
+        return JsonResponse(response_data, safe=True)
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Spotify API Request Failed: {e}")
+        return JsonResponse({
+            'error': 'Spotify API Request Failed',
+            'details': str(e),
+            'spotify_id': spotify_id
+        }, status=500)
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        return JsonResponse({
+            'error': 'An unexpected error occurred',
+            'details': str(e),
+            'spotify_id': spotify_id
+        }, status=500)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recommend_friends(request, limit=10):

@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import {
@@ -14,9 +16,12 @@ import {
   BookmarkPlus,
   MessageSquare,
   Send,
+  Plus,
+  ExternalLink,
 } from "lucide-react"
 import Navbar from "./navbar"
 import Sidebar from "./sidebar"
+import { AddToPlaylistModal, CreatePlaylistModal, PlaylistModalStyles } from "../../components/ui/playlist-modals"
 
 interface SongDetails {
   track_id: string
@@ -33,15 +38,21 @@ interface SongDetails {
     name: string
     artist: string
     album_cover: string
+    id?: string
   }>
 }
 
 interface RecommendedSong {
+  id: string // Make id required instead of optional
   track_id: string
   name: string
   artist: string
   album_cover: string
   popularity: number
+  // Optional properties for compatibility with Song type
+  title?: string
+  spotifyTrackid?: string
+  coverurl?: string
 }
 
 interface RefreshTokenResponse {
@@ -61,9 +72,36 @@ interface Comment {
   created_at: string
 }
 
+interface ApiResponse<T> {
+  status: string
+  [key: string]: any
+  data?: T
+}
+
+interface PlaylistResponse {
+  status: string
+  playlist?: {
+    id: number
+    title: string
+    created_at: string
+  }
+  playlists?: Array<{
+    id: number
+    title: string
+    created_at: string
+  }>
+}
+
 export default function SongPage() {
   const params = useParams()
-  const id = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : null
+  // Ensure we have a valid string ID from the params
+  const id = params?.id
+    ? Array.isArray(params.id)
+      ? params.id[0]
+      : typeof params.id === "string"
+        ? params.id
+        : null
+    : null
   const [song, setSong] = useState<SongDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isFavorite, setIsFavorite] = useState(false)
@@ -86,65 +124,135 @@ export default function SongPage() {
       name: string
       artist: string
       album: string
-      album_cover: string
+      album_cover: string // Make sure this property exists
     }>
     currentIndex: number
   } | null>(null)
 
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false)
+  const [currentSong, setCurrentSong] = useState<RecommendedSong | null>(null)
+  const [playlists, setPlaylists] = useState<Array<{ id: number; title: string; created_at: string }>>([])
+  const [addingToPlaylistId, setAddingToPlaylistId] = useState<number | null>(null)
+  const [addedToPlaylistId, setAddedToPlaylistId] = useState<number | null>(null)
+  const [isCreatePlaylistModalOpen, setIsCreatePlaylistModalOpen] = useState(false)
+  const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false)
+
+  // Function to fetch playlists
+  const fetchPlaylists = async (): Promise<void> => {
+    try {
+      const token = localStorage.getItem("access_token") || ""
+      const response = await fetch("http://127.0.0.1:8000/playlists/", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch playlists: ${response.status}`)
+      }
+
+      const data = (await response.json()) as PlaylistResponse
+
+      if (data.status === "success" && Array.isArray(data.playlists)) {
+        setPlaylists(data.playlists)
+      }
+    } catch (error) {
+      console.error("Error fetching playlists:", error)
+    }
+  }
+
   useEffect(() => {
-    const fetchSongDetails = async () => {
+    console.log("Current song ID:", id)
+
+    const fetchSongDetails = async (): Promise<void> => {
       setIsLoading(true)
       try {
-        if (id) {
-          // Check if we're in playlist mode
-          const playlistData = localStorage.getItem("currentPlaylist")
-          if (playlistData) {
-            const playlist = JSON.parse(playlistData)
+        if (!id) {
+          console.error("Song ID is undefined or null")
+          setErrorMessage("No song ID provided. Please check the URL.")
+          setIsLoading(false)
+          return
+        }
+
+        // Check if we're in playlist mode
+        const playlistData = localStorage.getItem("currentPlaylist")
+        if (playlistData) {
+          try {
+            const playlist = JSON.parse(playlistData) as {
+              id: number
+              title: string
+              songs: Array<{
+                id: number
+                spotify_id: string
+                name: string
+                artist: string
+                album: string
+                album_cover: string // Make sure this property exists
+              }>
+              currentIndex: number
+            }
+
+            // Add this check to ensure album_cover exists for each song
+            playlist.songs = playlist.songs.map((song) => ({
+              ...song,
+              album_cover: song.album_cover || song.coverurl || "/placeholder.svg?height=150&width=150", // Fallback to coverurl or placeholder
+            }))
+
             setCurrentPlaylist(playlist)
             setPlaylistMode(true)
+          } catch (parseError) {
+            console.error("Error parsing playlist data:", parseError)
+            localStorage.removeItem("currentPlaylist")
           }
+        }
 
-          // Replace with actual API endpoint
-          const response = await fetch(`http://127.0.0.1:8000/song/${id}`)
-          if (!response.ok) throw new Error("Failed to fetch song details")
-          const data = await response.json()
+        // Replace with actual API endpoint
+        const response = await fetch(`http://127.0.0.1:8000/song/${encodeURIComponent(id)}`)
+        if (!response.ok) throw new Error(`Failed to fetch song details: ${response.status}`)
+        const data = (await response.json()) as SongDetails
 
-          console.log("Song data received:", data)
+        console.log("Song data received:", data)
 
-          const formattedData: SongDetails = {
-            ...data,
-            album: typeof data.album === "object" ? data.album.name : data.album,
-          }
+        const formattedData: SongDetails = {
+          ...data,
+          album: typeof data.album === "object" ? data.album.name : data.album,
+          similar_songs: data.similar_songs || [],
+        }
 
-          setSong(formattedData)
+        setSong(formattedData)
 
-          // Log view interaction using the track_id from the API response
-          if (formattedData.track_id) {
-            await handleSongAction(formattedData.track_id, "view")
+        // Log view interaction using the track_id from the API response
+        if (formattedData.track_id) {
+          await handleSongAction(formattedData.track_id, "view")
 
-            // Fetch current like and save status
-            await fetchSongStatus(formattedData.track_id)
-          }
+          // Fetch current like and save status
+          await fetchSongStatus(formattedData.track_id)
         }
       } catch (error) {
         console.error("Error fetching song details:", error)
-        setErrorMessage("Failed to load song details. Please try again later.")
+        setErrorMessage(error instanceof Error ? error.message : "Failed to load song details. Please try again later.")
       } finally {
         setIsLoading(false)
       }
     }
 
-    const fetchRecommendedSongs = async () => {
+    const fetchRecommendedSongs = async (): Promise<void> => {
       setIsRecommendationsLoading(true)
       try {
-        if (id) {
-          // Fetch recommended songs from API
-          const response = await fetch(`http://127.0.0.1:8000/recommendations/${id}`)
-          if (!response.ok) throw new Error("Failed to fetch recommendations")
-          const data = await response.json()
-
-          setRecommendedSongs(data.recommendations || [])
+        if (!id) {
+          console.error("Song ID is undefined or null")
+          setRecommendedSongs([])
+          setIsRecommendationsLoading(false)
+          return
         }
+        // Fetch recommended songs from API
+        const response = await fetch(`http://127.0.0.1:8000/recommendations/${encodeURIComponent(id)}`)
+        if (!response.ok) throw new Error(`Failed to fetch recommendations: ${response.status}`)
+        const data = (await response.json()) as { recommendations: RecommendedSong[] }
+
+        setRecommendedSongs(data.recommendations || [])
       } catch (error) {
         console.error("Error fetching recommendations:", error)
         setRecommendedSongs([])
@@ -153,17 +261,21 @@ export default function SongPage() {
       }
     }
 
-    const fetchComments = async () => {
+    const fetchComments = async (): Promise<void> => {
       setIsCommentsLoading(true)
       try {
-        if (id) {
-          // Replace with actual API endpoint
-          const response = await fetch(`http://127.0.0.1:8000/songs/${id}/comments`)
-          if (!response.ok) throw new Error("Failed to fetch comments")
-          const data = await response.json()
-
-          setComments(data.comments || [])
+        if (!id) {
+          console.error("Song ID is undefined or null")
+          setComments([])
+          setIsCommentsLoading(false)
+          return
         }
+        // Replace with actual API endpoint
+        const response = await fetch(`http://127.0.0.1:8000/songs/${encodeURIComponent(id)}/comments`)
+        if (!response.ok) throw new Error(`Failed to fetch comments: ${response.status}`)
+        const data = (await response.json()) as { comments: Comment[] }
+
+        setComments(data.comments || [])
       } catch (error) {
         console.error("Error fetching comments:", error)
         setComments([])
@@ -176,11 +288,12 @@ export default function SongPage() {
       fetchSongDetails()
       fetchRecommendedSongs()
       fetchComments()
+      fetchPlaylists()
     }
   }, [id])
 
   // Function to fetch the current like and save status for a song
-  const fetchSongStatus = async (trackId: string) => {
+  const fetchSongStatus = async (trackId: string): Promise<void> => {
     try {
       const accessToken = localStorage.getItem("access_token")
       if (!accessToken) {
@@ -218,7 +331,7 @@ export default function SongPage() {
         throw new Error(`Failed to fetch song status: ${response.status}`)
       }
 
-      const data: SongStatusResponse = await response.json()
+      const data = (await response.json()) as SongStatusResponse
       console.log("Song status:", data)
 
       // Update state based on response
@@ -244,10 +357,10 @@ export default function SongPage() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to refresh token")
+        throw new Error(`Failed to refresh token: ${response.status}`)
       }
 
-      const data: RefreshTokenResponse = await response.json()
+      const data = (await response.json()) as RefreshTokenResponse
       return data.access
     } catch (error) {
       console.error("Error refreshing access token:", error)
@@ -274,7 +387,7 @@ export default function SongPage() {
   }
 
   // Function to handle API calls for specific song interactions
-  const handleSongAction = async (trackId: string, actionType: string) => {
+  const handleSongAction = async (trackId: string, actionType: string): Promise<any> => {
     try {
       setErrorMessage(null)
       const accessToken = localStorage.getItem("access_token")
@@ -317,7 +430,7 @@ export default function SongPage() {
       // Handle token refresh if needed
       if (response.status === 401) {
         const newToken = await handleTokenRefresh()
-        if (!newToken) return
+        if (!newToken) return null
 
         // Retry the request with the new token
         response = await fetch(endpoint, {
@@ -345,7 +458,7 @@ export default function SongPage() {
     }
   }
 
-  const playNextSongInPlaylist = () => {
+  const playNextSongInPlaylist = (): void => {
     if (!currentPlaylist || !playlistMode) return
 
     const nextIndex = currentPlaylist.currentIndex + 1
@@ -370,29 +483,33 @@ export default function SongPage() {
     }
   }
 
-  const handleNextSong = () => {
+  const handleNextSong = (): void => {
     if (playlistMode && currentPlaylist) {
       playNextSongInPlaylist()
     } else if (song?.similar_songs && song.similar_songs.length > 0) {
       const firstSimilarSong = song.similar_songs[0]
       // Log skip action to specific endpoint
       if (song.track_id) {
-        handleSongAction(song.track_id, "skip")
+        handleSongAction(song.track_id, "skip").catch((err) => {
+          console.error("Error skipping song:", err)
+        })
       }
       // Navigate to the first similar song
       window.location.href = `/song/${firstSimilarSong.track_id}`
     }
   }
 
-  const handlePreviousSong = () => {
+  const handlePreviousSong = (): void => {
     // For demonstration purposes - in a real app this would use browser history
     if (song?.track_id) {
-      handleSongAction(song.track_id, "skip")
+      handleSongAction(song.track_id, "skip").catch((err) => {
+        console.error("Error skipping song:", err)
+      })
     }
     window.history.back()
   }
 
-  const handleToggleFavorite = async () => {
+  const handleToggleFavorite = async (): Promise<void> => {
     if (song?.track_id) {
       try {
         await handleSongAction(song.track_id, "like")
@@ -403,7 +520,7 @@ export default function SongPage() {
     }
   }
 
-  const handleToggleSave = async () => {
+  const handleToggleSave = async (): Promise<void> => {
     if (song?.track_id) {
       try {
         await handleSongAction(song.track_id, "save")
@@ -414,7 +531,7 @@ export default function SongPage() {
     }
   }
 
-  const handlePlaySong = async () => {
+  const handlePlaySong = async (): Promise<void> => {
     if (song?.track_id) {
       try {
         await handleSongAction(song.track_id, "play")
@@ -425,7 +542,7 @@ export default function SongPage() {
     }
   }
 
-  const handleSongEnd = () => {
+  const handleSongEnd = (): void => {
     if (playlistMode) {
       playNextSongInPlaylist()
     }
@@ -449,7 +566,7 @@ export default function SongPage() {
     }
   }, [song, playlistMode])
 
-  const formatDuration = (seconds: number) => {
+  const formatDuration = (seconds: number): string => {
     if (isNaN(seconds)) return "0:00"
     const minutes = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
@@ -468,7 +585,9 @@ export default function SongPage() {
     return String(value)
   }
 
-  const renderPopularityBars = (popularity: number) => {
+  // Fix for the JSX namespace error in renderPopularityBars function
+  // Change the return type annotation to React.ReactNode instead of JSX.Element
+  const renderPopularityBars = (popularity: number): React.ReactNode => {
     const maxBars = 5
     const filledBars = Math.round((popularity / 100) * maxBars)
 
@@ -482,18 +601,18 @@ export default function SongPage() {
   }
 
   // Extract Spotify track ID from the spotify_url
-  const getSpotifyTrackId = (spotifyUrl: string) => {
+  const getSpotifyTrackId = (spotifyUrl: string): string | null => {
     if (!spotifyUrl) return null
     const urlParts = spotifyUrl.split("/")
     return urlParts[urlParts.length - 1].split("?")[0]
   }
 
   // Dismiss error message
-  const dismissError = () => {
+  const dismissError = (): void => {
     setErrorMessage(null)
   }
 
-  const handleSubmitComment = async () => {
+  const handleSubmitComment = async (): Promise<void> => {
     if (!newComment.trim() || !song?.track_id) return
 
     try {
@@ -540,7 +659,7 @@ export default function SongPage() {
         throw new Error(`Failed to post comment: ${response.status}`)
       }
 
-      const data = await response.json()
+      const data = (await response.json()) as Comment
 
       // Add the new comment to the list
       setComments([data, ...comments])
@@ -548,6 +667,118 @@ export default function SongPage() {
     } catch (error) {
       console.error("Error posting comment:", error)
       setErrorMessage("Failed to post comment. Please try again.")
+    }
+  }
+
+  const openAddToPlaylistModal = (song: RecommendedSong | null): void => {
+    // Reset states when opening modal
+    setAddingToPlaylistId(null)
+    setAddedToPlaylistId(null)
+    setCurrentSong(song)
+    setIsPlaylistModalOpen(true)
+  }
+
+  const closePlaylistModal = (): void => {
+    setIsPlaylistModalOpen(false)
+    // Reset states after modal closes
+    setTimeout(() => {
+      setAddingToPlaylistId(null)
+      setAddedToPlaylistId(null)
+    }, 300)
+  }
+
+  const openCreatePlaylistModal = (): void => {
+    setIsCreatePlaylistModalOpen(true)
+  }
+
+  const closeCreatePlaylistModal = (): void => {
+    setIsCreatePlaylistModalOpen(false)
+  }
+
+  const createNewPlaylist = async (title: string): Promise<void> => {
+    if (!title.trim()) return
+
+    try {
+      setIsCreatingPlaylist(true)
+      const token = localStorage.getItem("access_token") || ""
+
+      const response = await fetch("http://127.0.0.1:8000/playlists/", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to create playlist: ${response.status}`)
+      }
+
+      const data = (await response.json()) as PlaylistResponse
+      console.log("New playlist:", data)
+
+      if (data.status === "success") {
+        // Refresh playlists
+        await fetchPlaylists()
+
+        // Close the create playlist modal
+        setIsCreatePlaylistModalOpen(false)
+
+        // If we have a current song, automatically select the new playlist
+        if (currentSong && data.playlist && data.playlist.id) {
+          setAddingToPlaylistId(data.playlist.id)
+          await addSongToPlaylist(data.playlist.id, currentSong.track_id)
+        }
+      }
+    } catch (error) {
+      console.error("Error creating playlist:", error)
+      alert(error instanceof Error ? error.message : "Failed to create playlist")
+    } finally {
+      setIsCreatingPlaylist(false)
+    }
+  }
+
+  const addSongToPlaylist = async (playlistId: number, spotifyTrackId: string): Promise<boolean> => {
+    try {
+      setAddingToPlaylistId(playlistId)
+      setAddedToPlaylistId(null) // Reset success state
+
+      const token = localStorage.getItem("access_token") || ""
+
+      const response = await fetch(`http://127.0.0.1:8000/playlists/${playlistId}/songs/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ spotify_track_id: spotifyTrackId }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to add song: ${response.status}`)
+      }
+
+      const data = (await response.json()) as ApiResponse<unknown>
+      if (data.status === "success") {
+        setAddingToPlaylistId(null) // Clear loading state first
+        setAddedToPlaylistId(playlistId) // Then set success state
+
+        setTimeout(() => {
+          setIsPlaylistModalOpen(false)
+          // Reset states after modal closes
+          setTimeout(() => {
+            setAddedToPlaylistId(null)
+          }, 300)
+        }, 1500)
+        return true
+      } else {
+        throw new Error("Failed to add song to playlist")
+      }
+    } catch (error) {
+      console.error("Error adding song:", error)
+      setAddingToPlaylistId(null)
+      throw error
     }
   }
 
@@ -581,7 +812,7 @@ export default function SongPage() {
               <div className="w-full md:w-1/3">
                 <div className="relative group">
                   <img
-                    src={song.album_cover || "/api/placeholder/300/300"}
+                    src={song.album_cover || "/placeholder.svg?height=300&width=300"}
                     alt={`${song.name} album cover`}
                     className="w-full h-auto rounded-lg shadow-lg"
                   />
@@ -628,7 +859,9 @@ export default function SongPage() {
                     className="flex items-center gap-2 text-sm bg-green-600 hover:bg-green-700 px-3 py-1 rounded-full"
                     onClick={() => {
                       if (song.track_id) {
-                        handleSongAction(song.track_id, "view")
+                        handleSongAction(song.track_id, "view").catch((err) => {
+                          console.error("Error logging view:", err)
+                        })
                       }
                     }}
                   >
@@ -698,7 +931,9 @@ export default function SongPage() {
                         loading="lazy"
                         className="rounded-md"
                         onLoad={() => {
-                          handlePlaySong()
+                          handlePlaySong().catch((err) => {
+                            console.error("Error playing song:", err)
+                          })
                           // Note: This won't actually work due to cross-origin restrictions
                           // We're using the timer approach instead
                         }}
@@ -789,7 +1024,11 @@ export default function SongPage() {
                                 className="flex-1 bg-transparent border-none outline-none resize-none text-white p-2 min-h-[60px]"
                               />
                               <button
-                                onClick={handleSubmitComment}
+                                onClick={() =>
+                                  handleSubmitComment().catch((err) => {
+                                    console.error("Error submitting comment:", err)
+                                  })
+                                }
                                 disabled={!newComment.trim()}
                                 className="p-2 rounded-full bg-pink-500 hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
@@ -801,7 +1040,7 @@ export default function SongPage() {
                           {/* Comments list */}
                           {isCommentsLoading ? (
                             <div className="flex justify-center py-8">
-                              <div className="animate-spin h-8 w-8 border-3 border-pink-500 border-t-transparent rounded-full"></div>
+                              <div className="animate-spin h-8 w-8 border-4 border-pink-500 border-t-transparent rounded-full"></div>
                             </div>
                           ) : comments.length > 0 ? (
                             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
@@ -811,8 +1050,8 @@ export default function SongPage() {
                                     <div className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden">
                                       {comment.user_avatar ? (
                                         <img
-                                          src={comment.user_avatar || "/placeholder.svg"}
-                                          alt={comment.user_name}
+                                          src={comment.user_avatar || "/placeholder.svg?height=40&width=40"}
+                                          alt={`${comment.user_name}'s avatar`}
                                           className="w-full h-full object-cover"
                                         />
                                       ) : (
@@ -855,46 +1094,52 @@ export default function SongPage() {
 
               {isRecommendationsLoading ? (
                 <div className="flex justify-center py-8">
-                  <div className="animate-spin h-8 w-8 border-3 border-pink-500 border-t-transparent rounded-full"></div>
+                  <div className="animate-spin h-8 w-8 border-4 border-pink-500 border-t-transparent rounded-full"></div>
                 </div>
               ) : recommendedSongs.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {recommendedSongs.map((song) => (
-                    <a
-                      key={song.track_id}
-                      href={`/song/${song.track_id}`}
-                      className="bg-[#1d2433] p-4 rounded-lg hover:bg-[#2a3548] transition-colors group"
-                      onClick={() => handleSongAction(song.track_id, "view")}
-                    >
-                      <div className="relative overflow-hidden rounded-md mb-3">
-                        <img
-                          src={song.album_cover || "/api/placeholder/150/150"}
-                          alt={`${song.name} album cover`}
-                          className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <div className="bg-pink-500 rounded-full p-2">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="text-white"
-                            >
-                              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                            </svg>
+                    <div key={song.track_id} className="relative group">
+                      <div className="bg-[#1d2433] p-4 rounded-lg hover:bg-[#2a3548] transition-colors group">
+                        <div className="relative overflow-hidden rounded-md mb-3">
+                          <img
+                            src={song.album_cover || "/placeholder.svg?height=150&width=150"}
+                            alt={`${song.name} album cover`}
+                            className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="flex gap-2">
+                              {/* Add to playlist button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  openAddToPlaylistModal(song)
+                                }}
+                                className="bg-blue-500 rounded-full p-3 shadow-lg hover:bg-blue-600 transition-colors"
+                                title="Add to playlist"
+                              >
+                                <Plus size={24} className="text-white" />
+                              </button>
+
+                              {/* View song details button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  window.location.href = `/song/${song.id || song.track_id}`
+                                }}
+                                className="bg-[#74686e] rounded-full p-3 shadow-lg hover:bg-[#5f575c] transition-colors"
+                                title="View song details"
+                              >
+                                <ExternalLink size={24} className="text-white" />
+                              </button>
+                            </div>
                           </div>
                         </div>
+                        <h4 className="font-medium text-white truncate">{safeRender(song.name)}</h4>
+                        <p className="text-sm text-white/70 truncate">{safeRender(song.artist)}</p>
+                        {song.popularity && <div className="mt-2">{renderPopularityBars(song.popularity)}</div>}
                       </div>
-                      <h4 className="font-medium text-white truncate">{safeRender(song.name)}</h4>
-                      <p className="text-sm text-white/70 truncate">{safeRender(song.artist)}</p>
-                      {song.popularity && <div className="mt-2">{renderPopularityBars(song.popularity)}</div>}
-                    </a>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -911,40 +1156,53 @@ export default function SongPage() {
                 <h3 className="text-xl font-semibold text-white mb-6">You might also like</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {song.similar_songs.map((similarSong) => (
-                    <a
-                      key={similarSong.track_id}
-                      href={`/song/${similarSong.track_id}`}
-                      className="bg-[#74686e]/30 p-4 rounded-lg hover:bg-[#74686e]/50 transition-colors group"
-                      onClick={() => handleSongAction(similarSong.track_id, "view")}
-                    >
-                      <div className="relative overflow-hidden rounded-md mb-3">
-                        <img
-                          src={similarSong.album_cover || "/api/placeholder/150/150"}
-                          alt={`${similarSong.name} album cover`}
-                          className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <div className="bg-pink-500 rounded-full p-2">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="text-white"
-                            >
-                              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                            </svg>
+                    <div key={similarSong.track_id} className="relative group">
+                      <div className="bg-[#74686e]/30 p-4 rounded-lg hover:bg-[#74686e]/50 transition-colors group">
+                        <div className="relative overflow-hidden rounded-md mb-3">
+                          <img
+                            src={similarSong.album_cover || "/placeholder.svg?height=150&width=150"}
+                            alt={`${similarSong.name} album cover`}
+                            className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="flex gap-2">
+                              {/* Add to playlist button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  openAddToPlaylistModal({
+                                    id: similarSong.id || similarSong.track_id,
+                                    track_id: similarSong.track_id,
+                                    name: similarSong.name,
+                                    artist: similarSong.artist,
+                                    album_cover: similarSong.album_cover,
+                                    popularity: 0, // Default value since similar_songs might not have popularity
+                                  })
+                                }}
+                                className="bg-blue-500 rounded-full p-3 shadow-lg hover:bg-blue-600 transition-colors"
+                                title="Add to playlist"
+                              >
+                                <Plus size={24} className="text-white" />
+                              </button>
+
+                              {/* View song details button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  window.location.href = `/song/${similarSong.id || similarSong.track_id}`
+                                }}
+                                className="bg-[#74686e] rounded-full p-3 shadow-lg hover:bg-[#5f575c] transition-colors"
+                                title="View song details"
+                              >
+                                <ExternalLink size={24} className="text-white" />
+                              </button>
+                            </div>
                           </div>
                         </div>
+                        <h4 className="font-medium text-white truncate">{safeRender(similarSong.name)}</h4>
+                        <p className="text-sm text-white/70 truncate">{safeRender(similarSong.artist)}</p>
                       </div>
-                      <h4 className="font-medium text-white truncate">{safeRender(similarSong.name)}</h4>
-                      <p className="text-sm text-white/70 truncate">{safeRender(similarSong.artist)}</p>
-                    </a>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -960,6 +1218,28 @@ export default function SongPage() {
           </div>
         )}
       </div>
+
+      {/* Playlist Modals */}
+      <AddToPlaylistModal
+        isOpen={isPlaylistModalOpen}
+        onClose={closePlaylistModal}
+        song={currentSong}
+        playlists={playlists}
+        onAddToPlaylist={addSongToPlaylist}
+        onCreatePlaylistClick={openCreatePlaylistModal}
+        addingToPlaylistId={addingToPlaylistId}
+        addedToPlaylistId={addedToPlaylistId}
+      />
+
+      <CreatePlaylistModal
+        isOpen={isCreatePlaylistModalOpen}
+        onClose={closeCreatePlaylistModal}
+        onCreatePlaylist={createNewPlaylist}
+        isCreating={isCreatingPlaylist}
+      />
+
+      {/* Global styles for modals */}
+      <PlaylistModalStyles />
     </div>
   )
 }

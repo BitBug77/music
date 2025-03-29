@@ -221,3 +221,6 @@ CACHES = {
         'TIMEOUT': 3600,  # Default timeout in seconds (1 hour)
     }
 }
+# settings.py
+KAFKA_BROKER_URL = ' localhost:9092'
+KAFKA_TOPIC = 'friend_requests'
