@@ -18,8 +18,6 @@ urlpatterns = [
     path('spotify-callback/', views.spotify_callback, name='spotify_callback'),
     path('home/', views.home, name='home'),
     path('popularity/', views.get_songs_by_popularity, name='songs_by_popularity'),
-    
-
     path('logout/', views.logout_view, name='logout'),
     path('search-songs/', views.search_songs, name='search_songs'),
     path('recommend-friends/', views.recommend_friends, name='recommend_friends'),
@@ -63,6 +61,9 @@ urlpatterns = [
     path('recommendations/for-you/', views.get_for_you_recommendations, name='for_you_recommendations'),
     path('recommend-friends/', views.recommend_friends, name='recommend_friends'),
     path('recommendations/friends/', views.recommend_songs_from_friends, name='recommend_songs_from_friends'),
+   path('recommendations/<str:spotify_id>/', views.get_recommendations, name='get_recommendations'),
+   path('notifications/', views.get_notifications, name='get_notifications'),
+  path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
 ]
 
 if settings.DEBUG:
