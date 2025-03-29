@@ -306,8 +306,64 @@ def recommended_songs(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_songs_by_popularity(request):
-    """Fetch songs from Spotify API with randomization to provide variety."""
+    """Fetch songs from Spotify API with Redis caching to avoid rate limiting."""
+    import logging
+    import json
+    import random
+    import sys
+    import requests
+    from django.http import JsonResponse
+    from django.core.cache import cache
+    
+    logger = logging.getLogger(__name__)
+    
+    # Test if Redis connection is working
+    test_key = "spotify:test:connection"
+    cache.set(test_key, "Redis connection test", 60)
+    test_result = cache.get(test_key)
+    logger.info(f"Redis connection test: {test_result}")
+    print(f"Redis connection test: {test_result}")
+    sys.stdout.flush()
+    
+    # Check if we have cached results
+    cache_key = "spotify:songs:popular"  # Redis-friendly key format
+    cached_data = cache.get(cache_key)
+    logger.info(f"Initial cache check: {'Data found in cache' if cached_data else 'No data in cache'}")
+    print(f"Initial cache check: {'Data found in cache' if cached_data else 'No data in cache'}")
+    sys.stdout.flush()
+    
+    # Test with a simple song list to verify caching works
+    test_songs = [{"name": "Test Song", "artist": "Test Artist"}]
+    cache.set("spotify:test:songs", json.dumps(test_songs), 3600)
+    test_cache = cache.get("spotify:test:songs")
+    logger.info(f"Test cache: {test_cache}")
+    print(f"Test cache: {test_cache}")
+    sys.stdout.flush()
+    
+    if cached_data:
+        # If we have cached data, use it but randomize the order
+        try:
+            songs = json.loads(cached_data)
+            random.shuffle(songs)
+            logger.info(f"Using cached data with {len(songs)} songs")
+            print(f"Using cached data with {len(songs)} songs")
+            sys.stdout.flush()
+            return JsonResponse({
+                "status": "success", 
+                "songs": songs[:50], 
+                "source": "cache"
+            })
+        except Exception as e:
+            logger.error(f"Error using cached data: {str(e)}")
+            print(f"Error using cached data: {str(e)}")
+            sys.stdout.flush()
+            # Continue and get fresh data
+    
+    # If no cached data, make a new request to Spotify
     access_token = get_spotify_token()
+    logger.info(f"Got Spotify token: {'Success' if access_token else 'Failed'}")
+    print(f"Got Spotify token: {'Success' if access_token else 'Failed'}")
+    sys.stdout.flush()
     
     if not access_token:
         return JsonResponse({"status": "error", "message": "Failed to get Spotify token"}, status=500)
@@ -316,60 +372,130 @@ def get_songs_by_popularity(request):
     search_url = "https://api.spotify.com/v1/search"
     headers = {"Authorization": f"Bearer {access_token}"}
     
-    # Add randomization by using different search terms
-    search_terms = [
-        "a", "e", "i", "o", "u",  # Vowels for broader results
-        "top", "hit", "new", "popular", "trending",
-        "year", "dance", "rock", "pop", "hip"
+    # Use category-based search to get more diverse results
+    search_categories = [
+        {"term": "year:2023", "type": "track", "limit": 50},
+        {"term": "year:2024", "type": "track", "limit": 50},
+        {"term": "genre:pop", "type": "track", "limit": 50},
+        {"term": "genre:hip-hop", "type": "track", "limit": 50},
+        {"term": "genre:rock", "type": "track", "limit": 50}
     ]
     
-    # Randomly select a search term
-    import random
-    random_term = random.choice(search_terms)
+    all_songs = []
     
-    # Randomly select offset to get different results each time
-    random_offset = random.randint(0, 950)  # Spotify max offset is 1000
+    # Pick just one random category per request to minimize API calls
+    category = random.choice(search_categories)
+    logger.info(f"Selected category: {category['term']}")
+    print(f"Selected category: {category['term']}")
+    sys.stdout.flush()
     
     params = {
-        "q": random_term,
-        "type": "track",
-        "limit": 50,  # Maximum allowed per request
-        "offset": random_offset
+        "q": category["term"],
+        "type": category["type"],
+        "limit": category["limit"]
     }
     
-    response = requests.get(search_url, headers=headers, params=params)
+    try:
+        response = requests.get(search_url, headers=headers, params=params)
+        logger.info(f"Spotify API response status: {response.status_code}")
+        print(f"Spotify API response status: {response.status_code}")
+        sys.stdout.flush()
+        
+        # Handle rate limiting
+        if response.status_code == 429:
+            # Check if we have any cached data as backup
+            old_cache = cache.get("spotify:songs:backup")
+            if old_cache:
+                songs = json.loads(old_cache)
+                random.shuffle(songs)
+                logger.info(f"Using backup cache due to rate limiting")
+                print(f"Using backup cache due to rate limiting")
+                sys.stdout.flush()
+                return JsonResponse({
+                    "status": "success", 
+                    "songs": songs[:50], 
+                    "source": "backup_cache",
+                    "note": "Using backup data due to Spotify rate limits"
+                })
+            else:
+                # If no backup, return an informative error
+                return JsonResponse({
+                    "status": "error", 
+                    "message": "Spotify API rate limit reached. Please try again later."
+                }, status=429)
+        
+        if response.status_code != 200:
+            return JsonResponse({
+                "status": "error", 
+                "message": f"Spotify API error: {response.status_code}"
+            }, status=response.status_code)
+        
+        songs = response.json().get("tracks", {}).get("items", [])
+        logger.info(f"Received {len(songs)} songs from Spotify API")
+        print(f"Received {len(songs)} songs from Spotify API")
+        sys.stdout.flush()
+        
+        if not songs:
+            return JsonResponse({"status": "error", "message": "No songs found"}, status=404)
+        
+        # Process the songs
+        for song in songs:
+            try:
+                song_data = {
+                    "name": song["name"],
+                    "artist": song["artists"][0]["name"],
+                    "popularity": song["popularity"],
+                    "spotify_url": song["external_urls"]["spotify"],
+                    "album_cover": song["album"]["images"][0]["url"] if song["album"]["images"] else None,
+                    "spotifyTrackId": song["id"]
+                }
+                all_songs.append(song_data)
+            except Exception as e:
+                logger.error(f"Error processing song: {str(e)}")
+                print(f"Error processing song: {str(e)}")
+                sys.stdout.flush()
+                # Continue with other songs
+        
+        logger.info(f"Processed {len(all_songs)} songs successfully")
+        print(f"Processed {len(all_songs)} songs successfully")
+        sys.stdout.flush()
     
-    if response.status_code != 200:
-        return JsonResponse({"status": "error", "message": "Failed to fetch songs"}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"Error fetching songs: {str(e)}")
+        print(f"Error fetching songs: {str(e)}")
+        sys.stdout.flush()
+        return JsonResponse({"status": "error", "message": f"Error fetching songs: {str(e)}"}, status=500)
     
-    songs = response.json().get("tracks", {}).get("items", [])
+    # Cache the results - primary cache for 1 hour, backup cache for 24 hours
+    if all_songs:
+        # Store in Redis cache
+        logger.info(f"Preparing to cache {len(all_songs)} songs")
+        print(f"Preparing to cache {len(all_songs)} songs")
+        sys.stdout.flush()
+        
+        try:
+            serialized_songs = json.dumps(all_songs)
+            logger.info("JSON serialization successful")
+            print("JSON serialization successful")
+            sys.stdout.flush()
+            
+            cache.set(cache_key, serialized_songs, 60 * 60)  # 1 hour
+            cache.set("spotify:songs:backup", serialized_songs, 60 * 60 * 24)  # 24 hours (backup)
+            
+            # Verify the cache was set
+            verification = cache.get(cache_key)
+            verification_success = verification is not None
+            logger.info(f"Cache verification: {'Success' if verification_success else 'Failed'}")
+            print(f"Cache verification: {'Success' if verification_success else 'Failed'}")
+            sys.stdout.flush()
+        except Exception as e:
+            logger.error(f"Error while caching: {str(e)}")
+            print(f"Error while caching: {str(e)}")
+            sys.stdout.flush()
     
-    if not songs:
-        return JsonResponse({"status": "error", "message": "No songs found"}, status=404)
-    
-    # Sort songs by popularity in descending order
-    sorted_songs = sorted(songs, key=lambda x: x["popularity"], reverse=True)
-    
-    # For additional randomness, shuffle a portion of the top songs
-    # This ensures you still get popular songs but in a different order each time
-    top_portion = sorted_songs[:30]  # Take the top 30 songs
-    random.shuffle(top_portion)  # Shuffle them
-    sorted_songs = top_portion + sorted_songs[30:]  # Combine with the rest
-    
-    # Extract relevant song details including album cover and track ID
-    song_list = [
-        {
-            "name": song["name"],
-            "artist": song["artists"][0]["name"],
-            "popularity": song["popularity"],
-            "spotify_url": song["external_urls"]["spotify"],
-            "album_cover": song["album"]["images"][0]["url"] if song["album"]["images"] else None,
-            "spotifyTrackId": song["id"]  # Added track ID
-        }
-        for song in sorted_songs
-    ]
-    
-    return JsonResponse({"status": "success", "songs": song_list})
+    # Randomize and return results
+    random.shuffle(all_songs)
+    return JsonResponse({"status": "success", "songs": all_songs[:50], "source": "api"})
 @api_view(['POST'])
 def logout_view(request):
     """Handles user logout"""
