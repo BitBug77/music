@@ -17,6 +17,7 @@ import {
   Pencil,
   ChevronRight,
   Bell,
+  UserPlus,
 } from "lucide-react"
 import { getAccessToken, clearTokens, getAuthHeader, withTokenRefresh } from "../../lib/jwt-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -39,12 +40,16 @@ interface UserProfile {
   joined_date: string
 }
 
+// Update the Notification interface to include a link field
 interface Notification {
   id: string
   message: string
   timestamp: string
   read: boolean
   type: string
+  sender: string
+  link?: string // Optional link to navigate to when clicked
+  notification_type: string
 }
 
 const Navbar: React.FC = () => {
@@ -58,7 +63,8 @@ const Navbar: React.FC = () => {
   const [isSearchActive, setIsSearchActive] = useState<boolean>(true)
   const [activeSuggestion, setActiveSuggestion] = useState<number>(-1)
   const [showProfileDropdown, setShowProfileDropdown] = useState<boolean>(false)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [userProfile, setUserProfile]=useState<UserProfile | null>(null)
+  useState<UserProfile | null>(null)
   const [tokenError, setTokenError] = useState<boolean>(false)
   const [profileLoading, setProfileLoading] = useState<boolean>(true)
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -66,6 +72,7 @@ const Navbar: React.FC = () => {
   const [notificationsLoading, setNotificationsLoading] = useState<boolean>(false)
   const [isOverProfileDropdown, setIsOverProfileDropdown] = useState<boolean>(false)
   const [isOverNotificationDropdown, setIsOverNotificationDropdown] = useState<boolean>(false)
+  const [lastNotificationFetchTime, setLastNotificationFetchTime] = useState<number | null>(null)
 
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -157,12 +164,73 @@ const Navbar: React.FC = () => {
         }
 
         const data = await response.json()
-        setNotifications(data.notifications || [])
+        // Update to match the API response format from your Django endpoint
+        const formattedNotifications = data.notifications.map((notification: any) => ({
+          id: notification.id,
+          message: notification.message,
+          timestamp: notification.created_at,
+          read: notification.is_read,
+          type: notification.type,
+          sender: notification.sender,
+          link: getNotificationLink(notification.type, notification), // Add link based on notification type
+          notification_type: notification.notification_type,
+        }))
+        setNotifications(formattedNotifications || [])
+        setLastNotificationFetchTime(Date.now())
       })
     } catch (error) {
       console.error("Error fetching notifications:", error)
     } finally {
       setNotificationsLoading(false)
+    }
+  }
+
+  // Mark notification as read
+  const markNotificationAsRead = async (notificationId: any) => {
+    try {
+      await withTokenRefresh(async () => {
+        const response = await fetch(`http://127.0.0.1:8000/notifications/${notificationId}/read/`, {
+          method: "POST",
+          headers: getAuthHeader(),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to mark notification as read")
+        }
+
+        // Update local state to reflect the change
+        setNotifications((prevNotifications) =>
+          prevNotifications.map((notification) =>
+            notification.id === notificationId ? { ...notification, read: true } : notification,
+          ),
+        )
+      })
+    } catch (error) {
+      console.error("Error marking notification as read:", error)
+    }
+  }
+
+  // Mark all notifications as read
+  const markAllNotificationsAsRead = async () => {
+    try {
+      await withTokenRefresh(async () => {
+        // You would need to implement this endpoint in your Django backend
+        const response = await fetch("http://127.0.0.1:8000/notifications/mark-all-read/", {
+          method: "POST",
+          headers: getAuthHeader(),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to mark all notifications as read")
+        }
+
+        // Update local state to reflect all notifications as read
+        setNotifications((prevNotifications) =>
+          prevNotifications.map((notification) => ({ ...notification, read: true })),
+        )
+      })
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error)
     }
   }
 
@@ -226,10 +294,19 @@ const Navbar: React.FC = () => {
     }
   }
 
-  // Handle notification dropdown hover
+  // Replace the handleNotificationMouseEnter function with this version
   const handleNotificationMouseEnter = () => {
     setShowNotificationDropdown(true)
-    fetchNotifications()
+
+    // Only fetch notifications if they haven't been loaded yet or it's been more than 2 minutes
+    const shouldFetchNotifications =
+      notifications.length === 0 ||
+      (notificationsLoading === false &&
+        (!lastNotificationFetchTime || Date.now() - lastNotificationFetchTime > 120000))
+
+    if (shouldFetchNotifications) {
+      fetchNotifications()
+    }
   }
 
   const handleNotificationMouseLeave = () => {
@@ -373,6 +450,103 @@ const Navbar: React.FC = () => {
     }
   }, [])
 
+  // Add this useEffect to periodically check for new notifications
+  useEffect(() => {
+    // Fetch notifications initially
+    if (getAccessToken()) {
+      fetchNotifications()
+    }
+
+    // Set up interval to check for new notifications every minute
+    const intervalId = setInterval(() => {
+      if (getAccessToken()) {
+        fetchNotifications()
+      }
+    }, 60000) // 60 seconds
+
+    return () => clearInterval(intervalId)
+  }, [])
+
+  // Add this helper function to determine the link for each notification type
+  const getNotificationLink = (type: string, notification: any): string => {
+    switch (type) {
+      case "like":
+        return `/post/${notification.post_id}`
+      case "comment":
+        return `/post/${notification.post_id}#comment-${notification.comment_id}`
+      case "follow":
+        return `/profile/${notification.sender.username}`
+      case "message":
+        return `/messages/${notification.sender.id}`
+      default:
+        return "#"
+    }
+  }
+
+  // Add this function to handle notification clicks
+  const handleNotificationClick = async (notification: Notification) => {
+    // Only mark as read if it's not already read
+    if (!notification.read) {
+      await markNotificationAsRead(notification.id)
+    }
+
+    // Navigate to the relevant content if there's a link
+    if (notification.link && notification.link !== "#") {
+      router.push(notification.link)
+    }
+
+    // Close the dropdown
+    setShowNotificationDropdown(false)
+  }
+
+  // Add these helper functions for the Instagram-style notifications
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "friend_request":
+        return <UserPlus size={16} className="text-white" />
+      case "request_accepted":
+        return <UserPlus size={16} className="text-white" />
+      case "request_rejected":
+        return <UserPlus size={16} className="text-white" />
+      default:
+        return <Bell size={16} className="text-white" />
+    }
+  }
+
+  const getNotificationText = (type: string) => {
+    switch (type) {
+      case "friend_request":
+        return "sent you a friend request"
+      case "request_accepted":
+        return "accepted your friend request"
+      case "request_rejected":
+        return "rejected your friend request"
+      default:
+        return "interacted with your profile"
+    }
+  }
+
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date()
+    const notificationTime = new Date(timestamp)
+    const diffInSeconds = Math.floor((now.getTime() - notificationTime.getTime()) / 1000)
+
+    if (diffInSeconds < 60) {
+      return "just now"
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60)
+      return `${minutes}m ago`
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600)
+      return `${hours}h ago`
+    } else if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400)
+      return `${days}d ago`
+    } else {
+      return notificationTime.toLocaleDateString()
+    }
+  }
+
   return (
     <nav className="text-white shadow-lg z-9999 w-full bg-[#74686e]">
       <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -489,7 +663,12 @@ const Navbar: React.FC = () => {
                   <div className="bg-gray-600 rounded-lg shadow-md border border-gray-700">
                     <div className="p-3 border-b border-gray-700 flex justify-between items-center">
                       <h3 className="font-medium text-white">Notifications</h3>
-                      <button className="text-xs text-blue-400 hover:text-blue-300">Mark all as read</button>
+                      <button
+                        className="text-xs text-blue-400 hover:text-blue-300"
+                        onClick={markAllNotificationsAsRead}
+                      >
+                        Mark all as read
+                      </button>
                     </div>
 
                     <div className="max-h-80 overflow-y-auto">
@@ -503,24 +682,27 @@ const Navbar: React.FC = () => {
                           {notifications.map((notification) => (
                             <div
                               key={notification.id}
-                              className={`p-3 border-b border-gray-700 hover:bg-gray-700 ${!notification.read ? "bg-gray-700" : ""}`}
+                              className={`p-3 border-b border-gray-700 hover:bg-gray-700 cursor-pointer transition-colors duration-200 ${!notification.read ? "bg-gray-700" : ""}`}
+                              onClick={() => handleNotificationClick(notification)}
                             >
                               <div className="flex items-start">
-                                <div
-                                  className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!notification.read ? "bg-blue-500" : "bg-gray-300"}`}
-                                ></div>
-                                <div className="ml-3">
-                                  <p className="text-sm text-white">{notification.message}</p>
-                                  <p className="text-xs text-gray-400 mt-1">
-                                    {new Date(notification.timestamp).toLocaleTimeString([], {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                      hour12: true,
-                                    })}
-                                    {" · "}
-                                    {new Date(notification.timestamp).toLocaleDateString()}
-                                  </p>
+                                <div className="mr-3">
+                                  <div
+                                    className={`h-8 w-8 rounded-full flex items-center justify-center ${!notification.read ? "bg-blue-600" : "bg-gray-500"}`}
+                                  >
+                                    {getNotificationIcon(notification.type)}
+                                  </div>
                                 </div>
+                                <div className="flex-1">
+                                  <p className="text-sm text-white">
+                                    <span className="font-semibold">{notification.sender.username || "Someone"}</span>{" "}
+                                    {notification.message || getNotificationText(notification.notification_type)}
+                                  </p>
+                                  <p className="text-xs text-gray-400 mt-1">{formatTimeAgo(notification.timestamp)}</p>
+                                </div>
+                                {!notification.read && (
+                                  <div className="h-2 w-2 rounded-full bg-blue-500 self-center"></div>
+                                )}
                               </div>
                             </div>
                           ))}
