@@ -431,7 +431,7 @@ export default function DiscoverPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen text-black">
+    <div className="flex flex-col min-h-screen text-black">
       {/* Navbar */}
       <div className="bg-[#74686e]">
         <Navbar />
@@ -514,6 +514,8 @@ export default function DiscoverPage() {
           )}
         </div>
       </div>
+
+     
 
       {/* Playlist Modals */}
       <AddToPlaylistModal

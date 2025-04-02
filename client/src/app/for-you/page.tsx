@@ -7,7 +7,7 @@ import Navbar from "../navbar/page"
 import Sidebar from "../../components/ui/sidebar"
 import { useRouter } from "next/navigation"
 import { AddToPlaylistModal, CreatePlaylistModal, PlaylistModalStyles } from "../../components/ui/playlist-modals"
-
+import Footer from "@/components/ui/footer"
 // Define TypeScript interfaces for our data structures
 interface ApiResponse {
   songs?: any[]
@@ -668,6 +668,7 @@ export default function ForYouPage() {
           )}
         </div>
       </div>
+
 
       {/* Playlist Modals */}
       <AddToPlaylistModal
