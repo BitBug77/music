@@ -42,6 +42,20 @@ import json
 from datetime import datetime, timedelta
 from django.core.cache import cache
 import sys
+import os
+import logging
+import requests
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from django.conf import settings
+from django.db import models
+from .spotify_utils import get_spotify_token, get_spotify_track, store_spotify_tracks, get_recommendations_for_new_user, get_related_spotify_tracks
 
 
 def check_db(request):
@@ -219,35 +233,7 @@ access_token_cache = {
     'expires_at': datetime.now()
 }
 
-def get_spotify_token():
-    global access_token_cache
 
-    # Check if the token is already cached and still valid
-    if access_token_cache['token'] and access_token_cache['expires_at'] > datetime.now():
-        return access_token_cache['token']
-
-    # Token has expired or not available, get a new one using client credentials flow
-    auth_response = requests.post(
-        'https://accounts.spotify.com/api/token',
-        data={
-            'grant_type': 'client_credentials',
-        },
-        auth=(settings.SPOTIFY_CLIENT_ID, settings.SPOTIFY_CLIENT_SECRET)
-    )
-
-    if auth_response.status_code == 200:
-        auth_data = auth_response.json()
-        access_token = auth_data['access_token']
-        expires_in = auth_data['expires_in']
-
-        # Update the cache
-        access_token_cache['token'] = access_token
-        access_token_cache['expires_at'] = datetime.now() + timedelta(seconds=expires_in)
-
-        return access_token
-    else:
-        return None  # Return None in case of failure to get the token
-# Example CSRF exempt view using the token
 @csrf_exempt
 def spotify_search(request):
     """
@@ -306,64 +292,8 @@ def recommended_songs(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_songs_by_popularity(request):
-    """Fetch songs from Spotify API with Redis caching to avoid rate limiting."""
-    import logging
-    import json
-    import random
-    import sys
-    import requests
-    from django.http import JsonResponse
-    from django.core.cache import cache
-    
-    logger = logging.getLogger(__name__)
-    
-    # Test if Redis connection is working
-    test_key = "spotify:test:connection"
-    cache.set(test_key, "Redis connection test", 60)
-    test_result = cache.get(test_key)
-    logger.info(f"Redis connection test: {test_result}")
-    print(f"Redis connection test: {test_result}")
-    sys.stdout.flush()
-    
-    # Check if we have cached results
-    cache_key = "spotify:songs:popular"  # Redis-friendly key format
-    cached_data = cache.get(cache_key)
-    logger.info(f"Initial cache check: {'Data found in cache' if cached_data else 'No data in cache'}")
-    print(f"Initial cache check: {'Data found in cache' if cached_data else 'No data in cache'}")
-    sys.stdout.flush()
-    
-    # Test with a simple song list to verify caching works
-    test_songs = [{"name": "Test Song", "artist": "Test Artist"}]
-    cache.set("spotify:test:songs", json.dumps(test_songs), 3600)
-    test_cache = cache.get("spotify:test:songs")
-    logger.info(f"Test cache: {test_cache}")
-    print(f"Test cache: {test_cache}")
-    sys.stdout.flush()
-    
-    if cached_data:
-        # If we have cached data, use it but randomize the order
-        try:
-            songs = json.loads(cached_data)
-            random.shuffle(songs)
-            logger.info(f"Using cached data with {len(songs)} songs")
-            print(f"Using cached data with {len(songs)} songs")
-            sys.stdout.flush()
-            return JsonResponse({
-                "status": "success", 
-                "songs": songs[:50], 
-                "source": "cache"
-            })
-        except Exception as e:
-            logger.error(f"Error using cached data: {str(e)}")
-            print(f"Error using cached data: {str(e)}")
-            sys.stdout.flush()
-            # Continue and get fresh data
-    
-    # If no cached data, make a new request to Spotify
+    """Fetch songs from Spotify API with randomization to provide variety."""
     access_token = get_spotify_token()
-    logger.info(f"Got Spotify token: {'Success' if access_token else 'Failed'}")
-    print(f"Got Spotify token: {'Success' if access_token else 'Failed'}")
-    sys.stdout.flush()
     
     if not access_token:
         return JsonResponse({"status": "error", "message": "Failed to get Spotify token"}, status=500)
@@ -372,130 +302,60 @@ def get_songs_by_popularity(request):
     search_url = "https://api.spotify.com/v1/search"
     headers = {"Authorization": f"Bearer {access_token}"}
     
-    # Use category-based search to get more diverse results
-    search_categories = [
-        {"term": "year:2023", "type": "track", "limit": 50},
-        {"term": "year:2024", "type": "track", "limit": 50},
-        {"term": "genre:pop", "type": "track", "limit": 50},
-        {"term": "genre:hip-hop", "type": "track", "limit": 50},
-        {"term": "genre:rock", "type": "track", "limit": 50}
+    # Add randomization by using different search terms
+    search_terms = [
+        "a", "e", "i", "o", "u",  # Vowels for broader results
+        "top", "hit", "new", "popular", "trending",
+        "year", "dance", "rock", "pop", "hip"
     ]
     
-    all_songs = []
+    # Randomly select a search term
+    import random
+    random_term = random.choice(search_terms)
     
-    # Pick just one random category per request to minimize API calls
-    category = random.choice(search_categories)
-    logger.info(f"Selected category: {category['term']}")
-    print(f"Selected category: {category['term']}")
-    sys.stdout.flush()
+    # Randomly select offset to get different results each time
+    random_offset = random.randint(0, 950)  # Spotify max offset is 1000
     
     params = {
-        "q": category["term"],
-        "type": category["type"],
-        "limit": category["limit"]
+        "q": random_term,
+        "type": "track",
+        "limit": 50,  # Maximum allowed per request
+        "offset": random_offset
     }
     
-    try:
-        response = requests.get(search_url, headers=headers, params=params)
-        logger.info(f"Spotify API response status: {response.status_code}")
-        print(f"Spotify API response status: {response.status_code}")
-        sys.stdout.flush()
-        
-        # Handle rate limiting
-        if response.status_code == 429:
-            # Check if we have any cached data as backup
-            old_cache = cache.get("spotify:songs:backup")
-            if old_cache:
-                songs = json.loads(old_cache)
-                random.shuffle(songs)
-                logger.info(f"Using backup cache due to rate limiting")
-                print(f"Using backup cache due to rate limiting")
-                sys.stdout.flush()
-                return JsonResponse({
-                    "status": "success", 
-                    "songs": songs[:50], 
-                    "source": "backup_cache",
-                    "note": "Using backup data due to Spotify rate limits"
-                })
-            else:
-                # If no backup, return an informative error
-                return JsonResponse({
-                    "status": "error", 
-                    "message": "Spotify API rate limit reached. Please try again later."
-                }, status=429)
-        
-        if response.status_code != 200:
-            return JsonResponse({
-                "status": "error", 
-                "message": f"Spotify API error: {response.status_code}"
-            }, status=response.status_code)
-        
-        songs = response.json().get("tracks", {}).get("items", [])
-        logger.info(f"Received {len(songs)} songs from Spotify API")
-        print(f"Received {len(songs)} songs from Spotify API")
-        sys.stdout.flush()
-        
-        if not songs:
-            return JsonResponse({"status": "error", "message": "No songs found"}, status=404)
-        
-        # Process the songs
-        for song in songs:
-            try:
-                song_data = {
-                    "name": song["name"],
-                    "artist": song["artists"][0]["name"],
-                    "popularity": song["popularity"],
-                    "spotify_url": song["external_urls"]["spotify"],
-                    "album_cover": song["album"]["images"][0]["url"] if song["album"]["images"] else None,
-                    "spotifyTrackId": song["id"]
-                }
-                all_songs.append(song_data)
-            except Exception as e:
-                logger.error(f"Error processing song: {str(e)}")
-                print(f"Error processing song: {str(e)}")
-                sys.stdout.flush()
-                # Continue with other songs
-        
-        logger.info(f"Processed {len(all_songs)} songs successfully")
-        print(f"Processed {len(all_songs)} songs successfully")
-        sys.stdout.flush()
+    response = requests.get(search_url, headers=headers, params=params)
     
-    except Exception as e:
-        logger.error(f"Error fetching songs: {str(e)}")
-        print(f"Error fetching songs: {str(e)}")
-        sys.stdout.flush()
-        return JsonResponse({"status": "error", "message": f"Error fetching songs: {str(e)}"}, status=500)
+    if response.status_code != 200:
+        return JsonResponse({"status": "error", "message": "Failed to fetch songs"}, status=response.status_code)
     
-    # Cache the results - primary cache for 1 hour, backup cache for 24 hours
-    if all_songs:
-        # Store in Redis cache
-        logger.info(f"Preparing to cache {len(all_songs)} songs")
-        print(f"Preparing to cache {len(all_songs)} songs")
-        sys.stdout.flush()
-        
-        try:
-            serialized_songs = json.dumps(all_songs)
-            logger.info("JSON serialization successful")
-            print("JSON serialization successful")
-            sys.stdout.flush()
-            
-            cache.set(cache_key, serialized_songs, 60 * 60)  # 1 hour
-            cache.set("spotify:songs:backup", serialized_songs, 60 * 60 * 24)  # 24 hours (backup)
-            
-            # Verify the cache was set
-            verification = cache.get(cache_key)
-            verification_success = verification is not None
-            logger.info(f"Cache verification: {'Success' if verification_success else 'Failed'}")
-            print(f"Cache verification: {'Success' if verification_success else 'Failed'}")
-            sys.stdout.flush()
-        except Exception as e:
-            logger.error(f"Error while caching: {str(e)}")
-            print(f"Error while caching: {str(e)}")
-            sys.stdout.flush()
+    songs = response.json().get("tracks", {}).get("items", [])
     
-    # Randomize and return results
-    random.shuffle(all_songs)
-    return JsonResponse({"status": "success", "songs": all_songs[:50], "source": "api"})
+    if not songs:
+        return JsonResponse({"status": "error", "message": "No songs found"}, status=404)
+    
+    # Sort songs by popularity in descending order
+    sorted_songs = sorted(songs, key=lambda x: x["popularity"], reverse=True)
+    
+    # For additional randomness, shuffle a portion of the top songs
+    # This ensures you still get popular songs but in a different order each time
+    top_portion = sorted_songs[:30]  # Take the top 30 songs
+    random.shuffle(top_portion)  # Shuffle them
+    sorted_songs = top_portion + sorted_songs[30:]  # Combine with the rest
+    
+    # Extract relevant song details including album cover and track ID
+    song_list = [
+        {
+            "name": song["name"],
+            "artist": song["artists"][0]["name"],
+            "popularity": song["popularity"],
+            "spotify_url": song["external_urls"]["spotify"],
+            "album_cover": song["album"]["images"][0]["url"] if song["album"]["images"] else None,
+            "spotifyTrackId": song["id"]  # Added track ID
+        }
+        for song in sorted_songs
+    ]
+    
+    return JsonResponse({"status": "success", "songs": song_list})
 @api_view(['POST'])
 def logout_view(request):
     """Handles user logout"""
@@ -992,53 +852,7 @@ import requests
 
 import requests
 
-import requests
 
-def get_spotify_track(spotify_track_id):
-    """
-    Fetches track details from Spotify API using track ID, including album cover and genre.
-    """
-    access_token = get_spotify_token()
-    if not access_token:
-        return None  # Return None if token is missing
-    
-    # Fetch track details
-    track_url = f"https://api.spotify.com/v1/tracks/{spotify_track_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(track_url, headers=headers)
-    
-    if response.status_code == 200:
-        track_data = response.json()
-        
-        # Get album cover (selecting the largest image if available)
-        album_cover_url = track_data['album']['images'][0]['url'] if track_data['album']['images'] else None
-        
-        # Extract artist details (Spotify allows multiple artists per song, take the first one)
-        artist_id = track_data['artists'][0]['id'] if track_data['artists'] else None
-        
-        genre = None
-        if artist_id:
-            # Fetch artist details to get genre
-            artist_url = f"https://api.spotify.com/v1/artists/{artist_id}"
-            artist_response = requests.get(artist_url, headers=headers)
-            if artist_response.status_code == 200:
-                artist_data = artist_response.json()
-                genre = ", ".join(artist_data.get("genres", []))  # Join multiple genres
-        
-        # Construct final track details
-        data = {
-            "name": track_data['name'],
-            "artist": ", ".join(artist['name'] for artist in track_data['artists']),
-            "album": track_data['album']['name'],
-            "duration": track_data['duration_ms'] // 1000,  # Convert ms to seconds
-            "url": track_data['external_urls']['spotify'],
-            "album_cover": album_cover_url,  # Add album cover
-            "genre": genre  # Add genre
-        }
-        
-        return data  # Return the dictionary with complete details
-    
-    return None  # Return None if track not found
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -1514,7 +1328,7 @@ def list_friends(request):
             friend_users.append(friend.sender)
 
     # Return the list of friends' usernames
-    friend_usernames = [friend.username for friend_user in friend_users]
+    friend_usernames = [friend_users.username for friend_users in friend_users]
 
     return JsonResponse({'status': 'success', 'friends': friend_usernames})
 
@@ -1856,139 +1670,6 @@ def trigger_preferences_update(request):
 
 
 
-
-def get_related_spotify_tracks(artist=None, genre=None, limit=30):
-    """
-    Fetch related tracks from Spotify based on artist or genre
-    """
-    access_token = get_spotify_token()
-    if not access_token:
-        return []
-    
-    headers = {"Authorization": f"Bearer {access_token}"}
-    
-    # If we have an artist, search for their tracks
-    if artist:
-        # First, search for the artist ID
-        search_url = f"https://api.spotify.com/v1/search?q={artist}&type=artist&limit=3"
-        response = requests.get(search_url, headers=headers)
-        
-        if response.status_code == 200 and response.json()['artists']['items']:
-            artist_id = response.json()['artists']['items'][0]['id']
-            
-            # Get top tracks for this artist
-            tracks_url = f"https://api.spotify.com/v1/artists/{artist_id}/top-tracks?market=US"
-            tracks_response = requests.get(tracks_url, headers=headers)
-            
-            if tracks_response.status_code == 200:
-                tracks = tracks_response.json()['tracks'][:limit]
-                return [
-                    {
-                        "spotify_id": track['id'],
-                        "name": track['name'],
-                        "artist": ", ".join(artist['name'] for artist in track['artists']),
-                        "album": track['album']['name'],
-                        "duration": track['duration_ms'] // 1000,
-                        "url": track['external_urls']['spotify'],
-                        "album_cover": track['album']['images'][0]['url'] if track['album']['images'] else None,
-                        "genre": None  # We don't get genre from this endpoint
-                    }
-                    for track in tracks
-                ]
-    
-    # If we have genre or artist search failed, search by genre or artist name as keyword
-    search_term = genre if genre else artist if artist else "popular"
-    search_url = f"https://api.spotify.com/v1/search?q={search_term}&type=track&limit={limit}"
-    
-    response = requests.get(search_url, headers=headers)
-    
-    if response.status_code == 200:
-        tracks = response.json()['tracks']['items']
-        return [
-            {
-                "spotify_id": track['id'],
-                "name": track['name'],
-                "artist": ", ".join(artist['name'] for artist in track['artists']),
-                "album": track['album']['name'],
-                "duration": track['duration_ms'] // 1000,
-                "url": track['external_urls']['spotify'],
-                "album_cover": track['album']['images'][0]['url'] if track['album']['images'] else None,
-                "genre": None  # We don't get genre from this endpoint
-            }
-            for track in tracks
-        ]
-    
-    return []
-
-def get_recommendations_for_new_user(user, limit=20):
-    """
-    Get recommendations for a user with very limited history (1 or 0 songs)
-    """
-    # Check if user has any actions
-    user_actions = Action.objects.filter(user=user)
-    action_count = user_actions.count()
-    
-    # If user has exactly one song interaction
-    if action_count == 1:
-        action = user_actions.first()
-        
-        # Get the song
-        song = action.song
-        
-        # Get recommendations based on this single song's artist or genre
-        if song.artist:
-            return get_related_spotify_tracks(artist=song.artist, limit=limit)
-        elif song.genre:
-            return get_related_spotify_tracks(genre=song.genre, limit=limit)
-    
-    # If user has no history, use profile preferences if available
-    try:
-        profile = UserProfile.objects.get(user=user)
-        preferences = profile.preferences
-        
-        # Check for favorite artists in preferences
-        favorite_artists = preferences.get('favorite_artists', [])
-        if favorite_artists:
-            return get_related_spotify_tracks(artist=favorite_artists[0], limit=limit)
-            
-        # Check for favorite genres in preferences
-        favorite_genres = preferences.get('favorite_genres', [])
-        if favorite_genres:
-            return get_related_spotify_tracks(genre=favorite_genres[0], limit=limit)
-            
-    except UserProfile.DoesNotExist:
-        pass
-    
-    # If nothing else, return popular tracks
-    return get_related_spotify_tracks(limit=limit)  # This will default to popular tracks
-
-def store_spotify_tracks(tracks):
-    """
-    Store Spotify tracks in the database if they don't exist
-    """
-    stored_tracks = []
-    
-    for track_data in tracks:
-        # Check if song already exists in database
-        try:
-            song = Song.objects.get(spotify_id=track_data['spotify_id'])
-        except Song.DoesNotExist:
-            # Create new song
-            song = Song(
-                spotify_id=track_data['spotify_id'],
-                name=track_data['name'],
-                artist=track_data['artist'],
-                album=track_data['album'],
-                duration=track_data['duration'],
-                genre=track_data['genre'],
-                url=track_data['url'],
-                album_cover=track_data['album_cover']
-            )
-            song.save()
-        
-        stored_tracks.append(song)
-    
-    return stored_tracks
 
 
 import random
@@ -3090,3 +2771,423 @@ def get_most_played(request):
         'time_period': f"Last {days} days",
         'songs': song_list
     }, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.conf import settings
+from django.db import transaction
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+
+import json
+from datetime import datetime
+
+from .models import Song, Action, Recommendation, UserProfile
+from .algorithms import (
+    recommend_songs_combined, 
+    get_trending_songs, 
+    cached_get_recommendations,
+    diversify_recommendations,
+    hybrid_recommendation,
+    calculate_svd_recommendations,
+    calculate_als_recommendations,
+    update_preferences_based_on_actions,
+    update_user_similarities
+)
+from .spotify_utils import (
+    get_spotify_track, 
+    get_related_spotify_tracks, 
+    get_recommendations_for_new_user,
+    store_spotify_tracks
+)
+
+# JWT Authentication middleware
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import InvalidToken, AuthenticationFailed
+
+
+class RecommendationAPIView(APIView):
+    """
+    Base class for recommendation views with common methods
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    
+    def get_user_from_request(self, request):
+        """Get the authenticated user from the request"""
+        return request.user
+    
+    def format_song_response(self, song):
+        """Format a song object to a standard response format"""
+        return {
+            "id": song.id,
+            "spotify_id": song.spotify_id,
+            "name": song.name,
+            "artist": song.artist,
+            "album": song.album,
+            "duration": song.duration,
+            "album_cover": song.album_cover,
+            "genre": song.genre if hasattr(song, 'genre') else None,
+            "url": song.spotify_url if hasattr(song, 'spotify_url') else song.url
+        }
+
+
+class ForYouRecommendationsView(RecommendationAPIView):
+    """
+    Endpoint for personalized 'For You' recommendations using various algorithms
+    """
+    
+    def get(self, request):
+        user = self.get_user_from_request(request)
+        limit = int(request.query_params.get('limit', 20))
+        algorithm = request.query_params.get('algorithm', 'hybrid')
+        
+        # Check if user is new or has limited interactions
+        action_count = Action.objects.filter(user=user).count()
+        
+        if action_count < 3:
+            # For new users with limited history, use the specialized method
+            track_data = get_recommendations_for_new_user(user, limit)
+            songs = store_spotify_tracks(track_data)
+            recommendation_source = "new_user"
+        else:
+            # Update user preferences based on actions before getting recommendations
+            update_preferences_based_on_actions(user)
+            
+            # Choose recommendation algorithm based on request or user profile
+            if algorithm == 'hybrid':
+                songs, recommendation_source = hybrid_recommendation(user, limit)
+            elif algorithm == 'als':
+                songs = cached_get_recommendations(user, limit, algorithm='als')
+                recommendation_source = "als"
+            elif algorithm == 'svd':
+                songs = cached_get_recommendations(user, limit, algorithm='svd')
+                recommendation_source = "svd"
+            elif algorithm == 'collaborative':
+                songs, _ = recommend_songs_combined(user, limit)
+                recommendation_source = "collaborative"
+            else:
+                # Default to hybrid
+                songs, recommendation_source = hybrid_recommendation(user, limit)
+            
+            # Add diversity to recommendations
+            song_scores = [(song, 1.0) for song in songs]  # Simple scoring for diversification
+            songs = [s for s, _ in diversify_recommendations(song_scores)]
+        
+        # Format the response
+        response_data = {
+            "recommendations": [self.format_song_response(song) for song in songs],
+            "algorithm": recommendation_source,
+            "limit": limit
+        }
+        
+        return Response(response_data)
+
+
+class TrendingSongsView(RecommendationAPIView):
+    """
+    Endpoint for getting trending songs based on recent activity
+    """
+    
+    def get(self, request):
+        days = int(request.query_params.get('days', 7))
+        limit = int(request.query_params.get('limit', 20))
+        
+        # Get trending songs
+        trending_songs = get_trending_songs(days=days, limit=limit)
+        
+        # Format the response
+        response_data = {
+            "trending": [self.format_song_response(song) for song in trending_songs],
+            "time_period_days": days,
+            "limit": limit
+        }
+        
+        return Response(response_data)
+
+
+class SimilarSongsView(RecommendationAPIView):
+    """
+    Get songs similar to a given song (by spotify_id)
+    """
+    
+    def get(self, request):
+        spotify_id = request.query_params.get('spotify_id')
+        limit = int(request.query_params.get('limit', 10))
+        
+        if not spotify_id:
+            return Response({"error": "spotify_id parameter is required"}, status=400)
+            
+        try:
+            # First check if the song exists in our database
+            try:
+                song = Song.objects.get(spotify_id=spotify_id)
+                artist = song.artist
+                genre = song.genre
+            except Song.DoesNotExist:
+                # If not, fetch it from Spotify
+                track_data = get_spotify_track(spotify_id)
+                if track_data:
+                    artist = track_data['artist']
+                    genre = track_data['genre']
+                else:
+                    return Response({"error": "Song not found"}, status=404)
+            
+            # Get similar tracks from Spotify
+            related_tracks = get_related_spotify_tracks(artist=artist, genre=genre, limit=limit)
+            
+            # Store tracks in our database and return them
+            if related_tracks:
+                similar_songs = store_spotify_tracks(related_tracks)
+                response_data = {
+                    "similar_songs": [self.format_song_response(song) for song in similar_songs],
+                    "source": "spotify",
+                    "limit": limit
+                }
+                return Response(response_data)
+            else:
+                return Response({"error": "No similar songs found"}, status=404)
+                
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
+
+
+class NewTracksRecommendationView(RecommendationAPIView):
+    """
+    Endpoint for recommending new tracks the user hasn't interacted with
+    """
+    
+    def get(self, request):
+        user = self.get_user_from_request(request)
+        limit = int(request.query_params.get('limit', 20))
+        
+        # Get all song IDs the user has interacted with
+        user_song_ids = set(Action.objects.filter(user=user).values_list('song_id', flat=True))
+        
+        # Get recommended songs using the hybrid algorithm
+        recommended_songs, algorithm = hybrid_recommendation(user, limit=limit*2)
+        
+        # Filter out songs the user has already interacted with
+        new_songs = [song for song in recommended_songs if song.id not in user_song_ids]
+        
+        # If we don't have enough recommendations, fetch some from Spotify
+        if len(new_songs) < limit:
+            # Try to get user preferences
+            try:
+                profile = UserProfile.objects.get(user=user)
+                preferences = profile.preferences
+                
+                # Get favorite genres or artists
+                favorite_genres = preferences.get('favorite_genres', [])
+                favorite_artists = preferences.get('favorite_artists', [])
+                
+                if favorite_artists:
+                    spotify_tracks = get_related_spotify_tracks(artist=favorite_artists[0], limit=limit)
+                elif favorite_genres:
+                    spotify_tracks = get_related_spotify_tracks(genre=favorite_genres[0], limit=limit)
+                else:
+                    spotify_tracks = get_related_spotify_tracks(limit=limit)
+                    
+                # Store and add these tracks
+                spotify_songs = store_spotify_tracks(spotify_tracks)
+                
+                # Add only songs that the user hasn't interacted with
+                for song in spotify_songs:
+                    if song.id not in user_song_ids and song not in new_songs:
+                        new_songs.append(song)
+                        
+                        # If we have enough songs, break
+                        if len(new_songs) >= limit:
+                            break
+                            
+            except UserProfile.DoesNotExist:
+                pass
+        
+        # Format the response
+        response_data = {
+            "new_recommendations": [self.format_song_response(song) for song in new_songs[:limit]],
+            "algorithm": f"{algorithm}_with_spotify",
+            "limit": limit
+        }
+        
+        return Response(response_data)
+
+
+class UserBasedRecommendationView(RecommendationAPIView):
+    """
+    Get recommendations based on similar users' preferences
+    """
+    
+    def get(self, request):
+        user = self.get_user_from_request(request)
+        limit = int(request.query_params.get('limit', 20))
+        
+        # Update user similarities to get fresh recommendations
+        update_user_similarities(user)
+        
+        # Get recommendations using collaborative filtering
+        songs, _ = recommend_songs_collaborative(user, limit)
+        
+        # Format the response
+        response_data = {
+            "recommendations": [self.format_song_response(song) for song in songs],
+            "algorithm": "collaborative_filtering",
+            "limit": limit
+        }
+        
+        return Response(response_data)
+
+
+class MatrixFactorizationRecommendationView(RecommendationAPIView):
+    """
+    Get recommendations using matrix factorization techniques (SVD or ALS)
+    """
+    
+    def get(self, request):
+        user = self.get_user_from_request(request)
+        limit = int(request.query_params.get('limit', 20))
+        algorithm = request.query_params.get('algorithm', 'svd')  # 'svd' or 'als'
+        
+        if algorithm.lower() == 'als':
+            songs = calculate_als_recommendations(user, limit)
+            algorithm_name = "Alternating Least Squares"
+        else:
+            songs = calculate_svd_recommendations(user, limit)
+            algorithm_name = "Singular Value Decomposition"
+        
+        # Format the response
+        response_data = {
+            "recommendations": [self.format_song_response(song) for song in songs],
+            "algorithm": algorithm_name,
+            "limit": limit
+        }
+        
+        return Response(response_data)
+
+
+class ActionLoggingView(APIView):
+    """
+    Endpoint for logging user actions with songs (play, like, save, share)
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    
+    @method_decorator(csrf_exempt)
+    def post(self, request):
+        user = request.user
+        data = json.loads(request.body)
+        
+        song_id = data.get('song_id')
+        spotify_id = data.get('spotify_id')
+        action_type = data.get('action_type')
+        
+        if not action_type or (not song_id and not spotify_id):
+            return Response({"error": "Missing required parameters"}, status=400)
+            
+        if action_type not in ['play', 'like', 'save', 'share']:
+            return Response({"error": "Invalid action type"}, status=400)
+        
+        try:
+            # Find or create the song
+            if song_id:
+                song = Song.objects.get(id=song_id)
+            elif spotify_id:
+                try:
+                    song = Song.objects.get(spotify_id=spotify_id)
+                except Song.DoesNotExist:
+                    # Fetch song data from Spotify and create it
+                    track_data = get_spotify_track(spotify_id)
+                    if not track_data:
+                        return Response({"error": "Song not found on Spotify"}, status=404)
+                        
+                    song = Song.objects.create(
+                        spotify_id=spotify_id,
+                        name=track_data['name'],
+                        artist=track_data['artist'],
+                        album=track_data['album'],
+                        duration=track_data['duration'],
+                        spotify_url=track_data['url'],
+                        album_cover=track_data['album_cover'],
+                        genre=track_data['genre']
+                    )
+            
+            # Create the action
+            Action.objects.create(
+                user=user,
+                song=song,
+                action_type=action_type,
+                timestamp=datetime.now()
+            )
+            
+            # Update user preferences based on this new action
+            update_preferences_based_on_actions(user)
+            
+            # Trigger similarity updates for collaborative filtering (can be done asynchronously)
+            # Note: In production, consider making this a background task
+            update_user_similarities(user)
+            
+            return Response({"success": True, "message": f"{action_type} action logged successfully"})
+            
+        except Song.DoesNotExist:
+            return Response({"error": "Song not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+# Specialized endpoint for new users with no interaction history
+class NewUserRecommendationView(RecommendationAPIView):
+    """
+    Get recommendations for brand new users with no interaction history
+    """
+    
+    def get(self, request):
+        user = self.get_user_from_request(request)
+        limit = int(request.query_params.get('limit', 20))
+        
+        # Check for optional genre/artist preferences
+        genre = request.query_params.get('genre')
+        artist = request.query_params.get('artist')
+        
+        # Fetch recommendations from Spotify
+        if genre:
+            track_data = get_related_spotify_tracks(genre=genre, limit=limit)
+            source = f"genre_{genre}"
+        elif artist:
+            track_data = get_related_spotify_tracks(artist=artist, limit=limit)
+            source = f"artist_{artist}"
+        else:
+            # Get popular tracks
+            track_data = get_related_spotify_tracks(limit=limit)
+            source = "popular"
+        
+        # Store tracks in our database
+        songs = store_spotify_tracks(track_data)
+        
+        # Format the response
+        response_data = {
+            "recommendations": [self.format_song_response(song) for song in songs],
+            "source": source,
+            "limit": limit
+        }
+        
+        return Response(response_data)
+

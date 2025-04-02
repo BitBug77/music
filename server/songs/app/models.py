@@ -39,7 +39,7 @@ def save_user_profile(sender, instance, **kwargs):
     except UserProfile.DoesNotExist:
         UserProfile.objects.create(user=instance)
     
-
+from django.core.exceptions import ValidationError
 # Song Model
 class Song(models.Model):
     spotify_id = models.CharField(max_length=255, unique=True)
@@ -50,10 +50,18 @@ class Song(models.Model):
     genre = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
     album_cover = models.URLField(blank=True, null=True)
+
     def __str__(self):
         return f"{self.name} by {self.artist}"
 
-
+    def clean(self):
+        # Validate spotify_id format
+        if self.spotify_id and (not isinstance(self.spotify_id, str) or len(self.spotify_id) != 22):
+            raise ValidationError({'spotify_id': 'Spotify ID must be a 22-character string'})
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Run validation before saving
+        super().save(*args, **kwargs)
 # Action Model
 class Action(models.Model):
     ACTION_CHOICES = [

@@ -8,6 +8,9 @@ from django.utils import timezone
 from .models import Action, UserProfile
 from django.db.models import Count, Avg
 import math
+
+# Import the utility functions from the new module instead of from views
+from .spotify_utils import get_spotify_track
 def update_user_similarities(user):
     """
     Update similarity scores between the given user and all other users
@@ -462,6 +465,410 @@ def assign_recommendation_strategy(user):
         return 'A'  # Default group
     
     
+
+
+
+import numpy as np
+from scipy.sparse.linalg import svds
+from scipy.sparse import csr_matrix
+from django.db.models import Count
+from django.core.cache import cache
+import json
+
+def build_user_song_matrix():
+    """Build a sparse user-song interaction matrix"""
+    # Get all users and songs
+    users = User.objects.all()
+    songs = Song.objects.all()
+    
+    # Create mappings from DB IDs to matrix indices
+    user_indices = {user.id: i for i, user in enumerate(users)}
+    song_indices = {song.id: i for i, song in enumerate(songs)}
+    
+    # Create a sparse matrix (most cells will be 0)
+    matrix = np.zeros((len(users), len(songs)))
+    
+    # Fill the matrix with weighted action values
+    actions = Action.objects.select_related('user', 'song').all()
+    for action in actions:
+        user_idx = user_indices.get(action.user.id)
+        song_idx = song_indices.get(action.song.id)
+        if user_idx is not None and song_idx is not None:
+            # Weight different actions
+            if action.action_type == 'like':
+                matrix[user_idx, song_idx] = 5.0
+            elif action.action_type == 'save':
+                matrix[user_idx, song_idx] = 3.0
+            elif action.action_type == 'play':
+                matrix[user_idx, song_idx] = 1.0
+    
+    return matrix, user_indices, song_indices
+
+
+def calculate_svd_recommendations(user, limit=50):
+    """Calculate recommendations using SVD"""
+    # Get or calculate the decomposed matrices
+    matrix, user_indices, song_indices = build_user_song_matrix()
+    
+    # Invert the mappings for lookup
+    idx_to_song = {idx: song_id for song_id, idx in song_indices.items()}
+    
+    # Number of latent factors (hyperparameter you can tune)
+    k = 10
+    
+    # Apply SVD
+    u, sigma, vt = svds(matrix, k=k)
+    
+    # Convert to diagonal matrix
+    sigma_diag = np.diag(sigma)
+    
+    # Get user's predicted ratings for all items
+    user_idx = user_indices.get(user.id)
+    if user_idx is None:
+        return []
+        
+    # Calculate predicted ratings
+    user_pred = u[user_idx].dot(sigma_diag).dot(vt)
+    
+    # Get songs user has already interacted with
+    user_song_ids = set(Action.objects.filter(user=user).values_list('song_id', flat=True))
+    
+    # Get indices of songs the user hasn't interacted with
+    unrated_indices = [i for i in range(len(user_pred)) if i in idx_to_song and idx_to_song[i] not in user_song_ids]
+    
+    # Sort by prediction score
+    recommendations = [(idx_to_song[idx], user_pred[idx]) for idx in unrated_indices]
+    recommendations.sort(key=lambda x: x[1], reverse=True)
+    
+    # Get top song IDs
+    top_song_ids = [song_id for song_id, _ in recommendations[:limit]]
+    
+    # Fetch the songs
+    songs = Song.objects.filter(id__in=top_song_ids)
+    
+    # Return in correct order
+    song_id_to_index = {song_id: i for i, song_id in enumerate(top_song_ids)}
+    return sorted(songs, key=lambda s: song_id_to_index.get(s.id, 999))
+
+
+def als_factorization(R, n_factors=10, n_iterations=5, reg_param=0.1):
+    """
+    Alternating Least Squares matrix factorization for collaborative filtering
+    
+    Parameters:
+    - R: User-item interaction matrix (users x items)
+    - n_factors: Number of latent factors
+    - n_iterations: Number of iterations to run
+    - reg_param: Regularization parameter to prevent overfitting
+    
+    Returns:
+    - P: User features matrix (users x factors)
+    - Q: Item features matrix (items x factors)
+    """
+    # Get dimensions of the matrix
+    n_users, n_items = R.shape
+    
+    # Initialize factor matrices randomly
+    P = np.random.normal(scale=1./n_factors, size=(n_users, n_factors))
+    Q = np.random.normal(scale=1./n_factors, size=(n_items, n_factors))
+    
+    # Create a mask for non-zero elements
+    mask = R > 0
+    
+    # Convert to sparse matrix for efficiency
+    R_csr = csr_matrix(R)
+    
+    # Run the ALS algorithm
+    for _ in range(n_iterations):
+        # Fix Q and estimate P
+        for u in range(n_users):
+            # Get indices of items rated by user u
+            u_items = R_csr[u].indices
+            if len(u_items) == 0:
+                continue
+                
+            # Get Q matrix for those items
+            Q_u = Q[u_items, :]
+            
+            # Get ratings for those items
+            R_u = R[u, u_items]
+            
+            # Calculate improved P_u with regularization
+            A = Q_u.T.dot(Q_u) + reg_param * np.eye(n_factors)
+            b = Q_u.T.dot(R_u)
+            P[u, :] = np.linalg.solve(A, b)
+        
+        # Fix P and estimate Q
+        for i in range(n_items):
+            # Get indices of users who rated item i
+            i_users = R_csr.getcol(i).indices
+            if len(i_users) == 0:
+                continue
+                
+            # Get P matrix for those users
+            P_i = P[i_users, :]
+            
+            # Get ratings from those users
+            R_i = R[i_users, i]
+            
+            # Calculate improved Q_i with regularization
+            A = P_i.T.dot(P_i) + reg_param * np.eye(n_factors)
+            b = P_i.T.dot(R_i)
+            Q[i, :] = np.linalg.solve(A, b)
+    
+    return P, Q
+
+
+def calculate_als_recommendations(user, limit=30):
+    """Calculate recommendations using ALS factorization"""
+    # Get or calculate the matrix
+    matrix, user_indices, song_indices = build_user_song_matrix()
+    
+    # Invert the mappings for lookup
+    idx_to_song = {idx: song_id for song_id, idx in song_indices.items()}
+    
+    # Number of latent factors (hyperparameter)
+    k = 10
+    
+    # Get user index
+    user_idx = user_indices.get(user.id)
+    if user_idx is None:
+        return []
+    
+    # Check if we have the ALS matrices in cache
+    als_key = "als_matrices"
+    cached_als = cache.get(als_key)
+    
+    if cached_als:
+        P, Q = cached_als
+    else:
+        # Run ALS factorization
+        P, Q = als_factorization(matrix, n_factors=k, n_iterations=15, reg_param=0.1)
+        # Cache the matrices
+        cache.set(als_key, (P, Q), 86400)  # Cache for 24 hours
+    
+    # Calculate predicted ratings
+    user_pred = P[user_idx].dot(Q.T)
+    
+    # Get songs user has already interacted with
+    user_song_ids = set(Action.objects.filter(user=user).values_list('song_id', flat=True))
+    
+    # Get indices of songs the user hasn't interacted with
+    unrated_indices = [i for i in range(len(user_pred)) if i in idx_to_song and idx_to_song[i] not in user_song_ids]
+    
+    # Sort by prediction score
+    recommendations = [(idx_to_song[idx], user_pred[idx]) for idx in unrated_indices]
+    recommendations.sort(key=lambda x: x[1], reverse=True)
+    
+    # Get top song IDs
+    top_song_ids = [song_id for song_id, _ in recommendations[:limit]]
+    
+    # Fetch the songs
+    songs = Song.objects.filter(id__in=top_song_ids)
+    
+    # Return in correct order
+    song_id_to_index = {song_id: i for i, song_id in enumerate(top_song_ids)}
+    return sorted(songs, key=lambda s: song_id_to_index.get(s.id, 999))
+
+
+def cached_get_recommendations(user, limit=50, cache_timeout=3600, algorithm='svd'):
+    """Get recommendations with caching"""
+    cache_key = f"user_recommendations:{user.id}:{algorithm}"
+    
+    # Try to get recommendations from cache
+    cached_recommendations = cache.get(cache_key)
+    if cached_recommendations:
+        # Deserialize and return cached recommendations
+        song_ids = json.loads(cached_recommendations)
+        songs = Song.objects.filter(id__in=song_ids)
+        
+        # Sort based on the original order
+        song_id_to_index = {id: i for i, id in enumerate(song_ids)}
+        return sorted(songs, key=lambda s: song_id_to_index.get(s.id, 999))
+    
+    # If not in cache, calculate recommendations
+    if algorithm == 'als':
+        recommendations = calculate_als_recommendations(user, limit)
+    else:  # Default to SVD
+        recommendations = calculate_svd_recommendations(user, limit)
+    
+    # Cache the song IDs (more efficient than caching full objects)
+    song_ids = [song.id for song in recommendations]
+    cache.set(cache_key, json.dumps(song_ids), cache_timeout)
+    
+    return recommendations
+
+
+def schedule_recommendation_updates():
+    """
+    Schedule periodic updates of recommendations for all users
+    This could run as a nightly background job
+    """
+    # First, calculate the ALS matrices
+    matrix, _, _ = build_user_song_matrix()
+    P, Q = als_factorization(matrix, n_factors=20, n_iterations=15, reg_param=0.1)
+    cache.set("als_matrices", (P, Q), 86400)  # Cache for 24 hours
+    
+    # Now update recommendations for each user
+    for user in User.objects.all():
+        # Calculate and cache SVD recommendations
+        svd_recommendations = calculate_svd_recommendations(user)
+        svd_song_ids = [song.id for song in svd_recommendations]
+        cache.set(f"user_recommendations:{user.id}:svd", json.dumps(svd_song_ids), 86400)
+        
+        # Calculate and cache ALS recommendations
+        als_recommendations = calculate_als_recommendations(user)
+        als_song_ids = [song.id for song in als_recommendations]
+        cache.set(f"user_recommendations:{user.id}:als", json.dumps(als_song_ids), 86400)
+
+
+def create_or_update_song_from_spotify(spotify_track_id):
+    """
+    Creates or updates a Song record using Spotify data
+    Assumes get_spotify_track() function is available elsewhere
+    """
+    # Get Spotify track data
+    if not spotify_track_id or not isinstance(spotify_track_id, str) or len(spotify_track_id) != 22:
+        return None
+    track_data = get_spotify_track(spotify_track_id)
+    if not track_data:
+        return None
+        
+    # Try to find existing song
+    try:
+        song = Song.objects.get(spotify_id=spotify_track_id)
+        # Update existing song
+        song.name = track_data['name']
+        song.artist = track_data['artist']
+        song.album = track_data['album']
+        song.duration = track_data['duration']
+        song.spotify_url = track_data['url']
+        song.album_cover = track_data['album_cover']
+        song.genre = track_data['genre']
+        song.save()
+    except Song.DoesNotExist:
+        # Create new song
+        song = Song.objects.create(
+            spotify_id=spotify_track_id,
+            name=track_data['name'],
+            artist=track_data['artist'],
+            album=track_data['album'],
+            duration=track_data['duration'],
+            spotify_url=track_data['url'],
+            album_cover=track_data['album_cover'],
+            genre=track_data['genre']
+        )
+        
+    return song
+
+
+def recommend_songs_combined(user, limit=50):
+    """
+    Combined recommendation approach that uses multiple algorithms
+    
+    Returns:
+        tuple: (recommendations, source_info)
+            - recommendations: list of Song objects
+            - source_info: string describing which algorithm was used
+    """
+    # First try to get cached recommendations
+    cache_key_als = f"user_recommendations:{user.id}:als"
+    cache_key_svd = f"user_recommendations:{user.id}:svd"
+    
+    cached_als = cache.get(cache_key_als)
+    cached_svd = cache.get(cache_key_svd)
+    
+    # Check if user has enough interactions
+    user_action_count = Action.objects.filter(user=user).count()
+    
+    if user_action_count < 5:
+        # Not enough user data, fall back to popularity-based recommendations
+        popular_songs = Song.objects.annotate(
+            action_count=Count('action')
+        ).order_by('-action_count')[:limit]
+        
+        return popular_songs, "popularity"
+    
+    # Prefer ALS for users with more data (it can handle implicit feedback better)
+    if user_action_count > 20 and cached_als:
+        song_ids = json.loads(cached_als)
+        songs = Song.objects.filter(id__in=song_ids)
+        song_id_to_index = {id: i for i, id in enumerate(song_ids)}
+        sorted_songs = sorted(songs, key=lambda s: song_id_to_index.get(s.id, 999))
+        return sorted_songs, "cached_als"
+    
+    # Fall back to SVD if we have those cached
+    if cached_svd:
+        song_ids = json.loads(cached_svd)
+        songs = Song.objects.filter(id__in=song_ids)
+        song_id_to_index = {id: i for i, id in enumerate(song_ids)}
+        sorted_songs = sorted(songs, key=lambda s: song_id_to_index.get(s.id, 999))
+        return sorted_songs, "cached_svd"
+    
+    # Nothing in cache, so calculate on the fly
+    if user_action_count > 20:
+        # More user data, use ALS
+        recommendations = calculate_als_recommendations(user, limit)
+        algorithm = "als"
+    else:
+        # Less user data, use SVD
+        recommendations = calculate_svd_recommendations(user, limit)
+        algorithm = "svd"
+    
+    # Cache for future requests
+    song_ids = [song.id for song in recommendations]
+    cache.set(f"user_recommendations:{user.id}:{algorithm}", json.dumps(song_ids), 3600)
+    
+    return recommendations, algorithm
+
+
+def hybrid_recommendation(user, limit=50):
+    """
+    A hybrid recommendation approach that combines collaborative filtering
+    with content-based filtering using song genres
+    """
+    # Get user's favorite genres based on their listening history
+    user_actions = Action.objects.filter(user=user).select_related('song')
+    genre_counts = {}
+    
+    for action in user_actions:
+        if not action.song.genre:
+            continue
+            
+        # Split genres (if it's a comma-separated string)
+        genres = [g.strip() for g in action.song.genre.split(',')]
+        
+        # Weight by action type
+        weight = 5.0 if action.action_type == 'like' else 3.0 if action.action_type == 'save' else 1.0
+        
+        for genre in genres:
+            if genre:
+                genre_counts[genre] = genre_counts.get(genre, 0) + weight
+    
+    # Get recommendations from the best algorithm for this user
+    recs, algorithm = recommend_songs_combined(user, limit=limit*2)  # Get more than needed
+    
+    # Add a score to each recommendation based on genre match
+    scored_recs = []
+    for song in recs:
+        base_score = 1.0  # Base score from original algorithm
+        genre_score = 0.0
+        
+        if song.genre and genre_counts:
+            song_genres = [g.strip() for g in song.genre.split(',')]
+            for genre in song_genres:
+                if genre in genre_counts:
+                    # Add weighted genre score
+                    genre_score += genre_counts[genre] / max(genre_counts.values())
+        
+        # Combine scores (you can adjust the weighting)
+        final_score = base_score + (genre_score * 0.5)
+        scored_recs.append((song, final_score))
+    
+    # Sort by final score and get top recommendations
+    scored_recs.sort(key=lambda x: x[1], reverse=True)
+    
+    return [song for song, _ in scored_recs[:limit]], f"hybrid_{algorithm}"
 
 
     
