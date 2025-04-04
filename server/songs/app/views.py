@@ -2964,3 +2964,39 @@ def get_most_played(request):
         'time_period': f"Last {days} days",
         'songs': song_list
     }, status=status.HTTP_200_OK)
+    
+    
+from .models import Feedback
+from .serializer import FeedbackSerializer
+
+@api_view(['POST'])
+def feedback_create(request):
+    """
+    Create a new feedback entry
+    """
+    serializer = FeedbackSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views import View
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import ContactRequest
+from .serializer import ContactRequestSerializer
+
+class ContactRequestView(APIView):
+    def get(self, request):
+        return render(request, 'contact_form.html')
+    
+    def post(self, request):
+        serializer = ContactRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Contact request submitted successfully'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

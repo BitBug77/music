@@ -218,3 +218,50 @@ class Notification(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+        
+        
+class Feedback(models.Model):
+    FEEDBACK_TYPES = (
+        ('music', 'Music Recommendations'),
+        ('social', 'Social Connections'),
+        ('feature', 'Feature Request'),
+        ('bug', 'Technical Issue'),
+    )
+    
+    RATING_CHOICES = (
+        (1, '1 Star'),
+        (2, '2 Stars'),
+        (3, '3 Stars'),
+        (4, '4 Stars'),
+        (5, '5 Stars'),
+    )
+    
+    feedbackType = models.CharField(max_length=20, choices=FEEDBACK_TYPES)
+    rating = models.IntegerField(choices=RATING_CHOICES, null=True, blank=True)
+    feedbackText = models.TextField()
+    contactConsent = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.get_feedbackType_display()} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+    
+    
+class ContactRequest(models.Model):
+    SUBJECT_CHOICES = (
+        ('recommendation', 'Music Recommendations'),
+        ('social', 'Social Connections'),
+        ('account', 'Account Issues'),
+        ('technical', 'Technical Problems'),
+        ('billing', 'Billing & Subscription'),
+        ('other', 'Other'),
+    )
+    
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    subject = models.CharField(max_length=20, choices=SUBJECT_CHOICES)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.name} - {self.subject} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+

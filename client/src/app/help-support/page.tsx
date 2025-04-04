@@ -1,18 +1,90 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { HelpCircle, MessageSquare, LifeBuoy, Search, ArrowRight, Music, Users } from "lucide-react"
+import { HelpCircle, MessageSquare, CheckCircle, AlertCircle } from "lucide-react"
 import Sidebar from "../../components/ui/sidebar"
 import Navbar from "../../components/ui/navbar"
 
 export default function HelpSupportPage() {
-  const [searchQuery, setSearchQuery] = useState("")
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<{
+    success: boolean
+    message: string
+  } | null>(null)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { id, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setSubmitStatus(null)
+
+    try {
+      // Send the request to the Django API
+      const response = await fetch("http://localhost:8000/contact/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+
+      // Check if the response is JSON
+      const contentType = response.headers.get("content-type")
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        const data = await response.json()
+
+        if (response.ok) {
+          setSubmitStatus({
+            success: true,
+            message: data.message || "Your request has been submitted successfully.",
+          })
+          // Reset form
+          setFormData({
+            name: "",
+            email: "",
+            subject: "",
+            message: "",
+          })
+        } else {
+          throw new Error(data.message || "Failed to submit contact request")
+        }
+      } else {
+        // Handle non-JSON response
+        const textResponse = await response.text()
+        console.error("Server returned non-JSON response:", textResponse)
+        throw new Error("Server returned an invalid response. Please try again later.")
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error)
+      setSubmitStatus({
+        success: false,
+        message: error instanceof Error ? error.message : "An unexpected error occurred",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="flex h-screen bg-[#151b27]">
@@ -27,11 +99,7 @@ export default function HelpSupportPage() {
                 <p className="text-gray-400">Find answers to common questions or contact our support team.</p>
               </div>
 
-              
-
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                
-              </div>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
 
               <Tabs defaultValue="faq" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-[#1e2738]">
@@ -154,13 +222,39 @@ export default function HelpSupportPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <form className="space-y-4">
+                      {submitStatus && (
+                        <div
+                          className={`mb-4 p-3 rounded-md flex items-start ${
+                            submitStatus.success
+                              ? "bg-green-900/50 border border-green-800"
+                              : "bg-red-900/50 border border-red-800"
+                          }`}
+                        >
+                          {submitStatus.success ? (
+                            <CheckCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                          ) : (
+                            <AlertCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                          )}
+                          <p className={`text-sm ${submitStatus.success ? "text-green-300" : "text-red-300"}`}>
+                            {submitStatus.message}
+                          </p>
+                        </div>
+                      )}
+
+                      <form className="space-y-4" onSubmit={handleSubmit}>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <label htmlFor="name" className="text-sm font-medium">
                               Name
                             </label>
-                            <Input id="name" placeholder="Your name" className="bg-[#151b27] border-[#2a3649]" />
+                            <Input
+                              id="name"
+                              placeholder="Your name"
+                              className="bg-[#151b27] border-[#2a3649]"
+                              value={formData.name}
+                              onChange={handleInputChange}
+                              required
+                            />
                           </div>
                           <div className="space-y-2">
                             <label htmlFor="email" className="text-sm font-medium">
@@ -171,6 +265,9 @@ export default function HelpSupportPage() {
                               type="email"
                               placeholder="Your email address"
                               className="bg-[#151b27] border-[#2a3649]"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              required
                             />
                           </div>
                         </div>
@@ -182,6 +279,9 @@ export default function HelpSupportPage() {
                           <select
                             id="subject"
                             className="w-full h-10 px-3 py-2 bg-[#151b27] border border-[#2a3649] rounded-md text-sm"
+                            value={formData.subject}
+                            onChange={handleInputChange}
+                            required
                           >
                             <option value="">Select a topic</option>
                             <option value="recommendation">Music Recommendations</option>
@@ -202,24 +302,27 @@ export default function HelpSupportPage() {
                             placeholder="Please describe your issue in detail..."
                             rows={5}
                             className="bg-[#151b27] border-[#2a3649]"
+                            value={formData.message}
+                            onChange={handleInputChange}
+                            required
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <label htmlFor="attachment" className="text-sm font-medium">
-                            Attachment (optional)
-                          </label>
-                          <Input id="attachment" type="file" className="bg-[#151b27] border-[#2a3649]" />
-                          <p className="text-xs text-gray-400">
-                            Max file size: 10MB. Supported formats: JPG, PNG, PDF, MP3.
-                          </p>
+                        <div className="flex justify-between items-center pt-2">
+                          <p className="text-xs text-gray-400">We typically respond within 24 hours.</p>
+                          <Button type="submit" className="bg-[#3b82f6] hover:bg-blue-700" disabled={isSubmitting}>
+                            {isSubmitting ? (
+                              <>
+                                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-t-transparent border-white" />
+                                Submitting...
+                              </>
+                            ) : (
+                              "Submit Request"
+                            )}
+                          </Button>
                         </div>
                       </form>
                     </CardContent>
-                    <CardFooter className="flex justify-between">
-                      <p className="text-xs text-gray-400">We typically respond within 24 hours.</p>
-                      <Button className="bg-[#3b82f6] hover:bg-blue-700">Submit Request</Button>
-                    </CardFooter>
                   </Card>
                 </TabsContent>
               </Tabs>
