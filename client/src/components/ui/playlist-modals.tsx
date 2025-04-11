@@ -11,11 +11,15 @@ interface Playlist {
 }
 
 interface Song {
-  id: number
-  title: string
+  id: string | number
+  title?: string
+  name?: string
   artist: string
-  spotifyTrackId: string
-  coverUrl: string
+  spotifyTrackId?: string
+  spotify_id?: string
+  coverUrl?: string
+  album_cover?: string
+  popularity?: number
 }
 
 // Add to Playlist Modal
@@ -42,6 +46,12 @@ export function AddToPlaylistModal({
 }: AddToPlaylistModalProps) {
   if (!isOpen || !song) return null
 
+  // Get the correct values regardless of property names
+  const songTitle = song.title || song.name || "Unknown Song"
+  const songArtist = song.artist || "Unknown Artist"
+  const songCoverUrl = song.coverUrl || song.album_cover || "/placeholder.svg"
+  const songTrackId = song.spotifyTrackId || song.spotify_id || ""
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 animate-fadeIn">
       <div
@@ -66,14 +76,14 @@ export function AddToPlaylistModal({
         <div className="flex items-center space-x-3 mb-6">
           <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
             <img
-              src={song.coverUrl || "/placeholder.svg"}
-              alt={`${song.title} cover`}
+              src={songCoverUrl || "/placeholder.svg"}
+              alt={`${songTitle} cover`}
               className="w-full h-full object-cover"
             />
           </div>
           <div className="overflow-hidden">
-            <p className="font-medium text-white truncate">{song.title}</p>
-            <p className="text-sm text-gray-400 truncate">{song.artist}</p>
+            <p className="font-medium text-white truncate">{songTitle}</p>
+            <p className="text-sm text-gray-400 truncate">{songArtist}</p>
           </div>
         </div>
 
@@ -103,7 +113,7 @@ export function AddToPlaylistModal({
             {playlists.map((playlist) => (
               <button
                 key={playlist.id}
-                onClick={() => onAddToPlaylist(playlist.id, song.spotifyTrackId)}
+                onClick={() => onAddToPlaylist(playlist.id, songTrackId)}
                 disabled={addingToPlaylistId !== null || addedToPlaylistId === playlist.id}
                 className={`
                   w-full text-left p-4 rounded-lg transition-all duration-200 flex justify-between items-center

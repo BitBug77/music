@@ -103,14 +103,18 @@ WSGI_APPLICATION = 'songs.wsgi.application'
 
 DATABASES = {
     'default': {
-       'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'musicwebsite',  # Change to your database name
-        'USER': 'musicwebsite_user',  # Change if you used a different username
-        'PASSWORD': 'odsBTe1CPEozINyD21tCUNhkADUbKeQl',  # Your PostgreSQL password
-        'HOST': 'dpg-cv5vcjan91rc73b98mm0-a.singapore-postgres.render.com',  # Use '127.0.0.1' if 'localhost' causes issues
-        'PORT': '5432',  # Default PostgreSQL port
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'neondb',  # From the Neon dashboard
+        'USER': 'neondb_owner',  # From the Neon dashboard
+        'PASSWORD': 'npg_mBFuqTGON30D',  # From the Neon dashboard
+        'HOST': 'ep-little-bonus-a153eygd-pooler.ap-southeast-1.aws.neon.tech',  # From the Neon dashboard
+        'PORT': '5432',  # Default for PostgreSQL
+        'OPTIONS': {
+            'sslmode': 'require',  # Secure connection
+        },
     }
 }
+
 
 
 print("Database settings:", DATABASES)

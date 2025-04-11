@@ -64,6 +64,16 @@ urlpatterns = [
    path('recommendations/<str:spotify_id>/', views.get_recommendations, name='get_recommendations'),
    path('notifications/', views.get_notifications, name='get_notifications'),
   path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
+ 
+   
+    path('api/recommendations/for-you/', views.ForYouRecommendationsView.as_view(), name='for-you-recommendations'),
+    path('api/recommendations/trending/',views.TrendingSongsView.as_view(), name='trending-songs'),
+    path('api/recommendations/similar/', views.SimilarSongsView.as_view(), name='similar-songs'),
+    path('api/recommendations/new-tracks/', views.NewTracksRecommendationView.as_view(), name='new-tracks'),
+    path('api/recommendations/user-based/', views.UserBasedRecommendationView.as_view(), name='user-based-recommendations'),
+    path('api/recommendations/matrix/', views.MatrixFactorizationRecommendationView.as_view(), name='matrix-factorization'),
+    path('api/actions/log/', views.ActionLoggingView.as_view(), name='log-action'),
+    path('api/recommendations/new-user/', views.NewUserRecommendationView.as_view(), name='new-user-recommendations'),
   path('feedback/', views.feedback_create, name='feedback-create'),
    path('contact/', ContactRequestView.as_view(), name='contact_request'),
 ]
