@@ -467,13 +467,22 @@ def assign_recommendation_strategy(user):
     
 
 
-
+import numpy as np
+from scipy.sparse.linalg import svds
+from scipy.sparse import csr_matrix
+from sklearn.metrics.pairwise import cosine_similarity
+from django.db.models import Count
+from django.core.cache import cache
+from django.http import JsonResponse
 import numpy as np
 from scipy.sparse.linalg import svds
 from scipy.sparse import csr_matrix
 from django.db.models import Count
 from django.core.cache import cache
 import json
+from .models import Song, Action, UserProfile
+from .spotify_utils import get_spotify_track, store_spotify_tracks, get_spotify_token
+import requests
 
 def build_user_song_matrix():
     """Build a sparse user-song interaction matrix"""
@@ -619,7 +628,7 @@ def als_factorization(R, n_factors=10, n_iterations=5, reg_param=0.1):
     return P, Q
 
 
-def calculate_als_recommendations(user, limit=30):
+def calculate_als_recommendations(user, limit=50):
     """Calculate recommendations using ALS factorization"""
     # Get or calculate the matrix
     matrix, user_indices, song_indices = build_user_song_matrix()
@@ -669,6 +678,157 @@ def calculate_als_recommendations(user, limit=30):
     # Return in correct order
     song_id_to_index = {song_id: i for i, song_id in enumerate(top_song_ids)}
     return sorted(songs, key=lambda s: song_id_to_index.get(s.id, 999))
+
+
+def fetch_audio_features(spotify_id):
+    """
+    Fetch audio features from Spotify API and store them in the database
+    """
+    access_token = get_spotify_token()
+    if not access_token:
+        return None
+    
+    headers = {"Authorization": f"Bearer {access_token}"}
+    features_url = f"https://api.spotify.com/v1/audio-features/{spotify_id}"
+    
+    response = requests.get(features_url, headers=headers)
+    
+    if response.status_code == 200:
+        features_data = response.json()
+        
+        # Get or create song
+        try:
+            song = Song.objects.get(spotify_id=spotify_id)
+        except Song.DoesNotExist:
+            # If song doesn't exist, get basic track info first
+            track_data = get_spotify_track(spotify_id)
+            if not track_data:
+                return None
+                
+            song = Song(
+                spotify_id=spotify_id,
+                name=track_data['name'],
+                artist=track_data['artist'],
+                album=track_data['album'],
+                duration=track_data['duration'],
+                url=track_data['url'],
+                album_cover=track_data['album_cover'],
+                genre=track_data['genre']
+            )
+            song.save()
+        
+        # Create or update audio features
+        try:
+            audio_features = AudioFeatures.objects.get(song=song)
+        except AudioFeatures.DoesNotExist:
+            audio_features = AudioFeatures(song=song)
+        
+        # Update audio features
+        audio_features.danceability = features_data['danceability']
+        audio_features.energy = features_data['energy']
+        audio_features.key = features_data['key']
+        audio_features.loudness = features_data['loudness']
+        audio_features.mode = features_data['mode']
+        audio_features.speechiness = features_data['speechiness']
+        audio_features.acousticness = features_data['acousticness']
+        audio_features.instrumentalness = features_data['instrumentalness']
+        audio_features.liveness = features_data['liveness']
+        audio_features.valence = features_data['valence']
+        audio_features.tempo = features_data['tempo']
+        audio_features.save()
+        
+        return audio_features
+    
+    return None
+
+
+def content_based_recommendations(song_id, limit=50):
+    """
+    Get content-based recommendations using audio features
+    """
+    try:
+        # Get audio features for reference song
+        reference_features = AudioFeatures.objects.get(song_id=song_id)
+        reference_vector = reference_features.as_vector()
+        
+        # Get all songs with audio features
+        all_features = AudioFeatures.objects.exclude(song_id=song_id)
+        
+        # Calculate similarities
+        similarities = []
+        for features in all_features:
+            vector = features.as_vector()
+            similarity = cosine_similarity([reference_vector], [vector])[0][0]
+            similarities.append((features.song_id, similarity))
+        
+        # Sort by similarity
+        similarities.sort(key=lambda x: x[1], reverse=True)
+        
+        # Get top song IDs
+        top_song_ids = [s[0] for s in similarities[:limit]]
+        
+        # Get song objects
+        songs = Song.objects.filter(id__in=top_song_ids)
+        
+        # Return in correct order
+        song_id_to_index = {song_id: i for i, song_id in enumerate(top_song_ids)}
+        return sorted(songs, key=lambda s: song_id_to_index.get(s.id, 999))
+    
+    except AudioFeatures.DoesNotExist:
+        return []
+
+
+def hybrid_recommendations(user=None, song_id=None, limit=50):
+    """
+    Hybrid recommendation system combining collaborative filtering and content-based
+    """
+    svd_songs = []
+    content_songs = []
+    
+    # Get SVD-based recommendations if user is provided
+    if user:
+        svd_songs = calculate_svd_recommendations(user, limit=limit//2)
+    
+    # Get content-based recommendations if song_id is provided
+    if song_id:
+        content_songs = content_based_recommendations(song_id, limit=limit//2)
+    
+    # Combine both lists, avoiding duplicates
+    recommended_songs = []
+    song_ids = set()
+    
+    # Add SVD recommendations first
+    for song in svd_songs:
+        if song.id not in song_ids:
+            recommended_songs.append(song)
+            song_ids.add(song.id)
+    
+    # Add content-based recommendations
+    for song in content_songs:
+        if song.id not in song_ids and len(recommended_songs) < limit:
+            recommended_songs.append(song)
+            song_ids.add(song.id)
+    
+    # If we still need more recommendations
+    if len(recommended_songs) < limit:
+        # Get more SVD recommendations if user is provided
+        if user:
+            more_svd = calculate_svd_recommendations(user, limit=limit)
+            for song in more_svd:
+                if song.id not in song_ids and len(recommended_songs) < limit:
+                    recommended_songs.append(song)
+                    song_ids.add(song.id)
+        
+        # Get more content-based recommendations if song_id is provided and we still need more
+        if song_id and len(recommended_songs) < limit:
+            more_content = content_based_recommendations(song_id, limit=limit)
+            for song in more_content:
+                if song.id not in song_ids and len(recommended_songs) < limit:
+                    recommended_songs.append(song)
+                    song_ids.add(song.id)
+    
+    return recommended_songs
+
 
 
 def cached_get_recommendations(user, limit=50, cache_timeout=3600, algorithm='svd'):

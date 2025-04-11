@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import numpy as np
 class UserProfile(models.Model):
     # Basic connection to auth user
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -226,3 +227,4 @@ class Notification(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+

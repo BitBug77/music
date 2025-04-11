@@ -1,4 +1,11 @@
 import requests
+import logging
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.conf import settings
+import re
+from .models import Song
+import requests
 from .models import Song, UserProfile, Action
 from django.utils import timezone 
 from datetime import datetime, timedelta
@@ -12,27 +19,44 @@ from django.core.cache import cache
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.conf import settings
 from django.db import models
+# Set up logging
+logger = logging.getLogger(__name__)
+
+# Cache in memory - consider using Redis instead for persistence
 access_token_cache = {
     'token': None,
     'expires_at': datetime.now()
 }
+
 def get_spotify_token():
+    """
+    Get Spotify API token with improved error handling and security
+    """
     global access_token_cache
+    logger.info("Attempting to get Spotify token")
 
     # Check if the token is already cached and still valid
     if access_token_cache['token'] and access_token_cache['expires_at'] > datetime.now():
+        logger.info("Using cached token")
         return access_token_cache['token']
 
-    # Token has expired or not available, get a new one using client credentials flow
-    auth_response = requests.post(
-        'https://accounts.spotify.com/api/token',
-        data={
-            'grant_type': 'client_credentials',
-        },
-        auth=(settings.SPOTIFY_CLIENT_ID, settings.SPOTIFY_CLIENT_SECRET)
-    )
-
-    if auth_response.status_code == 200:
+    # Token has expired or not available, get a new one
+    try:
+        auth_response = requests.post(
+            'https://accounts.spotify.com/api/token',
+            data={
+                'grant_type': 'client_credentials',
+            },
+            auth=(settings.SPOTIFY_CLIENT_ID, settings.SPOTIFY_CLIENT_SECRET),
+            timeout=10  # Add timeout to prevent hanging
+        )
+        
+        logger.info(f"Auth response status: {auth_response.status_code}")
+        
+        if auth_response.status_code != 200:
+            logger.error(f"Auth error response: {auth_response.status_code}")
+            return None
+            
         auth_data = auth_response.json()
         access_token = auth_data['access_token']
         expires_in = auth_data['expires_in']
@@ -40,77 +64,131 @@ def get_spotify_token():
         # Update the cache
         access_token_cache['token'] = access_token
         access_token_cache['expires_at'] = datetime.now() + timedelta(seconds=expires_in)
-
+        
+        logger.info("Successfully retrieved new token")
         return access_token
-    else:
-        return None  # Return None in case of failure to get the token
-# Example CSRF exempt view using the token
+    except requests.exceptions.RequestException as e:
+        logger.exception(f"Request exception in get_spotify_token: {str(e)}")
+        return None
+    except Exception as e:
+        logger.exception(f"Exception in get_spotify_token: {str(e)}")
+        return None
 
+def validate_spotify_id(spotify_track_id):
+    """
+    Validate Spotify ID format to prevent injection attacks
+    """
+    if not spotify_track_id or not isinstance(spotify_track_id, str):
+        return False
+    
+    # Spotify IDs are typically 22 characters of base62 (alphanumeric)
+    pattern = r'^[a-zA-Z0-9]{22}$'
+    return bool(re.match(pattern, spotify_track_id))
 
 def get_spotify_track(spotify_track_id):
     """
-    Fetches track details from Spotify API using track ID, including album cover and genre.
+    Securely fetch track details from Spotify API using track ID
     """
+    # Validate and sanitize input
+    spotify_track_id = spotify_track_id.strip() if spotify_track_id else None
+    logger.info(f"Getting track for ID: {spotify_track_id}")
+    
     # Validate Spotify ID format first
-    if not spotify_track_id or not isinstance(spotify_track_id, str) or not spotify_track_id.strip():
-        return None
-    
-    # Spotify IDs are typically 22 characters and alphanumeric
-    # This is a basic validation - you might want to use a more specific regex
-    if len(spotify_track_id) != 22 or not all(c.isalnum() or c == '_' or c == '-' for c in spotify_track_id):
-        raise ValueError({
+    if not validate_spotify_id(spotify_track_id):
+        error_details = {
             "error": "Invalid Spotify Track ID",
-            "details": "The provided ID does not match the expected Spotify ID format"
-        })
+            "details": "The ID format is invalid or contains disallowed characters"
+        }
+        logger.error(f"Spotify ID validation error: {error_details}")
+        raise ValueError(error_details)
     
+    # Get access token
     access_token = get_spotify_token()
     if not access_token:
-        return None  # Return None if token is missing
+        logger.error("No access token available")
+        return None
     
-    # Fetch track details
+    # Fetch track details with proper error handling
     track_url = f"https://api.spotify.com/v1/tracks/{spotify_track_id}"
     headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(track_url, headers=headers)
     
-    if response.status_code == 200:
+    try:
+        response = requests.get(track_url, headers=headers, timeout=10)
+        
+        if response.status_code != 200:
+            logger.error(f"Spotify API error: {response.status_code} - {response.text}")
+            return None
+        
         track_data = response.json()
         
         # Get album cover (selecting the largest image if available)
         album_cover_url = track_data['album']['images'][0]['url'] if track_data['album']['images'] else None
         
-        # Extract artist details (Spotify allows multiple artists per song, take the first one)
+        # Extract artist details
         artist_id = track_data['artists'][0]['id'] if track_data['artists'] else None
         
         genre = None
         if artist_id:
             # Fetch artist details to get genre
             artist_url = f"https://api.spotify.com/v1/artists/{artist_id}"
-            artist_response = requests.get(artist_url, headers=headers)
+            artist_response = requests.get(artist_url, headers=headers, timeout=10)
             if artist_response.status_code == 200:
                 artist_data = artist_response.json()
-                genre = ", ".join(artist_data.get("genres", []))  # Join multiple genres
+                genre = ", ".join(artist_data.get("genres", []))
         
         # Construct final track details
         data = {
             "name": track_data['name'],
             "artist": ", ".join(artist['name'] for artist in track_data['artists']),
             "album": track_data['album']['name'],
-            "duration": track_data['duration_ms'] // 1000,  # Convert ms to seconds
+            "duration": track_data['duration_ms'] // 1000,
             "url": track_data['external_urls']['spotify'],
-            "album_cover": album_cover_url,  # Add album cover
-            "genre": genre  # Add genre
+            "album_cover": album_cover_url,
+            "genre": genre
         }
         
-        return data  # Return the dictionary with complete details
+        logger.info(f"Successfully retrieved track: {data['name']} by {data['artist']}")
+        return data
+        
+    except requests.exceptions.RequestException as e:
+        logger.exception(f"Request exception in get_spotify_track: {str(e)}")
+        return None
+    except Exception as e:
+        logger.exception(f"Exception in get_spotify_track: {str(e)}")
+        if isinstance(e, ValueError):
+            raise
+        return None
     
-    # If the track wasn't found, check if it's an ID format issue
-    if response.status_code == 400:
-        raise ValueError({
-            "error": "Invalid Spotify Track ID",
-            "details": "The provided ID does not match the expected Spotify ID format"
-        })
+
+def store_spotify_tracks(tracks):
+    """
+    Store Spotify tracks in the database if they don't exist
+    """
+    stored_tracks = []
     
-    return None  # 
+    for track_data in tracks:
+        # Check if song already exists in database
+        try:
+            song = Song.objects.get(spotify_id=track_data['spotify_id'])
+        except Song.DoesNotExist:
+            # Create new song
+            song = Song(
+                spotify_id=track_data['spotify_id'],
+                name=track_data['name'],
+                artist=track_data['artist'],
+                album=track_data['album'],
+                duration=track_data['duration'],
+                genre=track_data['genre'],
+                url=track_data['url'],
+                album_cover=track_data['album_cover']
+            )
+            song.save()
+        
+        stored_tracks.append(song)
+    
+    return stored_tracks
+
+
 
 
 def get_related_spotify_tracks(artist=None, genre=None, limit=30):
@@ -216,33 +294,4 @@ def get_recommendations_for_new_user(user, limit=20):
         pass
     
     # If nothing else, return popular tracks
-    return get_related_spotify_tracks(limit=limit)  # This will default to popular tracks
-
-def store_spotify_tracks(tracks):
-    """
-    Store Spotify tracks in the database if they don't exist
-    """
-    stored_tracks = []
-    
-    for track_data in tracks:
-        # Check if song already exists in database
-        try:
-            song = Song.objects.get(spotify_id=track_data['spotify_id'])
-        except Song.DoesNotExist:
-            # Create new song
-            song = Song(
-                spotify_id=track_data['spotify_id'],
-                name=track_data['name'],
-                artist=track_data['artist'],
-                album=track_data['album'],
-                duration=track_data['duration'],
-                genre=track_data['genre'],
-                url=track_data['url'],
-                album_cover=track_data['album_cover']
-            )
-            song.save()
-        
-        stored_tracks.append(song)
-    
-    return stored_tracks
-
+    return get_related_spotify_tracks(limit=limit) 

@@ -64,7 +64,6 @@ urlpatterns = [
    path('recommendations/<str:spotify_id>/', views.get_recommendations, name='get_recommendations'),
    path('notifications/', views.get_notifications, name='get_notifications'),
   path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
- 
    
     path('api/recommendations/for-you/', views.ForYouRecommendationsView.as_view(), name='for-you-recommendations'),
     path('api/recommendations/trending/',views.TrendingSongsView.as_view(), name='trending-songs'),

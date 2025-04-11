@@ -75,7 +75,7 @@ export default function ForYouPage() {
       // Create an array of fetch promises
       const fetchPromises = [
         // For You recommendations
-        fetch("http://127.0.0.1:8000/recommendations/for-you/", {
+        fetch("http://127.0.0.1:8000/api/recommendations/for-you/", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -170,7 +170,7 @@ export default function ForYouPage() {
             return null
           }),
         // Personalized recommendations - new endpoint
-        fetch("http://127.0.0.1:8000/recommendations/personalized/", {
+        fetch("http://127.0.0.1:8000/api/recommendations/matrix/", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

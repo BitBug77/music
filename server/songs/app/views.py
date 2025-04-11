@@ -57,6 +57,7 @@ from django.conf import settings
 from django.db import models
 from .spotify_utils import get_spotify_token, get_spotify_track, store_spotify_tracks, get_recommendations_for_new_user, get_related_spotify_tracks
 
+from django.views.decorators.csrf import csrf_protect
 
 def check_db(request):
     db_name = connection.settings_dict["NAME"]
@@ -67,7 +68,9 @@ def csrf_token(request):
 from django.contrib.auth import logout
 
 
-@api_view(['POST'])
+ # Require login
+@api_view(['POST'])  # Only allow POST method
+
 def login_view(request):
     """Handles user login"""
    
@@ -105,8 +108,9 @@ def login_view(request):
         return JsonResponse({'status': 'error', 'message': 'Invalid credentials'}, status=400)
 
 
-@csrf_exempt
-@api_view(['POST'])
+
+@api_view(['POST'])  # Only allow POST method
+
 def signup_view(request):
     """Handles user signup and initial profile creation"""
     if request.method == 'POST':
@@ -162,6 +166,12 @@ def signup_view(request):
             'access': access_token,
             'refresh': refresh_token
         }, status=201)
+    
+
+@csrf_protect  # Enforce CSRF protection
+@login_required  # Require login
+@api_view(['POST'])  # Only allow POST method
+@permission_classes([IsAuthenticated])     
 def spotify_login(request):
     """Initiates Spotify OAuth login"""
     scope = 'user-read-private user-read-email user-top-read user-library-read'
@@ -170,7 +180,10 @@ def spotify_login(request):
     auth_url = f'{spotify_auth_url}?client_id={settings.SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri={redirect_uri}&scope={scope}'
     return redirect(auth_url)
 
-
+@csrf_protect  # Enforce CSRF protection
+@login_required  # Require login
+@api_view(['POST'])  # Only allow POST method
+@permission_classes([IsAuthenticated]) 
 def spotify_callback(request):
     """Handles the callback from Spotify after authentication"""
     code = request.GET.get('code')
@@ -234,7 +247,8 @@ access_token_cache = {
 }
 
 
-@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def spotify_search(request):
     """
     Example of a CSRF exempt view that uses the Spotify token
@@ -356,7 +370,9 @@ def get_songs_by_popularity(request):
     ]
     
     return JsonResponse({"status": "success", "songs": song_list})
+@csrf_protect
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def logout_view(request):
     """Handles user logout"""
 
@@ -369,8 +385,8 @@ def logout_view(request):
     return JsonResponse({'status': 'success', 'message': 'Logged out successfully'}, status=200)
 
 
-@api_view(['POST'])
-
+@csrf_protect
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recommend_friends(request):
     """Recommend friends based on similar music taste."""
@@ -407,6 +423,7 @@ from .models import User, FriendRequest
 from .kafka_producer import send_kafka_message
 from django.conf import settings
 
+@csrf_protect
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def send_friend_request(request):
@@ -479,7 +496,7 @@ def send_friend_request(request):
             }
         }
     })
-
+@csrf_protect
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def respond_to_friend_request(request):
@@ -539,7 +556,7 @@ def respond_to_friend_request(request):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
     
 from .models import Notification
-
+@csrf_protect
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_notifications(request):
@@ -561,7 +578,7 @@ def get_notifications(request):
         })
     
     return JsonResponse({'notifications': data})
-
+@csrf_protect
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def mark_notification_read(request, notification_id):
@@ -574,6 +591,8 @@ def mark_notification_read(request, notification_id):
     except Notification.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Notification not found'}, status=404)
 
+
+@csrf_protect
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_friend_requests(request):
@@ -616,7 +635,7 @@ def get_friend_requests(request):
         "sent_requests": sent_data
     })
 
-
+@csrf_protect
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def search_user(request, username):
@@ -853,7 +872,8 @@ import requests
 import requests
 
 
-
+@csrf_protect
+@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def like_song(request, spotify_track_id):
@@ -881,6 +901,8 @@ def like_song(request, spotify_track_id):
     message = 'Song liked successfully' if created else 'Song was already liked'
     return JsonResponse({'status': 'success', 'message': message})
 
+@csrf_protect
+@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def save_song(request, spotify_track_id):
@@ -908,6 +930,8 @@ def save_song(request, spotify_track_id):
     message = 'Song saved successfully' if created else 'Song was already saved'
     return JsonResponse({'status': 'success', 'message': message})
 
+@csrf_protect
+@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def play_song(request, spotify_track_id):
@@ -944,6 +968,8 @@ def play_song(request, spotify_track_id):
     )
     return JsonResponse({'status': 'success', 'message': 'Song played successfully'})
 
+@csrf_protect
+@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def skip_song(request, spotify_track_id):
@@ -971,6 +997,8 @@ def skip_song(request, spotify_track_id):
     return JsonResponse({'status': 'success', 'message': 'Song skipped successfully'})
 
 
+@csrf_protect
+@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def view_song(request, spotify_track_id):
@@ -997,6 +1025,8 @@ def view_song(request, spotify_track_id):
     Action.objects.create(user=user, song=song, action_type='view')
     return JsonResponse({'status': 'success', 'message': 'Song view recorded'})
 
+@csrf_protect
+@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def share_song(request, spotify_track_id):
@@ -1032,6 +1062,9 @@ def share_song(request, spotify_track_id):
     )
     return JsonResponse({'status': 'success', 'message': 'Song share recorded'})
 
+
+@csrf_protect
+@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def complete_song(request, spotify_track_id):
@@ -1056,6 +1089,9 @@ def complete_song(request, spotify_track_id):
     Action.objects.create(user=user, song=song, action_type='complete')
     return JsonResponse({'status': 'success', 'message': 'Song completion recorded'})
 
+
+@csrf_protect
+@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def track_search(request):
@@ -1132,7 +1168,8 @@ def session(request):
 
 
 
-
+@csrf_protect
+@login_required
 @api_view(['GET', 'POST', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def playlist_songs(request, playlist_id):
@@ -1212,7 +1249,8 @@ def playlist_songs(request, playlist_id):
         except json.JSONDecodeError:
             return Response({"status": "error", "message": "Invalid JSON"}, status=400)
 
-
+@csrf_protect
+@login_required
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def playlists(request):
@@ -1252,7 +1290,9 @@ def playlists(request):
             
         except json.JSONDecodeError:
             return Response({"status": "error", "message": "Invalid JSON"}, status=400)
-        
+
+@csrf_protect
+@login_required       
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def playlist_detail(request, playlist_id):
@@ -1300,6 +1340,9 @@ def playlist_detail(request, playlist_id):
             "status": "success",
             "message": "Playlist deleted"
         })
+    
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_liked_songs(request):
@@ -1308,6 +1351,9 @@ def get_liked_songs(request):
     serializer = LikedSongSerializer(liked_songs, many=True)  # Use the LikedSongSerializer for liked songs
     return Response({"status": "success", "playlist": serializer.data})
 
+
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friends(request):
@@ -1332,6 +1378,9 @@ def list_friends(request):
 
     return JsonResponse({'status': 'success', 'friends': friend_usernames})
 
+
+@csrf_protect
+@login_required
 @api_view(['POST', 'GET'])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
@@ -1384,7 +1433,8 @@ def update_profile(request):
             'message': 'Profile updated successfully'
         })
 
-# New dedicated endpoint for profile picture upload
+@csrf_protect
+@login_required# New dedicated endpoint for profile picture upload
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_profile_picture(request):
@@ -1452,7 +1502,8 @@ def get_lyrics(track_name, artist_name):
     else:
         return "Lyrics not found!"
 
-
+@csrf_protect
+@login_required
 @api_view(['POST', 'GET', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def user_music(request):
@@ -1570,7 +1621,8 @@ def user_music(request):
 
 
 
-
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_preferences(request):
@@ -1593,6 +1645,8 @@ print("UserProfile fields:", [f.name for f in UserProfile._meta.get_fields()])
 
 from .serializer import SongSerializer, RecommendationSerializer
 
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_personalized_recommendations_view(request):
@@ -1807,6 +1861,8 @@ def recommend_songs_hybrid(user, limit=20):
     return unique_recommendations
 
 
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_song_recommendations(request):
@@ -1843,6 +1899,8 @@ def get_song_recommendations(request):
         'recommendations': recommendations
     }, status=status.HTTP_200_OK)
 
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def fetch_and_store_spotify_track(request, track_id):
@@ -1900,6 +1958,8 @@ def fetch_and_store_spotify_track(request, track_id):
         }
     }, status=status.HTTP_200_OK)
 
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recommend_songs(request):
@@ -2225,6 +2285,8 @@ def get_trending_spotify_tracks(limit=10):
     # Placeholder implementation - should be replaced with actual API call
     return []
 
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_for_you_recommendations(request):
@@ -2316,6 +2378,7 @@ import urllib.parse
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
 
 @require_http_methods(["GET"])
 def get_recommendations(request, spotify_id):
@@ -2475,6 +2538,10 @@ def get_recommendations(request, spotify_id):
             'details': str(e),
             'spotify_id': spotify_id
         }, status=500)
+    
+
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recommend_friends(request, limit=10):
@@ -2579,6 +2646,8 @@ def recommend_friends(request, limit=10):
         'total_count': len(recommendations)
     })
 
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recommend_songs_from_friends(request, limit=20):
@@ -2653,6 +2722,8 @@ def recommend_songs_from_friends(request, limit=20):
 
 
 
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_recently_played(request):
@@ -2716,6 +2787,10 @@ def get_recently_played(request):
 
 from django.db.models import Max
 
+
+
+@csrf_protect
+@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_most_played(request):
@@ -2823,7 +2898,8 @@ from .spotify_utils import (
 # JWT Authentication middleware
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, AuthenticationFailed
-
+from .spotify_utils import get_spotify_token, validate_spotify_id
+logger = logging.getLogger(__name__)
 
 class RecommendationAPIView(APIView):
     """
@@ -2831,6 +2907,10 @@ class RecommendationAPIView(APIView):
     """
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+    
+    @method_decorator(csrf_protect)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
     
     def get_user_from_request(self, request):
         """Get the authenticated user from the request"""
@@ -2856,51 +2936,68 @@ class ForYouRecommendationsView(RecommendationAPIView):
     Endpoint for personalized 'For You' recommendations using various algorithms
     """
     
-    def get(self, request):
-        user = self.get_user_from_request(request)
-        limit = int(request.query_params.get('limit', 20))
-        algorithm = request.query_params.get('algorithm', 'hybrid')
-        
-        # Check if user is new or has limited interactions
-        action_count = Action.objects.filter(user=user).count()
-        
-        if action_count < 3:
-            # For new users with limited history, use the specialized method
-            track_data = get_recommendations_for_new_user(user, limit)
-            songs = store_spotify_tracks(track_data)
-            recommendation_source = "new_user"
-        else:
-            # Update user preferences based on actions before getting recommendations
-            update_preferences_based_on_actions(user)
+    def get(self, request, *args, **kwargs):
+        try:
+            user = self.get_user_from_request(request)
             
-            # Choose recommendation algorithm based on request or user profile
-            if algorithm == 'hybrid':
-                songs, recommendation_source = hybrid_recommendation(user, limit)
-            elif algorithm == 'als':
-                songs = cached_get_recommendations(user, limit, algorithm='als')
-                recommendation_source = "als"
-            elif algorithm == 'svd':
-                songs = cached_get_recommendations(user, limit, algorithm='svd')
-                recommendation_source = "svd"
-            elif algorithm == 'collaborative':
-                songs, _ = recommend_songs_combined(user, limit)
-                recommendation_source = "collaborative"
+            # Validate and sanitize inputs
+            try:
+                limit = int(request.query_params.get('limit', 20))
+                if limit < 1 or limit > 100:
+                    return Response({"error": "Limit must be between 1 and 100"}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                return Response({"error": "Limit must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            algorithm = request.query_params.get('algorithm', 'hybrid')
+            if algorithm not in ['hybrid', 'als', 'svd', 'collaborative']:
+                return Response({"error": "Invalid algorithm specified"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if user is new or has limited interactions
+            action_count = Action.objects.filter(user=user).count()
+            
+            if action_count < 3:
+                # For new users with limited history, use the specialized method
+                track_data = get_recommendations_for_new_user(user, limit)
+                songs = store_spotify_tracks(track_data)
+                recommendation_source = "new_user"
             else:
-                # Default to hybrid
-                songs, recommendation_source = hybrid_recommendation(user, limit)
+                # Update user preferences based on actions before getting recommendations
+                update_preferences_based_on_actions(user)
+                
+                # Choose recommendation algorithm based on request or user profile
+                if algorithm == 'hybrid':
+                    songs, recommendation_source = hybrid_recommendation(user, limit)
+                elif algorithm == 'als':
+                    songs = cached_get_recommendations(user, limit, algorithm='als')
+                    recommendation_source = "als"
+                elif algorithm == 'svd':
+                    songs = cached_get_recommendations(user, limit, algorithm='svd')
+                    recommendation_source = "svd"
+                elif algorithm == 'collaborative':
+                    songs, _ = recommend_songs_combined(user, limit)
+                    recommendation_source = "collaborative"
+                else:
+                    # Default to hybrid
+                    songs, recommendation_source = hybrid_recommendation(user, limit)
+                
+                # Add diversity to recommendations
+                song_scores = [(song, 1.0) for song in songs]  # Simple scoring for diversification
+                songs = [s for s, _ in diversify_recommendations(song_scores)]
             
-            # Add diversity to recommendations
-            song_scores = [(song, 1.0) for song in songs]  # Simple scoring for diversification
-            songs = [s for s, _ in diversify_recommendations(song_scores)]
-        
-        # Format the response
-        response_data = {
-            "recommendations": [self.format_song_response(song) for song in songs],
-            "algorithm": recommendation_source,
-            "limit": limit
-        }
-        
-        return Response(response_data)
+            # Format the response
+            response_data = {
+                "recommendations": [self.format_song_response(song) for song in songs],
+                "algorithm": recommendation_source,
+                "limit": limit
+            }
+            
+            return Response(response_data)
+        except Exception as e:
+            logger.exception(f"Error in ForYouRecommendationsView: {str(e)}")
+            return Response(
+                {"error": "An error occurred while processing your request"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class TrendingSongsView(RecommendationAPIView):
@@ -2908,21 +3005,40 @@ class TrendingSongsView(RecommendationAPIView):
     Endpoint for getting trending songs based on recent activity
     """
     
-    def get(self, request):
-        days = int(request.query_params.get('days', 7))
-        limit = int(request.query_params.get('limit', 20))
-        
-        # Get trending songs
-        trending_songs = get_trending_songs(days=days, limit=limit)
-        
-        # Format the response
-        response_data = {
-            "trending": [self.format_song_response(song) for song in trending_songs],
-            "time_period_days": days,
-            "limit": limit
-        }
-        
-        return Response(response_data)
+    def get(self, request, *args, **kwargs):
+        try:
+            # Validate and sanitize inputs
+            try:
+                days = int(request.query_params.get('days', 7))
+                if days < 1 or days > 90:
+                    return Response({"error": "Days must be between 1 and 90"}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                return Response({"error": "Days must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            try:
+                limit = int(request.query_params.get('limit', 20))
+                if limit < 1 or limit > 100:
+                    return Response({"error": "Limit must be between 1 and 100"}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                return Response({"error": "Limit must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get trending songs
+            trending_songs = get_trending_songs(days=days, limit=limit)
+            
+            # Format the response
+            response_data = {
+                "trending": [self.format_song_response(song) for song in trending_songs],
+                "time_period_days": days,
+                "limit": limit
+            }
+            
+            return Response(response_data)
+        except Exception as e:
+            logger.exception(f"Error in TrendingSongsView: {str(e)}")
+            return Response(
+                {"error": "An error occurred while processing your request"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class SimilarSongsView(RecommendationAPIView):
@@ -2930,45 +3046,62 @@ class SimilarSongsView(RecommendationAPIView):
     Get songs similar to a given song (by spotify_id)
     """
     
-    def get(self, request):
-        spotify_id = request.query_params.get('spotify_id')
-        limit = int(request.query_params.get('limit', 10))
-        
-        if not spotify_id:
-            return Response({"error": "spotify_id parameter is required"}, status=400)
-            
+    def get(self, request, *args, **kwargs):
         try:
-            # First check if the song exists in our database
-            try:
-                song = Song.objects.get(spotify_id=spotify_id)
-                artist = song.artist
-                genre = song.genre
-            except Song.DoesNotExist:
-                # If not, fetch it from Spotify
-                track_data = get_spotify_track(spotify_id)
-                if track_data:
-                    artist = track_data['artist']
-                    genre = track_data['genre']
-                else:
-                    return Response({"error": "Song not found"}, status=404)
+            spotify_id = request.query_params.get('spotify_id')
             
-            # Get similar tracks from Spotify
-            related_tracks = get_related_spotify_tracks(artist=artist, genre=genre, limit=limit)
+            if not spotify_id:
+                return Response({"error": "spotify_id parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Store tracks in our database and return them
-            if related_tracks:
-                similar_songs = store_spotify_tracks(related_tracks)
-                response_data = {
-                    "similar_songs": [self.format_song_response(song) for song in similar_songs],
-                    "source": "spotify",
-                    "limit": limit
-                }
-                return Response(response_data)
-            else:
-                return Response({"error": "No similar songs found"}, status=404)
+            # Validate Spotify ID format
+            if not validate_spotify_id(spotify_id):
+                return Response({"error": "Invalid Spotify ID format"}, status=status.HTTP_400_BAD_REQUEST)
                 
-        except ValueError as e:
-            return Response({"error": str(e)}, status=400)
+            try:
+                limit = int(request.query_params.get('limit', 10))
+                if limit < 1 or limit > 50:
+                    return Response({"error": "Limit must be between 1 and 50"}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                return Response({"error": "Limit must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            try:
+                # First check if the song exists in our database
+                try:
+                    song = Song.objects.get(spotify_id=spotify_id)
+                    artist = song.artist
+                    genre = song.genre
+                except Song.DoesNotExist:
+                    # If not, fetch it from Spotify
+                    track_data = get_spotify_track(spotify_id)
+                    if track_data:
+                        artist = track_data['artist']
+                        genre = track_data['genre']
+                    else:
+                        return Response({"error": "Song not found"}, status=status.HTTP_404_NOT_FOUND)
+                
+                # Get similar tracks from Spotify
+                related_tracks = get_related_spotify_tracks(artist=artist, genre=genre, limit=limit)
+                
+                # Store tracks in our database and return them
+                if related_tracks:
+                    similar_songs = store_spotify_tracks(related_tracks)
+                    response_data = {
+                        "similar_songs": [self.format_song_response(song) for song in similar_songs],
+                        "source": "spotify",
+                        "limit": limit
+                    }
+                    return Response(response_data)
+                else:
+                    return Response({"error": "No similar songs found"}, status=status.HTTP_404_NOT_FOUND)
+                    
+            except ValueError as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.exception(f"Error in SimilarSongsView: {str(e)}")
+            return Response(
+                {"error": "An error occurred while processing your request"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class NewTracksRecommendationView(RecommendationAPIView):
@@ -2976,60 +3109,73 @@ class NewTracksRecommendationView(RecommendationAPIView):
     Endpoint for recommending new tracks the user hasn't interacted with
     """
     
-    def get(self, request):
-        user = self.get_user_from_request(request)
-        limit = int(request.query_params.get('limit', 20))
-        
-        # Get all song IDs the user has interacted with
-        user_song_ids = set(Action.objects.filter(user=user).values_list('song_id', flat=True))
-        
-        # Get recommended songs using the hybrid algorithm
-        recommended_songs, algorithm = hybrid_recommendation(user, limit=limit*2)
-        
-        # Filter out songs the user has already interacted with
-        new_songs = [song for song in recommended_songs if song.id not in user_song_ids]
-        
-        # If we don't have enough recommendations, fetch some from Spotify
-        if len(new_songs) < limit:
-            # Try to get user preferences
+    def get(self, request, *args, **kwargs):
+        try:
+            user = self.get_user_from_request(request)
+            
             try:
-                profile = UserProfile.objects.get(user=user)
-                preferences = profile.preferences
-                
-                # Get favorite genres or artists
-                favorite_genres = preferences.get('favorite_genres', [])
-                favorite_artists = preferences.get('favorite_artists', [])
-                
-                if favorite_artists:
-                    spotify_tracks = get_related_spotify_tracks(artist=favorite_artists[0], limit=limit)
-                elif favorite_genres:
-                    spotify_tracks = get_related_spotify_tracks(genre=favorite_genres[0], limit=limit)
-                else:
-                    spotify_tracks = get_related_spotify_tracks(limit=limit)
+                limit = int(request.query_params.get('limit', 20))
+                if limit < 1 or limit > 100:
+                    return Response({"error": "Limit must be between 1 and 100"}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                return Response({"error": "Limit must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get all song IDs the user has interacted with
+            user_song_ids = set(Action.objects.filter(user=user).values_list('song_id', flat=True))
+            
+            # Get recommended songs using the hybrid algorithm
+            recommended_songs, algorithm = hybrid_recommendation(user, limit=limit*2)
+            
+            # Filter out songs the user has already interacted with
+            new_songs = [song for song in recommended_songs if song.id not in user_song_ids]
+            
+            # If we don't have enough recommendations, fetch some from Spotify
+            if len(new_songs) < limit:
+                # Try to get user preferences
+                try:
+                    profile = UserProfile.objects.get(user=user)
+                    preferences = profile.preferences
                     
-                # Store and add these tracks
-                spotify_songs = store_spotify_tracks(spotify_tracks)
-                
-                # Add only songs that the user hasn't interacted with
-                for song in spotify_songs:
-                    if song.id not in user_song_ids and song not in new_songs:
-                        new_songs.append(song)
+                    # Get favorite genres or artists
+                    favorite_genres = preferences.get('favorite_genres', [])
+                    favorite_artists = preferences.get('favorite_artists', [])
+                    
+                    if favorite_artists:
+                        spotify_tracks = get_related_spotify_tracks(artist=favorite_artists[0], limit=limit)
+                    elif favorite_genres:
+                        spotify_tracks = get_related_spotify_tracks(genre=favorite_genres[0], limit=limit)
+                    else:
+                        spotify_tracks = get_related_spotify_tracks(limit=limit)
                         
-                        # If we have enough songs, break
-                        if len(new_songs) >= limit:
-                            break
+                    # Store and add these tracks
+                    spotify_songs = store_spotify_tracks(spotify_tracks)
+                    
+                    # Add only songs that the user hasn't interacted with
+                    for song in spotify_songs:
+                        if song.id not in user_song_ids and song not in new_songs:
+                            new_songs.append(song)
                             
-            except UserProfile.DoesNotExist:
-                pass
-        
-        # Format the response
-        response_data = {
-            "new_recommendations": [self.format_song_response(song) for song in new_songs[:limit]],
-            "algorithm": f"{algorithm}_with_spotify",
-            "limit": limit
-        }
-        
-        return Response(response_data)
+                            # If we have enough songs, break
+                            if len(new_songs) >= limit:
+                                break
+                                
+                except UserProfile.DoesNotExist:
+                    pass
+            
+            # Format the response
+            response_data = {
+                "new_recommendations": [self.format_song_response(song) for song in new_songs[:limit]],
+                "algorithm": f"{algorithm}_with_spotify",
+                "limit": limit
+            }
+            
+            return Response(response_data)
+        except Exception as e:
+            logger.exception(f"Error in NewTracksRecommendationView: {str(e)}")
+            return Response(
+                {"error": "An error occurred while processing your request"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class UserBasedRecommendationView(RecommendationAPIView):
@@ -3037,24 +3183,37 @@ class UserBasedRecommendationView(RecommendationAPIView):
     Get recommendations based on similar users' preferences
     """
     
-    def get(self, request):
-        user = self.get_user_from_request(request)
-        limit = int(request.query_params.get('limit', 20))
-        
-        # Update user similarities to get fresh recommendations
-        update_user_similarities(user)
-        
-        # Get recommendations using collaborative filtering
-        songs, _ = recommend_songs_collaborative(user, limit)
-        
-        # Format the response
-        response_data = {
-            "recommendations": [self.format_song_response(song) for song in songs],
-            "algorithm": "collaborative_filtering",
-            "limit": limit
-        }
-        
-        return Response(response_data)
+    def get(self, request, *args, **kwargs):
+        try:
+            user = self.get_user_from_request(request)
+            
+            try:
+                limit = int(request.query_params.get('limit', 20))
+                if limit < 1 or limit > 100:
+                    return Response({"error": "Limit must be between 1 and 100"}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                return Response({"error": "Limit must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Update user similarities to get fresh recommendations
+            update_user_similarities(user)
+            
+            # Get recommendations using collaborative filtering
+            songs, _ = recommend_songs_collaborative(user, limit)
+            
+            # Format the response
+            response_data = {
+                "recommendations": [self.format_song_response(song) for song in songs],
+                "algorithm": "collaborative_filtering",
+                "limit": limit
+            }
+            
+            return Response(response_data)
+        except Exception as e:
+            logger.exception(f"Error in UserBasedRecommendationView: {str(e)}")
+            return Response(
+                {"error": "An error occurred while processing your request"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class MatrixFactorizationRecommendationView(RecommendationAPIView):
@@ -3062,26 +3221,42 @@ class MatrixFactorizationRecommendationView(RecommendationAPIView):
     Get recommendations using matrix factorization techniques (SVD or ALS)
     """
     
-    def get(self, request):
-        user = self.get_user_from_request(request)
-        limit = int(request.query_params.get('limit', 20))
-        algorithm = request.query_params.get('algorithm', 'svd')  # 'svd' or 'als'
-        
-        if algorithm.lower() == 'als':
-            songs = calculate_als_recommendations(user, limit)
-            algorithm_name = "Alternating Least Squares"
-        else:
-            songs = calculate_svd_recommendations(user, limit)
-            algorithm_name = "Singular Value Decomposition"
-        
-        # Format the response
-        response_data = {
-            "recommendations": [self.format_song_response(song) for song in songs],
-            "algorithm": algorithm_name,
-            "limit": limit
-        }
-        
-        return Response(response_data)
+    def get(self, request, *args, **kwargs):
+        try:
+            user = self.get_user_from_request(request)
+            
+            try:
+                limit = int(request.query_params.get('limit', 20))
+                if limit < 1 or limit > 100:
+                    return Response({"error": "Limit must be between 1 and 100"}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                return Response({"error": "Limit must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            algorithm = request.query_params.get('algorithm', 'svd')  # 'svd' or 'als'
+            if algorithm.lower() not in ['svd', 'als']:
+                return Response({"error": "Algorithm must be either 'svd' or 'als'"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if algorithm.lower() == 'als':
+                songs = calculate_als_recommendations(user, limit)
+                algorithm_name = "Alternating Least Squares"
+            else:
+                songs = calculate_svd_recommendations(user, limit)
+                algorithm_name = "Singular Value Decomposition"
+            
+            # Format the response
+            response_data = {
+                "recommendations": [self.format_song_response(song) for song in songs],
+                "algorithm": algorithm_name,
+                "limit": limit
+            }
+            
+            return Response(response_data)
+        except Exception as e:
+            logger.exception(f"Error in MatrixFactorizationRecommendationView: {str(e)}")
+            return Response(
+                {"error": "An error occurred while processing your request"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class ActionLoggingView(APIView):
@@ -3091,103 +3266,135 @@ class ActionLoggingView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
     
-    @method_decorator(csrf_exempt)
-    def post(self, request):
-        user = request.user
-        data = json.loads(request.body)
-        
-        song_id = data.get('song_id')
-        spotify_id = data.get('spotify_id')
-        action_type = data.get('action_type')
-        
-        if not action_type or (not song_id and not spotify_id):
-            return Response({"error": "Missing required parameters"}, status=400)
-            
-        if action_type not in ['play', 'like', 'save', 'share']:
-            return Response({"error": "Invalid action type"}, status=400)
-        
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
         try:
-            # Find or create the song
+            user = request.user
+            
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON in request body"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            song_id = data.get('song_id')
+            spotify_id = data.get('spotify_id')
+            action_type = data.get('action_type')
+            
+            if not action_type or (not song_id and not spotify_id):
+                return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            if action_type not in ['play', 'like', 'save', 'share']:
+                return Response({"error": "Invalid action type"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            if spotify_id and not validate_spotify_id(spotify_id):
+                return Response({"error": "Invalid Spotify ID format"}, status=status.HTTP_400_BAD_REQUEST)
+                
             if song_id:
-                song = Song.objects.get(id=song_id)
-            elif spotify_id:
                 try:
-                    song = Song.objects.get(spotify_id=spotify_id)
-                except Song.DoesNotExist:
-                    # Fetch song data from Spotify and create it
-                    track_data = get_spotify_track(spotify_id)
-                    if not track_data:
-                        return Response({"error": "Song not found on Spotify"}, status=404)
-                        
-                    song = Song.objects.create(
-                        spotify_id=spotify_id,
-                        name=track_data['name'],
-                        artist=track_data['artist'],
-                        album=track_data['album'],
-                        duration=track_data['duration'],
-                        spotify_url=track_data['url'],
-                        album_cover=track_data['album_cover'],
-                        genre=track_data['genre']
-                    )
+                    song_id = int(song_id)
+                except ValueError:
+                    return Response({"error": "Song ID must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Create the action
-            Action.objects.create(
-                user=user,
-                song=song,
-                action_type=action_type,
-                timestamp=datetime.now()
-            )
-            
-            # Update user preferences based on this new action
-            update_preferences_based_on_actions(user)
-            
-            # Trigger similarity updates for collaborative filtering (can be done asynchronously)
-            # Note: In production, consider making this a background task
-            update_user_similarities(user)
-            
-            return Response({"success": True, "message": f"{action_type} action logged successfully"})
-            
-        except Song.DoesNotExist:
-            return Response({"error": "Song not found"}, status=404)
+            try:
+                # Find or create the song
+                if song_id:
+                    song = Song.objects.get(id=song_id)
+                elif spotify_id:
+                    try:
+                        song = Song.objects.get(spotify_id=spotify_id)
+                    except Song.DoesNotExist:
+                        # Fetch song data from Spotify and create it
+                        track_data = get_spotify_track(spotify_id)
+                        if not track_data:
+                            return Response({"error": "Song not found on Spotify"}, status=status.HTTP_404_NOT_FOUND)
+                            
+                        song = Song.objects.create(
+                            spotify_id=spotify_id,
+                            name=track_data['name'],
+                            artist=track_data['artist'],
+                            album=track_data['album'],
+                            duration=track_data['duration'],
+                            spotify_url=track_data['url'],
+                            album_cover=track_data['album_cover'],
+                            genre=track_data['genre']
+                        )
+                
+                # Create the action
+                Action.objects.create(
+                    user=user,
+                    song=song,
+                    action_type=action_type,
+                    timestamp=datetime.now()
+                )
+                
+                # Update user preferences based on this new action
+                update_preferences_based_on_actions(user)
+                
+                # Trigger similarity updates for collaborative filtering (can be done asynchronously)
+                # Note: In production, consider making this a background task
+                update_user_similarities(user)
+                
+                return Response({"success": True, "message": f"{action_type} action logged successfully"})
+                
+            except Song.DoesNotExist:
+                return Response({"error": "Song not found"}, status=status.HTTP_404_NOT_FOUND)
+            except Exception as e:
+                logger.exception(f"Error processing action: {str(e)}")
+                return Response({"error": "An error occurred while processing your request"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
-            return Response({"error": str(e)}, status=500)
+            logger.exception(f"Error in ActionLoggingView: {str(e)}")
+            return Response(
+                {"error": "An error occurred while processing your request"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
-# Specialized endpoint for new users with no interaction history
 class NewUserRecommendationView(RecommendationAPIView):
     """
     Get recommendations for brand new users with no interaction history
     """
     
-    def get(self, request):
-        user = self.get_user_from_request(request)
-        limit = int(request.query_params.get('limit', 20))
-        
-        # Check for optional genre/artist preferences
-        genre = request.query_params.get('genre')
-        artist = request.query_params.get('artist')
-        
-        # Fetch recommendations from Spotify
-        if genre:
-            track_data = get_related_spotify_tracks(genre=genre, limit=limit)
-            source = f"genre_{genre}"
-        elif artist:
-            track_data = get_related_spotify_tracks(artist=artist, limit=limit)
-            source = f"artist_{artist}"
-        else:
-            # Get popular tracks
-            track_data = get_related_spotify_tracks(limit=limit)
-            source = "popular"
-        
-        # Store tracks in our database
-        songs = store_spotify_tracks(track_data)
-        
-        # Format the response
-        response_data = {
-            "recommendations": [self.format_song_response(song) for song in songs],
-            "source": source,
-            "limit": limit
-        }
-        
-        return Response(response_data)
-
+    def get(self, request, *args, **kwargs):
+        try:
+            user = self.get_user_from_request(request)
+            
+            try:
+                limit = int(request.query_params.get('limit', 20))
+                if limit < 1 or limit > 100:
+                    return Response({"error": "Limit must be between 1 and 100"}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                return Response({"error": "Limit must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check for optional genre/artist preferences
+            genre = request.query_params.get('genre')
+            artist = request.query_params.get('artist')
+            
+            # Fetch recommendations from Spotify
+            if genre:
+                track_data = get_related_spotify_tracks(genre=genre, limit=limit)
+                source = f"genre_{genre}"
+            elif artist:
+                track_data = get_related_spotify_tracks(artist=artist, limit=limit)
+                source = f"artist_{artist}"
+            else:
+                # Get popular tracks
+                track_data = get_related_spotify_tracks(limit=limit)
+                source = "popular"
+            
+            # Store tracks in our database
+            songs = store_spotify_tracks(track_data)
+            
+            # Format the response
+            response_data = {
+                "recommendations": [self.format_song_response(song) for song in songs],
+                "source": source,
+                "limit": limit
+            }
+            
+            return Response(response_data)
+        except Exception as e:
+            logger.exception(f"Error in NewUserRecommendationView: {str(e)}")
+            return Response(
+                {"error": "An error occurred while processing your request"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
