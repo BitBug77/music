@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect, useRef, useCallback } from "react"
 import type React from "react"
-
 import {
   Clock,
   Plus,
@@ -14,13 +13,11 @@ import {
   Pause,
 } from "lucide-react"
 import Navbar from "../navbar/page"
-import Sidebar from "../../components/ui/sidebar"
+import Sidebar from "@/components/ui/sidebar"
 import { useRouter } from "next/navigation"
-import { AddToPlaylistModal, CreatePlaylistModal, PlaylistModalStyles } from "../../components/ui/playlist-modals"
-
-// Add this import at the top of the file with the other imports
-import FeaturedPlaylistsSection from "../../components/ui/featured-playlist-section"
-import SoundSpectrum from "../../components/ui/sound-spectrum"
+import { AddToPlaylistModal, CreatePlaylistModal, PlaylistModalStyles } from "@/components/ui/playlist-modals"
+import FeaturedPlaylistsSection from "@/components/ui/featured-playlist-section"
+import SoundSpectrum from "@/components/ui/sound-spectrum"
 
 // Define TypeScript interfaces for our data structures
 interface ApiResponse {
@@ -37,7 +34,7 @@ interface ProcessedSong {
   artist: string
   popularity: number
   spotifyUrl: string
-  spotifyTrackId: string // Made this a required field
+  spotifyTrackId: string
   coverUrl: string
 }
 
@@ -56,8 +53,44 @@ interface Position {
   y: number
 }
 
+// SongCard Component
+const SongCard: React.FC<SongCardProps> = ({ song }) => {
+  const [isHovered, setIsHovered] = useState(false)
+
+  return (
+    <div
+      className="relative group cursor-pointer"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative overflow-hidden rounded-lg shadow-lg">
+        <img
+          src={song.coverUrl || "/placeholder.svg"}
+          alt={song.title}
+          className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-80"></div>
+        <div className="absolute bottom-0 left-0 p-3">
+          <h3 className="text-white font-medium truncate">{song.title}</h3>
+          <p className="text-gray-300 text-sm truncate">{song.artist}</p>
+        </div>
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+            className="bg-gray-500 rounded-full p-1.5 shadow-lg hover:bg-gray-400 transition-colors"
+          >
+            <Plus size={16} className="text-white" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function DiscoverPage() {
-  // First, add a new state to track the currently hovered song at the top of the DiscoverPage component
+  // State for hovered song
   const [hoveredSong, setHoveredSong] = useState<ProcessedSong | null>(null)
   const [popularSongs, setPopularSongs] = useState<ProcessedSong[]>([])
   const [trendingSongs, setTrendingSongs] = useState<ProcessedSong[]>([])
@@ -92,7 +125,7 @@ export default function DiscoverPage() {
   const popularContainerRef = useRef<HTMLDivElement>(null)
   const recentContainerRef = useRef<HTMLDivElement>(null)
 
-  // New states for CD player and slideshow
+  // States for CD player and slideshow
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [rotationDegree, setRotationDegree] = useState(0)
@@ -1292,145 +1325,6 @@ export default function DiscoverPage() {
           Keep hovering to play...
         </div>
       )}
-    </div>
-  )
-}
-
-// Replace the existing SongCard component with this updated version that properly isolates hover effects
-
-function SongCard({
-  song,
-  onAddToPlaylist,
-  onPreview,
-  setHoveredSong,
-  handleSongHover,
-}: SongCardProps & {
-  onAddToPlaylist: () => void
-  onPreview: (trackId: string | null) => void
-  setHoveredSong: (song: ProcessedSong | null) => void
-  handleSongHover: (song: ProcessedSong | null) => void
-}) {
-  const router = useRouter()
-  const [isHovering, setIsHovering] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-
-  const handleSongClick = () => {
-    router.push(`/song/${song.spotifyTrackId}`)
-  }
-
-  const handleMouseEnter = () => {
-    setIsHovering(true)
-    handleSongHover(song)
-  }
-
-  const handleMouseLeave = () => {
-    setIsHovering(false)
-    handleSongHover(null)
-
-    // Stop audio if playing
-    if (audioRef.current && isPlaying) {
-      audioRef.current.pause()
-      audioRef.current = null
-      setIsPlaying(false)
-    }
-  }
-
-  // Play preview directly in the browser
-  const handlePlayPreview = (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent navigation
-
-    // If already playing, stop it
-    if (isPlaying && audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current = null
-      setIsPlaying(false)
-      return
-    }
-
-    // Try to play preview
-    try {
-      // Create audio element if it doesn't exist
-      if (!audioRef.current) {
-        // Use Spotify preview URL
-        const previewUrl = `https://p.scdn.co/mp3-preview/${song.spotifyTrackId}`
-        const audio = new Audio(previewUrl)
-        audio.volume = 0.7
-
-        audio.onended = () => {
-          setIsPlaying(false)
-        }
-
-        audio.onerror = () => {
-          console.error("Preview not available")
-          setIsPlaying(false)
-
-          // Fallback to opening Spotify
-          window.open(`https://open.spotify.com/track/${song.spotifyTrackId}`, "_blank")
-        }
-
-        audioRef.current = audio
-      }
-
-      // Play the audio
-      const playPromise = audioRef.current.play()
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsPlaying(true)
-          })
-          .catch((error) => {
-            console.error("Playback prevented:", error)
-
-            // Fallback to opening Spotify
-            window.open(`https://open.spotify.com/track/${song.spotifyTrackId}`, "_blank")
-          })
-      }
-    } catch (error) {
-      console.error("Error playing preview:", error)
-
-      // Fallback to opening Spotify
-      window.open(`https://open.spotify.com/track/${song.spotifyTrackId}`, "_blank")
-    }
-  }
-
-  return (
-    <div
-      className={`cursor-pointer ${isHovering ? "z-10" : ""}`}
-      onClick={handleSongClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div className="relative overflow-hidden rounded-lg shadow-lg">
-        <img
-          src={song.coverUrl || "/placeholder.svg"}
-          alt={song.title}
-          className={`w-full aspect-square object-cover transition-transform duration-500 ${isHovering ? "scale-110" : ""}`}
-        />
-        <div
-          className={`absolute inset-0 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 ${isHovering ? "opacity-40" : "opacity-80"}`}
-        ></div>
-        {isHovering && (
-          <div className="absolute inset-0 bg-white/10 mix-blend-overlay transition-opacity duration-300"></div>
-        )}
-        <div className="absolute bottom-0 left-0 p-3">
-          <h3 className="text-white font-medium truncate">{song.title}</h3>
-          <p className="text-gray-300 text-sm truncate">{song.artist}</p>
-        </div>
-        {isHovering && (
-          <div className="absolute top-2 right-2 transition-opacity">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onAddToPlaylist()
-              }}
-              className="bg-gray-500 rounded-full p-1.5 shadow-lg hover:bg-gray-400 transition-colors"
-            >
-              <Plus size={16} className="text-white" />
-            </button>
-          </div>
-        )}
-      </div>
     </div>
   )
 }

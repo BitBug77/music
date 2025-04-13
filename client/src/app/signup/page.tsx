@@ -88,19 +88,14 @@ export default function MultiStepSignup() {
       })
 
       const data: SignupResponse = await response.json()
-      console.log("Signup response:", data)
 
       if (response.ok && data.access && data.refresh) {
-        // Store access and refresh tokens in localStorage
-        localStorage.setItem("access_token", data.access)
-        localStorage.setItem("refresh_token", data.refresh)
-
-        // Debug: Checking the access token and refresh token in localStorage
-        console.log("Access Token in LocalStorage:", localStorage.getItem("access_token"))
-        console.log("Refresh Token in LocalStorage:", localStorage.getItem("refresh_token"))
-
-        // Move to success step
-        setStep(4)
+        // Store tokens securely using the auth utility
+        import("@/lib/auth").then(({ storeTokens }) => {
+          storeTokens(data.access, data.refresh)
+          // Move to success step
+          setStep(4)
+        })
       } else {
         setError(data.message || "Signup failed")
         // Go back to the appropriate step based on the error
@@ -115,9 +110,11 @@ export default function MultiStepSignup() {
     }
   }
 
-  const handleSpotifySignup = () => {
-    // Redirect to your Spotify auth endpoint
-    window.location.href = "http://localhost:8000/spotify-login/"
+  const handleSpotifyLogin = () => {
+    setIsLoading(true)
+    // Your server is likely set up to handle the redirect directly
+    // So we'll navigate directly to the endpoint
+    window.location.href = "http://127.0.0.1:8000/spotify-login"
   }
 
   const validateStep = () => {
@@ -447,7 +444,7 @@ export default function MultiStepSignup() {
 
                 <div className="mt-6">
                   <button
-                    onClick={handleSpotifySignup}
+                    onClick={handleSpotifyLogin}
                     className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-green-900/30 rounded-md shadow-sm text-sm font-medium text-white bg-green-800 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-700 transition-colors duration-200"
                   >
                     <FaSpotify className="h-5 w-5" />
@@ -472,4 +469,3 @@ export default function MultiStepSignup() {
     </div>
   )
 }
-

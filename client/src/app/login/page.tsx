@@ -36,19 +36,14 @@ export default function Login() {
       })
 
       const data = await response.json()
-      console.log("Login response:", data)
 
       if (response.ok && data.access && data.refresh) {
-        // Store access and refresh tokens in localStorage
-        localStorage.setItem("access_token", data.access)
-        localStorage.setItem("refresh_token", data.refresh)
-
-        // Debug: Checking the access token and refresh token in localStorage
-        console.log("Access Token in LocalStorage:", localStorage.getItem("access_token"))
-        console.log("Refresh Token in LocalStorage:", localStorage.getItem("refresh_token"))
-
-        // Redirect the user after successful login
-        router.push("/discover")
+        // Store tokens securely using the auth utility
+        import("@/lib/auth").then(({ storeTokens }) => {
+          storeTokens(data.access, data.refresh)
+          // Redirect the user after successful login
+          router.push("/discover")
+        })
       } else {
         setError(data.message || "Login failed")
       }
@@ -61,7 +56,10 @@ export default function Login() {
   }
 
   const handleSpotifyLogin = () => {
-    window.location.href = "http://localhost:8000/spotify-login/"
+    setIsLoading(true)
+    // Your server is likely set up to handle the redirect directly
+    // So we'll navigate directly to the endpoint
+    window.location.href = "http://127.0.0.1:8000/spotify-login"
   }
 
   return (
@@ -203,4 +201,3 @@ export default function Login() {
     </>
   )
 }
-
