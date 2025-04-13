@@ -69,32 +69,22 @@ from django.contrib.auth import logout
 
 
  # Require login
-@api_view(['POST'])  # Only allow POST method
-
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def login_view(request):
     """Handles user login"""
-   
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
-    try:
-        if not request.body:
-            return JsonResponse({'status': 'error', 'message': 'Empty request body'}, status=400)
 
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
+    username = request.data.get('username', '').strip()
+    password = request.data.get('password', '').strip()
 
-    username = data.get('username', '').strip()
-    password = data.get('password', '').strip()
+    if not username or not password:
+        return JsonResponse({'status': 'error', 'message': 'Username and password required'}, status=400)
 
     user = authenticate(username=username, password=password)
 
     if user is not None:
         refresh = RefreshToken.for_user(user)
-        refresh.set_exp(lifetime=timedelta(days=7)) 
+        refresh.set_exp(lifetime=timedelta(days=7))
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
 
@@ -105,12 +95,11 @@ def login_view(request):
             'message': 'Login successful'
         })
     else:
-        return JsonResponse({'status': 'error', 'message': 'Invalid credentials'}, status=400)
+        return JsonResponse({'status': 'error', 'message': 'Invalid credentials'}, status=401)
 
 
-
-@api_view(['POST'])  # Only allow POST method
-
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Only allow POST method
 def signup_view(request):
     """Handles user signup and initial profile creation"""
     if request.method == 'POST':
@@ -168,8 +157,7 @@ def signup_view(request):
         }, status=201)
     
 
-@csrf_protect  # Enforce CSRF protection
-@login_required  # Require login
+@csrf_protect  # Enforce CSRF protection# Require login
 @api_view(['POST'])  # Only allow POST method
 @permission_classes([IsAuthenticated])     
 def spotify_login(request):
@@ -180,8 +168,7 @@ def spotify_login(request):
     auth_url = f'{spotify_auth_url}?client_id={settings.SPOTIFY_CLIENT_ID}&response_type=code&redirect_uri={redirect_uri}&scope={scope}'
     return redirect(auth_url)
 
-@csrf_protect  # Enforce CSRF protection
-@login_required  # Require login
+@csrf_protect  # Enforce CSRF protection  # Require login
 @api_view(['POST'])  # Only allow POST method
 @permission_classes([IsAuthenticated]) 
 def spotify_callback(request):
@@ -872,14 +859,16 @@ import requests
 import requests
 
 
-@csrf_protect
-@login_required
-@api_view(['POST'])
+@csrf_protect 
+@api_view(['POST']) 
 @permission_classes([IsAuthenticated])
 def like_song(request, spotify_track_id):
-    """Allows authenticated users to like a song, fetching details from Spotify if needed."""
+    """
+    Allows authenticated users to like/unlike a song, fetching details from Spotify if needed.
+    """
     user = request.user
-
+    
+    # Get or create the song
     song = Song.objects.filter(spotify_id=spotify_track_id).first()
     if not song:
         song_details = get_spotify_track(spotify_track_id)
@@ -893,45 +882,64 @@ def like_song(request, spotify_track_id):
             album=song_details['album'],
             duration=song_details['duration'],
             album_cover=song_details['album_cover'],
-            genre=song_details['genre'],
+            genre=song_details.get('genre'),
             url=song_details['url']
         )
-
-    action, created = Action.objects.get_or_create(user=user, song=song, action_type='like')
-    message = 'Song liked successfully' if created else 'Song was already liked'
-    return JsonResponse({'status': 'success', 'message': message})
+    
+    # Check if user already liked this song
+    action = Action.objects.filter(user=user, song=song, action_type='like').first()
+    
+    # Toggle like status based on action existence
+    if action:
+        # Unlike: Remove the like action
+        action.delete()
+        return JsonResponse({'status': 'success', 'message': 'Song unliked successfully', 'liked': False})
+    else:
+        # Like: Create new like action
+        Action.objects.create(user=user, song=song, action_type='like')
+        return JsonResponse({'status': 'success', 'message': 'Song liked successfully', 'liked': True})
 
 @csrf_protect
-@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def save_song(request, spotify_track_id):
-    """Allows authenticated users to save a song, fetching details from Spotify if needed."""
+    """
+    Allows authenticated users to save/unsave a song, fetching details from Spotify if needed.
+    """
     user = request.user
-
+    
+    # Get or create the song
     song = Song.objects.filter(spotify_id=spotify_track_id).first()
     if not song:
         song_details = get_spotify_track(spotify_track_id)
         if not song_details:
             return JsonResponse({'status': 'error', 'message': 'Unable to fetch song details'}, status=404)
-
+        
         song = Song.objects.create(
             spotify_id=spotify_track_id,
             name=song_details['name'],
             artist=song_details['artist'],
             album=song_details['album'],
-            album_cover=song_details['album_cover'],
-            genre=song_details['genre'],
             duration=song_details['duration'],
+            album_cover=song_details['album_cover'],
+            genre=song_details.get('genre'),
             url=song_details['url']
         )
-
-    action, created = Action.objects.get_or_create(user=user, song=song, action_type='save')
-    message = 'Song saved successfully' if created else 'Song was already saved'
-    return JsonResponse({'status': 'success', 'message': message})
-
+    
+    # Check if user already saved this song
+    action = Action.objects.filter(user=user, song=song, action_type='save').first()
+    
+    # Toggle save status based on action existence
+    if action:
+        # Unsave: Remove the save action
+        action.delete()
+        return JsonResponse({'status': 'success', 'message': 'Song unsaved successfully', 'saved': False})
+    else:
+        # Save: Create new save action
+        Action.objects.create(user=user, song=song, action_type='save')
+        return JsonResponse({'status': 'success', 'message': 'Song saved successfully', 'saved': True})
+    
 @csrf_protect
-@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def play_song(request, spotify_track_id):
@@ -969,7 +977,6 @@ def play_song(request, spotify_track_id):
     return JsonResponse({'status': 'success', 'message': 'Song played successfully'})
 
 @csrf_protect
-@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def skip_song(request, spotify_track_id):
@@ -998,7 +1005,6 @@ def skip_song(request, spotify_track_id):
 
 
 @csrf_protect
-@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def view_song(request, spotify_track_id):
@@ -1026,7 +1032,6 @@ def view_song(request, spotify_track_id):
     return JsonResponse({'status': 'success', 'message': 'Song view recorded'})
 
 @csrf_protect
-@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def share_song(request, spotify_track_id):
@@ -1064,7 +1069,6 @@ def share_song(request, spotify_track_id):
 
 
 @csrf_protect
-@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def complete_song(request, spotify_track_id):
@@ -1091,7 +1095,6 @@ def complete_song(request, spotify_track_id):
 
 
 @csrf_protect
-@login_required
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def track_search(request):
@@ -1169,7 +1172,6 @@ def session(request):
 
 
 @csrf_protect
-@login_required
 @api_view(['GET', 'POST', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def playlist_songs(request, playlist_id):
@@ -1212,45 +1214,64 @@ def playlist_songs(request, playlist_id):
             if not spotify_track_id:
                 return Response({"status": "error", "message": "Missing spotify_track_id"}, status=400)
             
-            # Find or create the song
-            song = Song.objects.filter(spotify_id=spotify_track_id).first()
-            if not song:
-                song_details = get_spotify_track(spotify_track_id)  # Fetch details from Spotify API
-                if not song_details:
-                    return Response({'status': 'error', 'message': 'Unable to fetch song details'}, status=404)
-                
-                # Save song with album cover
-                song = Song.objects.create(
-                    spotify_id=spotify_track_id,
-                    name=song_details['name'],
-                    artist=song_details['artist'],
-                    album=song_details['album'],
-                    duration=song_details['duration'],
-                    url=song_details['url'],
-                    album_cover=song_details['album_cover']  # Store album cover URL
-                )
+            # Always fetch the latest details from Spotify API to ensure we have album covers
+            song_details = get_spotify_track(spotify_track_id)
+            
+            if not song_details:
+                return Response({'status': 'error', 'message': 'Unable to fetch song details'}, status=404)
+            
+            # Update or create the song with fresh data from Spotify
+            song, created = Song.objects.update_or_create(
+                spotify_id=spotify_track_id,
+                defaults={
+                    'name': song_details['name'],
+                    'artist': song_details['artist'],
+                    'album': song_details['album'],
+                    'duration': song_details['duration'],
+                    'url': song_details['url'],
+                    'album_cover': song_details['album_cover'],
+                    'genre': song_details.get('genre')
+                }
+            )
             
             # Add to playlist if not already there
-            _, created = PlaylistSong.objects.get_or_create(playlist=playlist, song=song)
+            playlist_song, playlist_created = PlaylistSong.objects.get_or_create(playlist=playlist, song=song)
             
             return Response({
-                "status": "success", 
-                "message": "Song added to playlist" if created else "Song already in playlist",
+                "status": "success",
+                "message": "Song added to playlist" if playlist_created else "Song already in playlist",
                 "song": {
                     "id": song.id,
                     "spotify_id": song.spotify_id,
                     "name": song.name,
                     "artist": song.artist,
                     "album": song.album,
-                    "album_cover": song.album_cover  # Ensure album cover is returned
+                    "album_cover": song.album_cover
                 }
             })
             
         except json.JSONDecodeError:
             return Response({"status": "error", "message": "Invalid JSON"}, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+            song_id = data.get('song_id')
+            
+            if not song_id:
+                return Response({"status": "error", "message": "Missing song_id"}, status=400)
+            
+            deleted, _ = PlaylistSong.objects.filter(playlist=playlist, song_id=song_id).delete()
+            
+            if deleted:
+                return Response({"status": "success", "message": "Song removed from playlist"})
+            else:
+                return Response({"status": "error", "message": "Song not found in playlist"}, status=404)
+                
+        except json.JSONDecodeError:
+            return Response({"status": "error", "message": "Invalid JSON"}, status=400)
 
 @csrf_protect
-@login_required
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def playlists(request):
@@ -1291,8 +1312,7 @@ def playlists(request):
         except json.JSONDecodeError:
             return Response({"status": "error", "message": "Invalid JSON"}, status=400)
 
-@csrf_protect
-@login_required       
+@csrf_protect     
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def playlist_detail(request, playlist_id):
@@ -1342,18 +1362,53 @@ def playlist_detail(request, playlist_id):
         })
     
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_liked_songs(request):
     """Retrieve the playlist of liked songs for the authenticated user."""
-    liked_songs = Action.objects.filter(user=request.user, action_type="like").select_related("song")
-    serializer = LikedSongSerializer(liked_songs, many=True)  # Use the LikedSongSerializer for liked songs
-    return Response({"status": "success", "playlist": serializer.data})
+    # Get all liked songs
+    liked_songs = Action.objects.filter(
+        user=request.user, 
+        action_type="like"
+    ).select_related("song").order_by('-timestamp')
+    
+    # Refresh Spotify data for songs that might be missing album covers
+    for action in liked_songs:
+        # Check if album cover is missing
+        if not action.song.album_cover:
+            # Fetch fresh data from Spotify
+            spotify_track_id = action.song.spotify_id
+            if spotify_track_id:
+                song_details = get_spotify_track(spotify_track_id)
+                if song_details:
+                    # Update the song with fresh data including album cover
+                    Song.objects.filter(id=action.song.id).update(
+                        name=song_details['name'],
+                        artist=song_details['artist'],
+                        album=song_details['album'],
+                        duration=song_details['duration'],
+                        url=song_details['url'],
+                        album_cover=song_details['album_cover'],
+                        genre=song_details.get('genre')
+                    )
+    
+    # Refresh the queryset to get updated data
+    liked_songs = Action.objects.filter(
+        user=request.user, 
+        action_type="like"
+    ).select_related("song").order_by('-timestamp')
+    
+    # Serialize the data
+    serializer = LikedSongSerializer(liked_songs, many=True)
+    
+    # Format response to match frontend expectations
+    return Response({
+        "status": "success",
+        "playlist": serializer.data
+    })
 
 
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_friends(request):
@@ -1380,7 +1435,6 @@ def list_friends(request):
 
 
 @csrf_protect
-@login_required
 @api_view(['POST', 'GET'])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
@@ -1434,7 +1488,7 @@ def update_profile(request):
         })
 
 @csrf_protect
-@login_required# New dedicated endpoint for profile picture upload
+# New dedicated endpoint for profile picture upload
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_profile_picture(request):
@@ -1503,7 +1557,6 @@ def get_lyrics(track_name, artist_name):
         return "Lyrics not found!"
 
 @csrf_protect
-@login_required
 @api_view(['POST', 'GET', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def user_music(request):
@@ -1622,7 +1675,6 @@ def user_music(request):
 
 
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_preferences(request):
@@ -1646,7 +1698,6 @@ print("UserProfile fields:", [f.name for f in UserProfile._meta.get_fields()])
 from .serializer import SongSerializer, RecommendationSerializer
 
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_personalized_recommendations_view(request):
@@ -1862,7 +1913,6 @@ def recommend_songs_hybrid(user, limit=20):
 
 
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_song_recommendations(request):
@@ -1900,7 +1950,6 @@ def get_song_recommendations(request):
     }, status=status.HTTP_200_OK)
 
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def fetch_and_store_spotify_track(request, track_id):
@@ -1959,7 +2008,6 @@ def fetch_and_store_spotify_track(request, track_id):
     }, status=status.HTTP_200_OK)
 
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recommend_songs(request):
@@ -2286,7 +2334,6 @@ def get_trending_spotify_tracks(limit=10):
     return []
 
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_for_you_recommendations(request):
@@ -2541,7 +2588,6 @@ def get_recommendations(request, spotify_id):
     
 
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recommend_friends(request, limit=10):
@@ -2647,7 +2693,6 @@ def recommend_friends(request, limit=10):
     })
 
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recommend_songs_from_friends(request, limit=20):
@@ -2723,7 +2768,6 @@ def recommend_songs_from_friends(request, limit=20):
 
 
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_recently_played(request):
@@ -2790,7 +2834,6 @@ from django.db.models import Max
 
 
 @csrf_protect
-@login_required
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_most_played(request):
@@ -3354,47 +3397,155 @@ class NewUserRecommendationView(RecommendationAPIView):
     Get recommendations for brand new users with no interaction history
     """
     
-    def get(self, request, *args, **kwargs):
-        try:
-            user = self.get_user_from_request(request)
-            
-            try:
-                limit = int(request.query_params.get('limit', 20))
-                if limit < 1 or limit > 100:
-                    return Response({"error": "Limit must be between 1 and 100"}, status=status.HTTP_400_BAD_REQUEST)
-            except ValueError:
-                return Response({"error": "Limit must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Check for optional genre/artist preferences
-            genre = request.query_params.get('genre')
-            artist = request.query_params.get('artist')
-            
-            # Fetch recommendations from Spotify
-            if genre:
-                track_data = get_related_spotify_tracks(genre=genre, limit=limit)
-                source = f"genre_{genre}"
-            elif artist:
-                track_data = get_related_spotify_tracks(artist=artist, limit=limit)
-                source = f"artist_{artist}"
-            else:
-                # Get popular tracks
-                track_data = get_related_spotify_tracks(limit=limit)
-                source = "popular"
-            
-            # Store tracks in our database
-            songs = store_spotify_tracks(track_data)
-            
-            # Format the response
-            response_data = {
-                "recommendations": [self.format_song_response(song) for song in songs],
-                "source": source,
-                "limit": limit
+    def get(self, request):
+        user = self.get_user_from_request(request)
+        limit = int(request.query_params.get('limit', 20))
+        
+        # Check for optional genre/artist preferences
+        genre = request.query_params.get('genre')
+        artist = request.query_params.get('artist')
+        
+        # Fetch recommendations from Spotify
+        if genre:
+            track_data = get_related_spotify_tracks(genre=genre, limit=limit)
+            source = f"genre_{genre}"
+        elif artist:
+            track_data = get_related_spotify_tracks(artist=artist, limit=limit)
+            source = f"artist_{artist}"
+        else:
+            # Get popular tracks
+            track_data = get_related_spotify_tracks(limit=limit)
+            source = "popular"
+        
+        # Store tracks in our database
+        songs = store_spotify_tracks(track_data)
+        
+        # Format the response
+        response_data = {
+            "recommendations": [self.format_song_response(song) for song in songs],
+            "source": source,
+            "limit": limit
+        }
+        
+        return Response(response_data)
+
+
+    
+    
+from .models import Feedback
+from .serializer import FeedbackSerializer
+
+@api_view(['POST'])
+def feedback_create(request):
+    """
+    Create a new feedback entry
+    """
+    serializer = FeedbackSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views import View
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import ContactRequest
+from .serializer import ContactRequestSerializer
+
+class ContactRequestView(APIView):
+    def get(self, request):
+        return render(request, 'contact_form.html')
+    
+    def post(self, request):
+        serializer = ContactRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Contact request submitted successfully'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+from django.views.decorators.csrf import csrf_protect
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+@csrf_protect
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def artist_tracks(request, artist_id):
+    """
+    GET: Retrieve an artist's tracks from Spotify API.
+    """
+    user = request.user
+    
+    # Validate Spotify artist ID
+    if not validate_spotify_id(artist_id):
+        return Response({"status": "error", "message": "Invalid Spotify artist ID format"}, status=400)
+    
+    # Get access token
+    access_token = get_spotify_token()
+    if not access_token:
+        return Response({"status": "error", "message": "Failed to get Spotify access token"}, status=500)
+    
+    try:
+        import requests
+        
+        # Get artist info
+        artist_url = f"https://api.spotify.com/v1/artists/{artist_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        
+        artist_response = requests.get(artist_url, headers=headers, timeout=10)
+        if artist_response.status_code != 200:
+            return Response({"status": "error", "message": f"Failed to fetch artist: {artist_response.text}"}, status=artist_response.status_code)
+        
+        artist_data = artist_response.json()
+        artist_info = {
+            "id": artist_data["id"],
+            "name": artist_data["name"],
+            "image": artist_data["images"][0]["url"] if artist_data.get("images") else None
+        }
+        
+        # Get artist's top tracks
+        tracks_url = f"https://api.spotify.com/v1/artists/{artist_id}/top-tracks?market=US"
+        tracks_response = requests.get(tracks_url, headers=headers, timeout=10)
+        
+        if tracks_response.status_code != 200:
+            return Response({"status": "error", "message": f"Failed to fetch tracks: {tracks_response.text}"}, status=tracks_response.status_code)
+        
+        tracks_data = tracks_response.json()
+        
+        # Process tracks
+        tracks = []
+        for track in tracks_data["tracks"]:
+            track_info = {
+                "id": track["id"],
+                "name": track["name"],
+                "duration_ms": track["duration_ms"],
+                "popularity": track["popularity"],
+                "preview_url": track["preview_url"],
+                "album": {
+                    "id": track["album"]["id"],
+                    "name": track["album"]["name"],
+                    "release_date": track["album"]["release_date"],
+                    "album_cover": track["album"]["images"][0]["url"] if track["album"].get("images") else None
+                }
             }
-            
-            return Response(response_data)
-        except Exception as e:
-            logger.exception(f"Error in NewUserRecommendationView: {str(e)}")
-            return Response(
-                {"error": "An error occurred while processing your request"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            tracks.append(track_info)
+        
+        # Return the complete response
+        return Response({
+            "status": "success",
+            "artist": artist_info,
+            "tracks": tracks
+        })
+        
+    except requests.exceptions.RequestException as e:
+        logger.exception(f"Request exception in artist_tracks: {str(e)}")
+        return Response({"status": "error", "message": "Network error when contacting Spotify API"}, status=500)
+    except Exception as e:
+        logger.exception(f"Exception in artist_tracks: {str(e)}")
+        return Response({"status": "error", "message": f"An error occurred: {str(e)}"}, status=500)

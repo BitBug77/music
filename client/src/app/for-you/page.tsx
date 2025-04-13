@@ -75,7 +75,7 @@ export default function ForYouPage() {
       // Create an array of fetch promises
       const fetchPromises = [
         // For You recommendations
-        fetch("http://127.0.0.1:8000/api/recommendations/for-you/", {
+        fetch("http://127.0.0.1:8000/api/recommendations/matrix/", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -123,7 +123,7 @@ export default function ForYouPage() {
           }),
 
         // Friend recommendations
-        fetch("http://127.0.0.1:8000/recommendations/friends/?limit=4", {
+        fetch("http://127.0.0.1:8000/recommendations/friends/?limit=16", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -609,7 +609,7 @@ export default function ForYouPage() {
               {renderSongSection(
                 "Recommended For You",
                 <Sparkles size={20} className="mr-2" />,
-                personalizedSongs.slice(0, 4),
+                personalizedSongs.slice(0, 20),
                 isLoading,
                 error,
                 "No personalized recommendations available at the moment.",

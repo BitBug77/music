@@ -3,6 +3,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
+import { useSearch } from "../../contexts/search-context"
 import {
   UserCircle,
   Search,
@@ -12,7 +13,6 @@ import {
   AlertTriangle,
   Settings,
   HelpCircle,
-  Moon,
   MessageSquare,
   Pencil,
   ChevronRight,
@@ -60,10 +60,9 @@ const Navbar: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Song[]>([])
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [isSearchActive, setIsSearchActive] = useState<boolean>(true)
   const [activeSuggestion, setActiveSuggestion] = useState<number>(-1)
   const [showProfileDropdown, setShowProfileDropdown] = useState<boolean>(false)
-  const [userProfile, setUserProfile]=useState<UserProfile | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   useState<UserProfile | null>(null)
   const [tokenError, setTokenError] = useState<boolean>(false)
   const [profileLoading, setProfileLoading] = useState<boolean>(true)
@@ -73,6 +72,9 @@ const Navbar: React.FC = () => {
   const [isOverProfileDropdown, setIsOverProfileDropdown] = useState<boolean>(false)
   const [isOverNotificationDropdown, setIsOverNotificationDropdown] = useState<boolean>(false)
   const [lastNotificationFetchTime, setLastNotificationFetchTime] = useState<number | null>(null)
+
+  // Get the search context
+  const { isSearchActive, setIsSearchActive } = useSearch()
 
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -547,6 +549,14 @@ const Navbar: React.FC = () => {
     }
   }
 
+  // Focus input when search becomes active
+  useEffect(() => {
+    if (isSearchActive && inputRef.current) {
+      inputRef.current.focus()
+      setShowSuggestions(query.trim() !== "")
+    }
+  }, [isSearchActive, query])
+
   return (
     <nav className="text-white shadow-lg z-9999 w-full bg-[#74686e]">
       <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -695,7 +705,6 @@ const Navbar: React.FC = () => {
                                 </div>
                                 <div className="flex-1">
                                   <p className="text-sm text-white">
-                                    
                                     {notification.message || getNotificationText(notification.notification_type)}
                                   </p>
                                   <p className="text-xs text-gray-400 mt-1">{formatTimeAgo(notification.timestamp)}</p>
@@ -801,7 +810,11 @@ const Navbar: React.FC = () => {
                       <div className="p-2">
                         <ul className="space-y-1">
                           <li>
-                            <Button onClick={() => router.push("/settings")} variant="ghost" className="w-full justify-between font-normal text-gray-200">
+                            <Button
+                              onClick={() => router.push("/settings")}
+                              variant="ghost"
+                              className="w-full justify-between font-normal text-gray-200"
+                            >
                               <div className="flex items-center">
                                 <Settings className="h-5 w-5 mr-3" />
                                 Settings & privacy
@@ -810,7 +823,11 @@ const Navbar: React.FC = () => {
                             </Button>
                           </li>
                           <li>
-                            <Button onClick={() => router.push("/help-support")}  variant="ghost" className="w-full justify-between font-normal text-gray-200">
+                            <Button
+                              onClick={() => router.push("/help-support")}
+                              variant="ghost"
+                              className="w-full justify-between font-normal text-gray-200"
+                            >
                               <div className="flex items-center">
                                 <HelpCircle className="h-5 w-5 mr-3" />
                                 Help & support
@@ -818,16 +835,17 @@ const Navbar: React.FC = () => {
                               <ChevronRight className="h-5 w-5 text-gray-400" />
                             </Button>
                           </li>
+                          <li></li>
                           <li>
-                           
-                          </li>
-                          <li>
-                            <Button onClick={() => router.push("/feedback")}  variant="ghost" className="w-full justify-between font-normal text-gray-200">
+                            <Button
+                              onClick={() => router.push("/feedback")}
+                              variant="ghost"
+                              className="w-full justify-between font-normal text-gray-200"
+                            >
                               <div className="flex items-center">
                                 <MessageSquare className="h-5 w-5 mr-3" />
                                 Give feedback
                               </div>
-                              
                             </Button>
                           </li>
                           <li>

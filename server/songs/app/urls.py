@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import GetSongView
+from .views import GetSongView, ContactRequestView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -64,7 +64,9 @@ urlpatterns = [
    path('recommendations/<str:spotify_id>/', views.get_recommendations, name='get_recommendations'),
    path('notifications/', views.get_notifications, name='get_notifications'),
   path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
-   
+  
+  path('api/artists/<str:artist_id>/tracks/', views.artist_tracks, name='artist_tracks'),
+
     path('api/recommendations/for-you/', views.ForYouRecommendationsView.as_view(), name='for-you-recommendations'),
     path('api/recommendations/trending/',views.TrendingSongsView.as_view(), name='trending-songs'),
     path('api/recommendations/similar/', views.SimilarSongsView.as_view(), name='similar-songs'),
@@ -73,6 +75,8 @@ urlpatterns = [
     path('api/recommendations/matrix/', views.MatrixFactorizationRecommendationView.as_view(), name='matrix-factorization'),
     path('api/actions/log/', views.ActionLoggingView.as_view(), name='log-action'),
     path('api/recommendations/new-user/', views.NewUserRecommendationView.as_view(), name='new-user-recommendations'),
+  path('feedback/', views.feedback_create, name='feedback-create'),
+   path('contact/', ContactRequestView.as_view(), name='contact_request'),
 ]
 
 if settings.DEBUG:

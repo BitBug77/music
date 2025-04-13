@@ -44,7 +44,7 @@ interface SongDetails {
 
 interface RecommendedSong {
   id: string // Make id required instead of optional
-  track_id: string
+  spotify_id: string
   name: string
   artist: string
   album_cover: string
@@ -197,7 +197,7 @@ export default function SongPage() {
             // Add this check to ensure album_cover exists for each song
             playlist.songs = playlist.songs.map((song) => ({
               ...song,
-              album_cover: song.album_cover || song.coverurl || "/placeholder.svg?height=150&width=150", // Fallback to coverurl or placeholder
+              album_cover: song.album_cover || "/placeholder.svg?height=150&width=150", // Fallback to coverurl or placeholder
             }))
 
             setCurrentPlaylist(playlist)
@@ -241,18 +241,42 @@ export default function SongPage() {
     const fetchRecommendedSongs = async (): Promise<void> => {
       setIsRecommendationsLoading(true)
       try {
+        const accessToken = localStorage.getItem("access_token")
+        if (!accessToken) {
+          console.log("No access token found, user might not be logged in")
+          return
+        }
         if (!id) {
           console.error("Song ID is undefined or null")
           setRecommendedSongs([])
           setIsRecommendationsLoading(false)
           return
         }
-        // Fetch recommended songs from API
-        const response = await fetch(`http://127.0.0.1:8000/recommendations/${encodeURIComponent(id)}`)
-        if (!response.ok) throw new Error(`Failed to fetch recommendations: ${response.status}`)
-        const data = (await response.json()) as { recommendations: RecommendedSong[] }
 
-        setRecommendedSongs(data.recommendations || [])
+        // Fetch recommended songs from API
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/recommendations/similar/?spotify_id=${encodeURIComponent(id)}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            credentials: "include",
+          },
+        )
+        if (!response.ok) throw new Error(`Failed to fetch recommendations: ${response.status}`)
+        const data = await response.json()
+        console.log("Recommended songs data received:", data)
+
+        // Check if data.similar_songs exists and is an array
+        if (data.similar_songs && Array.isArray(data.similar_songs)) {
+          setRecommendedSongs(data.similar_songs)
+        } else if (data.recommendations && Array.isArray(data.recommendations)) {
+          setRecommendedSongs(data.recommendations)
+        } else {
+          console.error("Unexpected response format:", data)
+          setRecommendedSongs([])
+        }
       } catch (error) {
         console.error("Error fetching recommendations:", error)
         setRecommendedSongs([])
@@ -728,7 +752,7 @@ export default function SongPage() {
         // If we have a current song, automatically select the new playlist
         if (currentSong && data.playlist && data.playlist.id) {
           setAddingToPlaylistId(data.playlist.id)
-          await addSongToPlaylist(data.playlist.id, currentSong.track_id)
+          await addSongToPlaylist(data.playlist.id, currentSong.spotify_id)
         }
       }
     } catch (error) {
@@ -1089,58 +1113,131 @@ export default function SongPage() {
             </div>
 
             {/* Recommendations Section */}
-            <div className="mt-12">
-              <h3 className="text-xl font-semibold text-white mb-6">Recommended For You</h3>
+            <div className="mt-12 relative">
+              <h3 className="text-xl font-semibold text-white mb-6">From the same artist</h3>
 
               {isRecommendationsLoading ? (
                 <div className="flex justify-center py-8">
                   <div className="animate-spin h-8 w-8 border-4 border-pink-500 border-t-transparent rounded-full"></div>
                 </div>
               ) : recommendedSongs.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {recommendedSongs.map((song) => (
-                    <div key={song.track_id} className="relative group">
-                      <div className="bg-[#1d2433] p-4 rounded-lg hover:bg-[#2a3548] transition-colors group">
-                        <div className="relative overflow-hidden rounded-md mb-3">
-                          <img
-                            src={song.album_cover || "/placeholder.svg?height=150&width=150"}
-                            alt={`${song.name} album cover`}
-                            className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <div className="flex gap-2">
-                              {/* Add to playlist button */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  openAddToPlaylistModal(song)
-                                }}
-                                className="bg-blue-500 rounded-full p-3 shadow-lg hover:bg-blue-600 transition-colors"
-                                title="Add to playlist"
-                              >
-                                <Plus size={24} className="text-white" />
-                              </button>
+                <div className="relative group">
+                  {/* Left arrow - positioned at left edge */}
+                  <button
+                    onClick={() => {
+                      const container = document.getElementById("artist-recommendations")
+                      if (container) {
+                        container.scrollBy({ left: -280, behavior: "smooth" })
+                      }
+                    }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/60 text-white/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/80"
+                    aria-label="Scroll left"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-chevron-left"
+                    >
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
+                  </button>
 
-                              {/* View song details button */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  window.location.href = `/song/${song.id || song.track_id}`
-                                }}
-                                className="bg-[#74686e] rounded-full p-3 shadow-lg hover:bg-[#5f575c] transition-colors"
-                                title="View song details"
-                              >
-                                <ExternalLink size={24} className="text-white" />
-                              </button>
+                  {/* Right arrow - positioned at right edge */}
+                  <button
+                    onClick={() => {
+                      const container = document.getElementById("artist-recommendations")
+                      if (container) {
+                        container.scrollBy({ left: 280, behavior: "smooth" })
+                      }
+                    }}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/60 text-white/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/80"
+                    aria-label="Scroll right"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-chevron-right"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </button>
+
+                  <div
+                    id="artist-recommendations"
+                    className="flex overflow-x-auto pb-4 scrollbar-hide snap-x scroll-smooth"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  >
+                    {recommendedSongs.map((song) => (
+                      <div key={song.id || song.spotify_id} className="flex-none w-[280px] px-2 snap-start">
+                        <div className="relative">
+                          <div className="bg-[#1d2433] p-4 rounded-lg hover:bg-[#2a3548] transition-colors">
+                            <div className="relative overflow-hidden rounded-md mb-3">
+                              <img
+                                src={song.album_cover || song.coverurl || "/placeholder.svg?height=150&width=150"}
+                                alt={`${song.name || song.title} album cover`}
+                                className="w-full h-auto hover:scale-105 transition-transform duration-300"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <div className="flex gap-2">
+                                  {/* Add to playlist button */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      openAddToPlaylistModal({
+                                        id: song.id || "",
+                                        spotify_id: song.spotify_id || song.spotifyTrackid || "",
+                                        name: song.name || song.title || "",
+                                        artist: song.artist || "",
+                                        album_cover: song.album_cover || song.coverurl || "",
+                                        popularity: song.popularity || 0,
+                                        // Add these properties to match the AddToPlaylistModal interface
+                                        title: song.name || song.title || "",
+                                        
+                                        
+                                      })
+                                    }}
+                                    className="bg-blue-500 rounded-full p-3 shadow-lg hover:bg-blue-600 transition-colors"
+                                    title="Add to playlist"
+                                  >
+                                    <Plus size={24} className="text-white" />
+                                  </button>
+
+                                  {/* View song details button */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      window.location.href = `/song/${song.spotify_id || song.spotifyTrackid || song.id}`
+                                    }}
+                                    className="bg-[#74686e] rounded-full p-3 shadow-lg hover:bg-[#5f575c] transition-colors"
+                                    title="View song details"
+                                  >
+                                    <ExternalLink size={24} className="text-white" />
+                                  </button>
+                                </div>
+                              </div>
                             </div>
+                            <h4 className="font-medium text-white truncate">{safeRender(song.name || song.title)}</h4>
+                            <p className="text-sm text-white/70 truncate">{safeRender(song.artist)}</p>
+                            {song.popularity && <div className="mt-2">{renderPopularityBars(song.popularity)}</div>}
                           </div>
                         </div>
-                        <h4 className="font-medium text-white truncate">{safeRender(song.name)}</h4>
-                        <p className="text-sm text-white/70 truncate">{safeRender(song.artist)}</p>
-                        {song.popularity && <div className="mt-2">{renderPopularityBars(song.popularity)}</div>}
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8 bg-[#1d2433] rounded-lg">
@@ -1156,15 +1253,15 @@ export default function SongPage() {
                 <h3 className="text-xl font-semibold text-white mb-6">You might also like</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {song.similar_songs.map((similarSong) => (
-                    <div key={similarSong.track_id} className="relative group">
-                      <div className="bg-[#74686e]/30 p-4 rounded-lg hover:bg-[#74686e]/50 transition-colors group">
+                    <div key={similarSong.track_id} className="relative">
+                      <div className="bg-[#74686e]/30 p-4 rounded-lg hover:bg-[#74686e]/50 transition-colors">
                         <div className="relative overflow-hidden rounded-md mb-3">
                           <img
                             src={similarSong.album_cover || "/placeholder.svg?height=150&width=150"}
                             alt={`${similarSong.name} album cover`}
-                            className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-auto hover:scale-105 transition-transform duration-300"
                           />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                             <div className="flex gap-2">
                               {/* Add to playlist button */}
                               <button
@@ -1172,11 +1269,15 @@ export default function SongPage() {
                                   e.stopPropagation()
                                   openAddToPlaylistModal({
                                     id: similarSong.id || similarSong.track_id,
-                                    track_id: similarSong.track_id,
+                                    spotify_id: similarSong.track_id,
                                     name: similarSong.name,
                                     artist: similarSong.artist,
                                     album_cover: similarSong.album_cover,
                                     popularity: 0, // Default value since similar_songs might not have popularity
+                                    // Add these properties to match the AddToPlaylistModal interface
+                                    title: similarSong.name,
+                                    
+                                  
                                   })
                                 }}
                                 className="bg-blue-500 rounded-full p-3 shadow-lg hover:bg-blue-600 transition-colors"
@@ -1240,6 +1341,13 @@ export default function SongPage() {
 
       {/* Global styles for modals */}
       <PlaylistModalStyles />
+
+      {/* Custom styles for scrollbar hiding */}
+      <style jsx global>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   )
 }

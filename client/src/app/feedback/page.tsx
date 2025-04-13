@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { MessageSquare, ThumbsUp, Star, Send, Music, Users, Headphones } from "lucide-react"
+import { MessageSquare, ThumbsUp, Star, Send, Music, Users, Headphones, AlertCircle } from "lucide-react"
 import Sidebar from "../../components/ui/sidebar"
 import Navbar from "../../components/ui/navbar"
 
@@ -19,28 +19,56 @@ export default function FeedbackPage() {
   const [feedbackText, setFeedbackText] = useState("")
   const [contactConsent, setContactConsent] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would normally send the feedback to your backend
-    console.log({
+    setIsLoading(true)
+    setError(null)
+
+    const feedbackData = {
       feedbackType,
       rating,
       feedbackText,
       contactConsent,
-    })
+    }
 
-    // Show success message
-    setSubmitted(true)
+    try {
+      // Make API call to Django backend
+      const response = await fetch("http://localhost:8000/feedback/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(feedbackData),
+      })
 
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setFeedbackType("music")
-      setRating(null)
-      setFeedbackText("")
-      setContactConsent(false)
-      setSubmitted(false)
-    }, 3000)
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`)
+      }
+
+      // Log the response data
+      const data = await response.json()
+      console.log("Feedback submitted successfully:", data)
+
+      // Show success message
+      setSubmitted(true)
+
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setFeedbackType("music")
+        setRating(null)
+        setFeedbackText("")
+        setContactConsent(false)
+        setSubmitted(false)
+      }, 3000)
+    } catch (err) {
+      console.error("Error submitting feedback:", err)
+      setError(err instanceof Error ? err.message : "Failed to submit feedback")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -85,6 +113,12 @@ export default function FeedbackPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
+                    {error && (
+                      <div className="mb-4 p-3 bg-red-900/50 border border-red-800 rounded-md flex items-start">
+                        <AlertCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                        <p className="text-red-300 text-sm">{error}</p>
+                      </div>
+                    )}
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div className="space-y-2">
                         <Label className="font-medium">What type of feedback do you have?</Label>
@@ -176,17 +210,28 @@ export default function FeedbackPage() {
                         <p className="text-xs text-gray-400">
                           Your feedback is anonymous unless you choose to be contacted.
                         </p>
-                        <Button type="submit" className="flex items-center bg-[#3b82f6] hover:bg-blue-700">
-                          <Send className="mr-2 h-4 w-4" />
-                          Submit Feedback
+                        <Button
+                          type="submit"
+                          className="flex items-center bg-[#3b82f6] hover:bg-blue-700"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? (
+                            <>
+                              <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-t-transparent border-white" />
+                              Submitting...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="mr-2 h-4 w-4" />
+                              Submit Feedback
+                            </>
+                          )}
                         </Button>
                       </div>
                     </form>
                   </CardContent>
                 </Card>
               )}
-
-              
             </div>
           </div>
         </div>

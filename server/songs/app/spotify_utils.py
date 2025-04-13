@@ -29,34 +29,22 @@ access_token_cache = {
 }
 
 def get_spotify_token():
-    """
-    Get Spotify API token with improved error handling and security
-    """
     global access_token_cache
-    logger.info("Attempting to get Spotify token")
 
     # Check if the token is already cached and still valid
     if access_token_cache['token'] and access_token_cache['expires_at'] > datetime.now():
-        logger.info("Using cached token")
         return access_token_cache['token']
 
-    # Token has expired or not available, get a new one
-    try:
-        auth_response = requests.post(
-            'https://accounts.spotify.com/api/token',
-            data={
-                'grant_type': 'client_credentials',
-            },
-            auth=(settings.SPOTIFY_CLIENT_ID, settings.SPOTIFY_CLIENT_SECRET),
-            timeout=10  # Add timeout to prevent hanging
-        )
-        
-        logger.info(f"Auth response status: {auth_response.status_code}")
-        
-        if auth_response.status_code != 200:
-            logger.error(f"Auth error response: {auth_response.status_code}")
-            return None
-            
+    # Token has expired or not available, get a new one using client credentials flow
+    auth_response = requests.post(
+        'https://accounts.spotify.com/api/token',
+        data={
+            'grant_type': 'client_credentials',
+        },
+        auth=(settings.SPOTIFY_CLIENT_ID, settings.SPOTIFY_CLIENT_SECRET)
+    )
+
+    if auth_response.status_code == 200:
         auth_data = auth_response.json()
         access_token = auth_data['access_token']
         expires_in = auth_data['expires_in']
@@ -64,16 +52,11 @@ def get_spotify_token():
         # Update the cache
         access_token_cache['token'] = access_token
         access_token_cache['expires_at'] = datetime.now() + timedelta(seconds=expires_in)
-        
-        logger.info("Successfully retrieved new token")
-        return access_token
-    except requests.exceptions.RequestException as e:
-        logger.exception(f"Request exception in get_spotify_token: {str(e)}")
-        return None
-    except Exception as e:
-        logger.exception(f"Exception in get_spotify_token: {str(e)}")
-        return None
 
+        return access_token
+    else:
+        return None  # Return None in case of failure to get the token
+# Example CSRF exempt view using the token
 def validate_spotify_id(spotify_track_id):
     """
     Validate Spotify ID format to prevent injection attacks

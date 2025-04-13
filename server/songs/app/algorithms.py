@@ -519,45 +519,60 @@ def calculate_svd_recommendations(user, limit=50):
     # Get or calculate the decomposed matrices
     matrix, user_indices, song_indices = build_user_song_matrix()
     
+    if matrix.shape[0] == 0 or matrix.shape[1] == 0:
+        return []  # Empty matrix, no recommendations possible
+    
     # Invert the mappings for lookup
     idx_to_song = {idx: song_id for song_id, idx in song_indices.items()}
     
     # Number of latent factors (hyperparameter you can tune)
-    k = 10
+    # Ensure k is valid for the matrix dimensions
+    k = min(10, min(matrix.shape) - 1)
+    
+    if k <= 0:
+        return []  # Not enough data for SVD
     
     # Apply SVD
-    u, sigma, vt = svds(matrix, k=k)
-    
-    # Convert to diagonal matrix
-    sigma_diag = np.diag(sigma)
-    
-    # Get user's predicted ratings for all items
-    user_idx = user_indices.get(user.id)
-    if user_idx is None:
-        return []
+    try:
+        u, sigma, vt = svds(matrix, k=k)
         
-    # Calculate predicted ratings
-    user_pred = u[user_idx].dot(sigma_diag).dot(vt)
+        # Convert to diagonal matrix
+        sigma_diag = np.diag(sigma)
+        
+        # Get user's predicted ratings for all items
+        user_idx = user_indices.get(user.id)
+        if user_idx is None:
+            return []
+            
+        # Calculate predicted ratings
+        user_pred = u[user_idx].dot(sigma_diag).dot(vt)
+        
+        # Get songs user has already interacted with
+        user_song_ids = set(Action.objects.filter(user=user).values_list('song_id', flat=True))
+        
+        # Get indices of songs the user hasn't interacted with
+        unrated_indices = [i for i in range(len(user_pred)) if i in idx_to_song and idx_to_song[i] not in user_song_ids]
+        
+        # Sort by prediction score
+        recommendations = [(idx_to_song[idx], user_pred[idx]) for idx in unrated_indices]
+        recommendations.sort(key=lambda x: x[1], reverse=True)
+        
+        # Get top song IDs
+        top_song_ids = [song_id for song_id, _ in recommendations[:limit]]
+        
+        # Fetch the songs
+        songs = Song.objects.filter(id__in=top_song_ids)
+        
+        # Return in correct order
+        song_id_to_index = {song_id: i for i, song_id in enumerate(top_song_ids)}
+        return sorted(songs, key=lambda s: song_id_to_index.get(s.id, 999))
     
-    # Get songs user has already interacted with
-    user_song_ids = set(Action.objects.filter(user=user).values_list('song_id', flat=True))
-    
-    # Get indices of songs the user hasn't interacted with
-    unrated_indices = [i for i in range(len(user_pred)) if i in idx_to_song and idx_to_song[i] not in user_song_ids]
-    
-    # Sort by prediction score
-    recommendations = [(idx_to_song[idx], user_pred[idx]) for idx in unrated_indices]
-    recommendations.sort(key=lambda x: x[1], reverse=True)
-    
-    # Get top song IDs
-    top_song_ids = [song_id for song_id, _ in recommendations[:limit]]
-    
-    # Fetch the songs
-    songs = Song.objects.filter(id__in=top_song_ids)
-    
-    # Return in correct order
-    song_id_to_index = {song_id: i for i, song_id in enumerate(top_song_ids)}
-    return sorted(songs, key=lambda s: song_id_to_index.get(s.id, 999))
+    except Exception as e:
+        # Log the error
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"SVD calculation error: {str(e)}")
+        return []
 
 
 def als_factorization(R, n_factors=10, n_iterations=5, reg_param=0.1):

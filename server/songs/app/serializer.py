@@ -106,3 +106,22 @@ class RecommendationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recommendation
         fields = ['id', 'song_name', 'artist', 'album', 'duration', 'url', 'spotify_id', 'album_cover', 'genre', 'recommendation_score', 'timestamp']  # Included album_cover and genre
+        
+        
+        
+from .models import Feedback
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = ['id', 'feedbackType', 'rating', 'feedbackText', 'contactConsent', 'created_at']
+        read_only_fields = ['id', 'created_at']
+        
+
+from .models import ContactRequest
+
+class ContactRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactRequest
+        fields = ['id', 'name', 'email', 'subject', 'message', 'created_at']
+        read_only_fields = ['id', 'created_at']
