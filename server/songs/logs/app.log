@@ -6810,3 +6810,1533 @@ INFO 2025-04-13 17:36:24,054 autoreload 15576 16492 Watching for file changes wi
 INFO 2025-04-13 17:36:49,664 basehttp 15576 16236 "GET /notifications/ HTTP/1.1" 200 21
 INFO 2025-04-13 17:37:40,748 basehttp 15576 16220 "GET /api/artists/4dpARuHxo51G3z768sgnrY/tracks/ HTTP/1.1" 200 2926
 INFO 2025-04-13 17:37:49,635 basehttp 15576 14000 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:14:57,889 autoreload 14928 13532 Watching for file changes with StatReloader
+INFO 2025-04-13 18:15:04,613 basehttp 14928 20608 "OPTIONS /login/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:05,669 basehttp 14928 18888 "POST /login/ HTTP/1.1" 200 538
+INFO 2025-04-13 18:15:05,799 basehttp 14928 20608 "OPTIONS /notifications/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:05,808 basehttp 14928 20608 "OPTIONS /notifications/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:05,815 basehttp 14928 21316 "OPTIONS /playlists/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:05,834 basehttp 14928 18656 "OPTIONS /playlists/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:06,562 basehttp 14928 19036 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:15:06,649 basehttp 14928 17164 "GET /api/recommendations/trending/ HTTP/1.1" 200 4569
+INFO 2025-04-13 18:15:06,934 basehttp 14928 21316 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:15:07,247 basehttp 14928 19036 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:15:07,297 basehttp 14928 22756 "GET /popularity/ HTTP/1.1" 200 13460
+INFO 2025-04-13 18:15:07,408 basehttp 14928 18656 "GET /api/recommendations/trending/ HTTP/1.1" 200 4569
+INFO 2025-04-13 18:15:07,923 basehttp 14928 21316 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:15:08,752 basehttp 14928 19036 "GET /popularity/ HTTP/1.1" 200 13865
+INFO 2025-04-13 18:15:10,049 basehttp 14928 21316 "GET /popularity/ HTTP/1.1" 200 6944
+INFO 2025-04-13 18:15:11,455 basehttp 14928 19036 "GET /popularity/ HTTP/1.1" 200 14175
+INFO 2025-04-13 18:15:21,588 basehttp 14928 20824 "OPTIONS /api/recommendations/similar/?spotify_id=2ffwBvpsQhgXyU7zBUOhwP HTTP/1.1" 200 0
+WARNING 2025-04-13 18:15:21,595 log 14928 3340 Not Found: /songs/2ffwBvpsQhgXyU7zBUOhwP/comments
+INFO 2025-04-13 18:15:21,596 basehttp 14928 13872 "GET /song/2ffwBvpsQhgXyU7zBUOhwP HTTP/1.1" 301 0
+WARNING 2025-04-13 18:15:21,596 basehttp 14928 3340 "GET /songs/2ffwBvpsQhgXyU7zBUOhwP/comments HTTP/1.1" 404 179
+WARNING 2025-04-13 18:15:21,602 log 14928 3340 Not Found: /songs/2ffwBvpsQhgXyU7zBUOhwP/comments
+ERROR 2025-04-13 18:15:21,603 log 14928 20824 Internal Server Error: /song/2ffwBvpsQhgXyU7zBUOhwP/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 143, in dispatch
+    return handler(request, *args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 1130, in get
+    song_response = requests.get(song_url, headers=headers)
+                    ^^^^^^^^^^^^
+AttributeError: 'WSGIRequest' object has no attribute 'get'
+INFO 2025-04-13 18:15:21,603 basehttp 14928 20324 "OPTIONS /api/recommendations/similar/?spotify_id=2ffwBvpsQhgXyU7zBUOhwP HTTP/1.1" 200 0
+WARNING 2025-04-13 18:15:21,604 basehttp 14928 3340 "GET /songs/2ffwBvpsQhgXyU7zBUOhwP/comments HTTP/1.1" 404 179
+ERROR 2025-04-13 18:15:21,618 basehttp 14928 20824 "GET /song/2ffwBvpsQhgXyU7zBUOhwP/ HTTP/1.1" 500 145
+ERROR 2025-04-13 18:15:21,620 log 14928 20824 Internal Server Error: /song/2ffwBvpsQhgXyU7zBUOhwP/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 143, in dispatch
+    return handler(request, *args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 1130, in get
+    song_response = requests.get(song_url, headers=headers)
+                    ^^^^^^^^^^^^
+AttributeError: 'WSGIRequest' object has no attribute 'get'
+ERROR 2025-04-13 18:15:21,622 basehttp 14928 20824 "GET /song/2ffwBvpsQhgXyU7zBUOhwP/ HTTP/1.1" 500 145
+INFO 2025-04-13 18:15:22,262 basehttp 14928 23400 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:15:22,278 spotify_utils 14928 18392 Getting track for ID: 2ffwBvpsQhgXyU7zBUOhwP
+INFO 2025-04-13 18:15:22,556 basehttp 14928 20544 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:15:22,848 spotify_utils 14928 18392 Successfully retrieved track: Written on the Sky by Max Richter
+INFO 2025-04-13 18:15:22,967 basehttp 14928 23400 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:15:23,638 basehttp 14928 20544 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:15:25,870 basehttp 14928 18392 "GET /api/recommendations/similar/?spotify_id=2ffwBvpsQhgXyU7zBUOhwP HTTP/1.1" 200 3413
+INFO 2025-04-13 18:15:27,947 basehttp 14928 18392 "GET /api/recommendations/similar/?spotify_id=2ffwBvpsQhgXyU7zBUOhwP HTTP/1.1" 200 3413
+INFO 2025-04-13 18:15:28,612 basehttp 14928 22164 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:15:29,350 basehttp 14928 22164 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:15:30,063 basehttp 14928 22164 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:15:44,893 basehttp 14928 20212 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:44,894 basehttp 14928 1380 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:44,899 basehttp 14928 20212 "OPTIONS /api/recommendations/trending/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:44,899 basehttp 14928 8244 "OPTIONS /api/recommendations/trending/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:44,909 basehttp 14928 23076 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:44,909 basehttp 14928 22896 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:45,568 basehttp 14928 22844 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:15:45,672 basehttp 14928 20212 "GET /api/recommendations/trending/ HTTP/1.1" 200 4569
+INFO 2025-04-13 18:15:45,883 basehttp 14928 1380 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:15:46,277 basehttp 14928 22844 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:15:46,302 basehttp 14928 8244 "GET /popularity/ HTTP/1.1" 200 6817
+INFO 2025-04-13 18:15:46,441 basehttp 14928 20212 "GET /api/recommendations/trending/ HTTP/1.1" 200 4569
+INFO 2025-04-13 18:15:46,871 basehttp 14928 1380 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:15:47,615 basehttp 14928 8244 "GET /popularity/ HTTP/1.1" 200 13402
+INFO 2025-04-13 18:15:48,836 basehttp 14928 8244 "GET /popularity/ HTTP/1.1" 200 13846
+INFO 2025-04-13 18:15:50,265 basehttp 14928 18832 "GET /popularity/ HTTP/1.1" 200 9641
+INFO 2025-04-13 18:15:56,228 basehttp 14928 8244 "OPTIONS /api/recommendations/matrix/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:56,236 basehttp 14928 8244 "OPTIONS /history/most-played/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:56,236 basehttp 14928 20560 "OPTIONS /history/recent/?limit=4 HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:56,240 basehttp 14928 8244 "OPTIONS /api/recommendations/matrix/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:56,241 basehttp 14928 20560 "OPTIONS /history/recent/?limit=4 HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:56,247 basehttp 14928 8244 "OPTIONS /recommendations/friends/?limit=16 HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:56,247 basehttp 14928 14068 "OPTIONS /recommendations/friends/?limit=16 HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:56,248 basehttp 14928 20560 "OPTIONS /history/most-played/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:56,263 basehttp 14928 22404 "OPTIONS /api/recommendations/matrix/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:15:56,906 basehttp 14928 18832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:15:56,937 basehttp 14928 8244 "GET /history/recent/?limit=4 HTTP/1.1" 200 1519
+WARNING 2025-04-13 18:15:56,948 log 14928 22404 Not Found: /recommendations/friends/
+WARNING 2025-04-13 18:15:56,949 basehttp 14928 22404 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-13 18:15:57,004 basehttp 14928 20560 "GET /history/most-played/ HTTP/1.1" 200 2364
+INFO 2025-04-13 18:15:57,242 basehttp 14928 3856 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:15:57,450 basehttp 14928 14068 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6051
+INFO 2025-04-13 18:15:57,627 basehttp 14928 18832 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-13 18:15:57,681 log 14928 22404 Not Found: /recommendations/friends/
+WARNING 2025-04-13 18:15:57,681 basehttp 14928 22404 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-13 18:15:57,687 basehttp 14928 8244 "GET /history/recent/?limit=4 HTTP/1.1" 200 1519
+INFO 2025-04-13 18:15:57,770 basehttp 14928 20560 "GET /history/most-played/ HTTP/1.1" 200 2364
+INFO 2025-04-13 18:15:58,286 basehttp 14928 3856 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:15:58,625 basehttp 14928 14068 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6004
+INFO 2025-04-13 18:15:59,738 basehttp 14928 3856 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5965
+INFO 2025-04-13 18:16:00,830 basehttp 14928 14068 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6051
+WARNING 2025-04-13 18:16:01,955 log 14928 22404 Not Found: /songs/7qshYIOUFQAGgYfWXg1m9N/comments
+INFO 2025-04-13 18:16:01,956 basehttp 14928 3856 "OPTIONS /api/recommendations/similar/?spotify_id=7qshYIOUFQAGgYfWXg1m9N HTTP/1.1" 200 0
+INFO 2025-04-13 18:16:01,956 basehttp 14928 20560 "GET /song/7qshYIOUFQAGgYfWXg1m9N HTTP/1.1" 301 0
+INFO 2025-04-13 18:16:01,956 basehttp 14928 8244 "OPTIONS /api/recommendations/similar/?spotify_id=7qshYIOUFQAGgYfWXg1m9N HTTP/1.1" 200 0
+WARNING 2025-04-13 18:16:01,961 basehttp 14928 22404 "GET /songs/7qshYIOUFQAGgYfWXg1m9N/comments HTTP/1.1" 404 179
+ERROR 2025-04-13 18:16:01,965 log 14928 8244 Internal Server Error: /song/7qshYIOUFQAGgYfWXg1m9N/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 143, in dispatch
+    return handler(request, *args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 1130, in get
+    song_response = requests.get(song_url, headers=headers)
+                    ^^^^^^^^^^^^
+AttributeError: 'WSGIRequest' object has no attribute 'get'
+WARNING 2025-04-13 18:16:01,968 log 14928 22404 Not Found: /songs/7qshYIOUFQAGgYfWXg1m9N/comments
+ERROR 2025-04-13 18:16:01,971 basehttp 14928 8244 "GET /song/7qshYIOUFQAGgYfWXg1m9N/ HTTP/1.1" 500 145
+WARNING 2025-04-13 18:16:01,972 basehttp 14928 22404 "GET /songs/7qshYIOUFQAGgYfWXg1m9N/comments HTTP/1.1" 404 179
+ERROR 2025-04-13 18:16:01,974 log 14928 8244 Internal Server Error: /song/7qshYIOUFQAGgYfWXg1m9N/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 143, in dispatch
+    return handler(request, *args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 1130, in get
+    song_response = requests.get(song_url, headers=headers)
+                    ^^^^^^^^^^^^
+AttributeError: 'WSGIRequest' object has no attribute 'get'
+ERROR 2025-04-13 18:16:01,978 basehttp 14928 8244 "GET /song/7qshYIOUFQAGgYfWXg1m9N/ HTTP/1.1" 500 145
+INFO 2025-04-13 18:16:02,626 basehttp 14928 14068 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:16:02,918 basehttp 14928 18832 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:16:03,334 basehttp 14928 14068 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:16:03,918 basehttp 14928 18832 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:16:04,134 basehttp 14928 13068 "GET /api/recommendations/similar/?spotify_id=7qshYIOUFQAGgYfWXg1m9N HTTP/1.1" 200 3071
+INFO 2025-04-13 18:16:06,207 basehttp 14928 13068 "GET /api/recommendations/similar/?spotify_id=7qshYIOUFQAGgYfWXg1m9N HTTP/1.1" 200 3071
+INFO 2025-04-13 18:17:03,652 basehttp 14928 8316 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:18:03,685 basehttp 14928 15952 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:18:35,469 autoreload 14928 13532 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-13 18:18:36,838 autoreload 6884 17420 Watching for file changes with StatReloader
+INFO 2025-04-13 18:19:03,693 basehttp 6884 15996 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:19:32,798 basehttp 6884 20512 "GET /song/4cOdK2wGLETKBW3PvgPWqT/ HTTP/1.1" 200 380
+INFO 2025-04-13 18:20:06,381 basehttp 6884 100 "POST /login/ HTTP/1.1" 200 538
+INFO 2025-04-13 18:20:07,183 basehttp 6884 21688 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:20:07,328 basehttp 6884 13732 "GET /api/recommendations/trending/ HTTP/1.1" 200 4569
+INFO 2025-04-13 18:20:07,591 basehttp 6884 2828 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:20:07,888 basehttp 6884 21688 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:20:07,980 basehttp 6884 8080 "GET /popularity/ HTTP/1.1" 200 14337
+INFO 2025-04-13 18:20:08,094 basehttp 6884 13732 "GET /api/recommendations/trending/ HTTP/1.1" 200 4569
+INFO 2025-04-13 18:20:08,568 basehttp 6884 2828 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:20:09,144 basehttp 6884 21688 "GET /popularity/ HTTP/1.1" 200 6909
+INFO 2025-04-13 18:20:10,349 basehttp 6884 2828 "GET /popularity/ HTTP/1.1" 200 6912
+INFO 2025-04-13 18:20:11,825 basehttp 6884 21688 "GET /popularity/ HTTP/1.1" 200 6870
+INFO 2025-04-13 18:20:30,841 basehttp 6884 20100 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:20:30,855 basehttp 6884 20140 "GET /history/recent/?limit=4 HTTP/1.1" 200 1519
+WARNING 2025-04-13 18:20:30,856 log 6884 21220 Not Found: /recommendations/friends/
+WARNING 2025-04-13 18:20:30,862 basehttp 6884 21220 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-13 18:20:30,939 basehttp 6884 17200 "GET /history/most-played/ HTTP/1.1" 200 2364
+INFO 2025-04-13 18:20:31,154 basehttp 6884 19708 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:20:31,309 basehttp 6884 15264 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6013
+INFO 2025-04-13 18:20:31,539 basehttp 6884 20100 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-13 18:20:31,561 log 6884 21220 Not Found: /recommendations/friends/
+WARNING 2025-04-13 18:20:31,562 basehttp 6884 21220 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-13 18:20:31,566 basehttp 6884 20140 "GET /history/recent/?limit=4 HTTP/1.1" 200 1519
+INFO 2025-04-13 18:20:31,706 basehttp 6884 17200 "GET /history/most-played/ HTTP/1.1" 200 2364
+INFO 2025-04-13 18:20:32,175 basehttp 6884 19708 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:20:32,452 basehttp 6884 15264 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6013
+INFO 2025-04-13 18:20:33,530 basehttp 6884 15264 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5932
+INFO 2025-04-13 18:20:34,654 basehttp 6884 20892 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6013
+WARNING 2025-04-13 18:20:34,983 log 6884 12276 Not Found: /songs/7qshYIOUFQAGgYfWXg1m9N/comments
+WARNING 2025-04-13 18:20:34,984 basehttp 6884 12276 "GET /songs/7qshYIOUFQAGgYfWXg1m9N/comments HTTP/1.1" 404 179
+WARNING 2025-04-13 18:20:34,987 log 6884 12276 Not Found: /songs/7qshYIOUFQAGgYfWXg1m9N/comments
+WARNING 2025-04-13 18:20:34,988 basehttp 6884 12276 "GET /songs/7qshYIOUFQAGgYfWXg1m9N/comments HTTP/1.1" 404 179
+INFO 2025-04-13 18:20:35,244 basehttp 6884 13348 "GET /song/7qshYIOUFQAGgYfWXg1m9N/ HTTP/1.1" 200 352
+INFO 2025-04-13 18:20:35,247 basehttp 6884 12276 "OPTIONS /songs/7qshYIOUFQAGgYfWXg1m9N/view/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:20:35,511 basehttp 6884 13348 "GET /song/7qshYIOUFQAGgYfWXg1m9N/ HTTP/1.1" 200 352
+INFO 2025-04-13 18:20:35,630 basehttp 6884 20892 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:20:35,942 basehttp 6884 15264 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:20:36,046 basehttp 6884 13320 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/view/ HTTP/1.1" 200 54
+INFO 2025-04-13 18:20:36,052 basehttp 6884 13348 "OPTIONS /songs/7qshYIOUFQAGgYfWXg1m9N/status/ HTTP/1.1" 200 0
+WARNING 2025-04-13 18:20:36,056 log 6884 13320 Not Found: /songs/7qshYIOUFQAGgYfWXg1m9N/status/
+WARNING 2025-04-13 18:20:36,057 basehttp 6884 13320 "GET /songs/7qshYIOUFQAGgYfWXg1m9N/status/ HTTP/1.1" 404 179
+ERROR 2025-04-13 18:20:36,252 log 6884 18768 Internal Server Error: /songs/7qshYIOUFQAGgYfWXg1m9N/view/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 21, view) already exists.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 1031, in view_song
+    Action.objects.create(user=user, song=song, action_type='view')
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 892, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 998, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1161, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, fields, returning_fields, raw
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1202, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 1847, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\sql\compiler.py", line 1836, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.IntegrityError: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 21, view) already exists.
+INFO 2025-04-13 18:20:36,330 basehttp 6884 20892 "GET /notifications/ HTTP/1.1" 200 21
+ERROR 2025-04-13 18:20:36,355 basehttp 6884 18768 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/view/ HTTP/1.1" 500 145
+INFO 2025-04-13 18:20:36,940 basehttp 6884 15264 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:20:37,007 basehttp 6884 22052 "GET /api/recommendations/similar/?spotify_id=7qshYIOUFQAGgYfWXg1m9N HTTP/1.1" 200 3071
+INFO 2025-04-13 18:20:37,325 basehttp 6884 15264 "OPTIONS /songs/7qshYIOUFQAGgYfWXg1m9N/play/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:20:38,065 basehttp 6884 18768 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/play/ HTTP/1.1" 200 60
+INFO 2025-04-13 18:20:38,970 basehttp 6884 22052 "GET /api/recommendations/similar/?spotify_id=7qshYIOUFQAGgYfWXg1m9N HTTP/1.1" 200 3071
+INFO 2025-04-13 18:20:40,143 basehttp 6884 15264 "OPTIONS /songs/7qshYIOUFQAGgYfWXg1m9N/like/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:20:40,984 basehttp 6884 22052 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/like/ HTTP/1.1" 200 74
+INFO 2025-04-13 18:20:42,913 basehttp 6884 15264 "OPTIONS /songs/7qshYIOUFQAGgYfWXg1m9N/save/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:20:43,746 basehttp 6884 22052 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/save/ HTTP/1.1" 200 74
+WARNING 2025-04-13 18:20:48,484 log 6884 13348 Not Found: /songs/7qshYIOUFQAGgYfWXg1m9N/comments
+WARNING 2025-04-13 18:20:48,494 basehttp 6884 13348 "GET /songs/7qshYIOUFQAGgYfWXg1m9N/comments HTTP/1.1" 404 179
+INFO 2025-04-13 18:20:48,766 basehttp 6884 12276 "GET /song/7qshYIOUFQAGgYfWXg1m9N/ HTTP/1.1" 200 352
+INFO 2025-04-13 18:20:49,139 basehttp 6884 15264 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:20:49,458 basehttp 6884 20892 "GET /playlists/ HTTP/1.1" 200 370
+ERROR 2025-04-13 18:20:49,557 log 6884 18768 Internal Server Error: /songs/7qshYIOUFQAGgYfWXg1m9N/view/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 21, view) already exists.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 1031, in view_song
+    Action.objects.create(user=user, song=song, action_type='view')
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 892, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 998, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1161, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, fields, returning_fields, raw
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1202, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 1847, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\sql\compiler.py", line 1836, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.IntegrityError: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 21, view) already exists.
+ERROR 2025-04-13 18:20:49,569 basehttp 6884 18768 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/view/ HTTP/1.1" 500 145
+INFO 2025-04-13 18:20:50,487 basehttp 6884 22052 "GET /api/recommendations/similar/?spotify_id=7qshYIOUFQAGgYfWXg1m9N HTTP/1.1" 200 3071
+ERROR 2025-04-13 18:20:50,882 log 6884 18768 Internal Server Error: /songs/7qshYIOUFQAGgYfWXg1m9N/play/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 21, play) already exists.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 970, in play_song
+    Action.objects.create(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        user=user,
+        ^^^^^^^^^^
+    ...<3 lines>...
+        context=data.get('context')  # e.g., 'playlist', 'search_results', 'recommendation'
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 892, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 998, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1161, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, fields, returning_fields, raw
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1202, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 1847, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\sql\compiler.py", line 1836, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.IntegrityError: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 21, play) already exists.
+ERROR 2025-04-13 18:20:50,897 basehttp 6884 18768 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/play/ HTTP/1.1" 500 145
+INFO 2025-04-13 18:21:26,896 basehttp 6884 18768 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/like/ HTTP/1.1" 200 77
+INFO 2025-04-13 18:21:28,533 basehttp 6884 18768 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/save/ HTTP/1.1" 200 77
+INFO 2025-04-13 18:21:33,743 basehttp 6884 18768 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/save/ HTTP/1.1" 200 74
+INFO 2025-04-13 18:21:37,452 basehttp 6884 18768 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/like/ HTTP/1.1" 200 74
+WARNING 2025-04-13 18:21:42,156 log 6884 15264 Not Found: /songs/7qshYIOUFQAGgYfWXg1m9N/comments
+WARNING 2025-04-13 18:21:42,163 basehttp 6884 15264 "GET /songs/7qshYIOUFQAGgYfWXg1m9N/comments HTTP/1.1" 404 179
+INFO 2025-04-13 18:21:42,425 basehttp 6884 13348 "GET /song/7qshYIOUFQAGgYfWXg1m9N/ HTTP/1.1" 200 352
+INFO 2025-04-13 18:21:42,827 basehttp 6884 20892 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:21:43,121 basehttp 6884 12276 "GET /playlists/ HTTP/1.1" 200 370
+ERROR 2025-04-13 18:21:43,175 log 6884 22052 Internal Server Error: /songs/7qshYIOUFQAGgYfWXg1m9N/view/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 21, view) already exists.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 1031, in view_song
+    Action.objects.create(user=user, song=song, action_type='view')
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 892, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 998, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1161, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, fields, returning_fields, raw
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1202, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 1847, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\sql\compiler.py", line 1836, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.IntegrityError: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 21, view) already exists.
+ERROR 2025-04-13 18:21:43,180 basehttp 6884 22052 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/view/ HTTP/1.1" 500 145
+INFO 2025-04-13 18:21:44,162 basehttp 6884 18768 "GET /api/recommendations/similar/?spotify_id=7qshYIOUFQAGgYfWXg1m9N HTTP/1.1" 200 3071
+ERROR 2025-04-13 18:21:44,575 log 6884 22052 Internal Server Error: /songs/7qshYIOUFQAGgYfWXg1m9N/play/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 21, play) already exists.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 970, in play_song
+    Action.objects.create(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        user=user,
+        ^^^^^^^^^^
+    ...<3 lines>...
+        context=data.get('context')  # e.g., 'playlist', 'search_results', 'recommendation'
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 892, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 998, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1161, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, fields, returning_fields, raw
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1202, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 1847, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\sql\compiler.py", line 1836, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.IntegrityError: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 21, play) already exists.
+ERROR 2025-04-13 18:21:44,581 basehttp 6884 22052 "POST /songs/7qshYIOUFQAGgYfWXg1m9N/play/ HTTP/1.1" 500 145
+INFO 2025-04-13 18:22:42,845 basehttp 6884 12276 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:23:42,825 basehttp 6884 12276 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-13 18:23:46,155 log 6884 15264 Not Found: /recommendations/friends/
+INFO 2025-04-13 18:23:46,157 basehttp 6884 12276 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-13 18:23:46,157 basehttp 6884 15264 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-13 18:23:46,176 basehttp 6884 13348 "GET /history/recent/?limit=4 HTTP/1.1" 200 1494
+INFO 2025-04-13 18:23:46,249 basehttp 6884 17856 "GET /history/most-played/ HTTP/1.1" 200 2709
+INFO 2025-04-13 18:23:46,423 basehttp 6884 20892 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:23:46,596 basehttp 6884 20896 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5964
+WARNING 2025-04-13 18:23:46,826 log 6884 15264 Not Found: /recommendations/friends/
+WARNING 2025-04-13 18:23:46,827 basehttp 6884 15264 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-13 18:23:46,829 basehttp 6884 12276 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:23:46,838 basehttp 6884 13348 "GET /history/recent/?limit=4 HTTP/1.1" 200 1494
+INFO 2025-04-13 18:23:47,005 basehttp 6884 17856 "GET /history/most-played/ HTTP/1.1" 200 2709
+INFO 2025-04-13 18:23:47,438 basehttp 6884 20892 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:23:47,638 basehttp 6884 20896 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5977
+INFO 2025-04-13 18:23:48,732 basehttp 6884 20892 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5974
+INFO 2025-04-13 18:23:49,819 basehttp 6884 20896 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5974
+INFO 2025-04-13 18:23:52,143 basehttp 6884 20896 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-13 18:23:52,159 log 6884 12276 Not Found: /recommendations/friends/
+WARNING 2025-04-13 18:23:52,160 basehttp 6884 12276 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-13 18:23:52,164 basehttp 6884 13348 "GET /history/recent/?limit=4 HTTP/1.1" 200 1494
+INFO 2025-04-13 18:23:52,223 basehttp 6884 15264 "GET /history/most-played/ HTTP/1.1" 200 2709
+INFO 2025-04-13 18:23:52,428 basehttp 6884 20892 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:23:52,535 basehttp 6884 17856 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5977
+INFO 2025-04-13 18:23:53,592 basehttp 6884 20892 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5977
+INFO 2025-04-13 18:23:56,722 basehttp 6884 20892 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:23:56,800 basehttp 6884 13348 "GET /api/recommendations/trending/ HTTP/1.1" 200 4569
+INFO 2025-04-13 18:23:57,029 basehttp 6884 15264 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:23:57,180 basehttp 6884 17856 "GET /popularity/ HTTP/1.1" 200 6912
+INFO 2025-04-13 18:23:57,401 basehttp 6884 20892 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:23:57,566 basehttp 6884 12276 "GET /api/recommendations/trending/ HTTP/1.1" 200 4569
+INFO 2025-04-13 18:23:58,006 basehttp 6884 15264 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:23:58,514 basehttp 6884 17856 "GET /popularity/ HTTP/1.1" 200 14162
+INFO 2025-04-13 18:23:59,930 basehttp 6884 15264 "GET /popularity/ HTTP/1.1" 200 13773
+INFO 2025-04-13 18:24:01,416 basehttp 6884 17856 "GET /popularity/ HTTP/1.1" 200 6804
+INFO 2025-04-13 18:24:56,685 basehttp 6884 17856 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:25:56,696 basehttp 6884 17856 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:26:57,658 basehttp 6884 17348 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:27:57,651 basehttp 6884 21876 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:29:49,672 basehttp 6884 10384 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:30:02,748 basehttp 6884 10384 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:30:56,729 basehttp 6884 10384 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:31:56,743 basehttp 6884 10384 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:32:56,841 basehttp 6884 10384 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:33:56,720 basehttp 6884 10384 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:34:56,713 basehttp 6884 10384 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:35:25,554 basehttp 6884 17196 "GET /song/6NOrpcicPUh2eaj8bAD44u HTTP/1.1" 301 0
+INFO 2025-04-13 18:35:25,558 basehttp 6884 23384 "OPTIONS /api/recommendations/similar/?spotify_id=6NOrpcicPUh2eaj8bAD44u HTTP/1.1" 200 0
+WARNING 2025-04-13 18:35:25,561 log 6884 6460 Not Found: /songs/6NOrpcicPUh2eaj8bAD44u/comments
+WARNING 2025-04-13 18:35:25,562 basehttp 6884 6460 "GET /songs/6NOrpcicPUh2eaj8bAD44u/comments HTTP/1.1" 404 179
+WARNING 2025-04-13 18:35:25,567 log 6884 6460 Not Found: /songs/6NOrpcicPUh2eaj8bAD44u/comments
+WARNING 2025-04-13 18:35:25,580 basehttp 6884 6460 "GET /songs/6NOrpcicPUh2eaj8bAD44u/comments HTTP/1.1" 404 179
+INFO 2025-04-13 18:35:25,580 basehttp 6884 16424 "OPTIONS /api/recommendations/similar/?spotify_id=6NOrpcicPUh2eaj8bAD44u HTTP/1.1" 200 0
+INFO 2025-04-13 18:35:25,879 basehttp 6884 12000 "GET /song/6NOrpcicPUh2eaj8bAD44u/ HTTP/1.1" 200 365
+INFO 2025-04-13 18:35:25,883 basehttp 6884 6460 "OPTIONS /songs/6NOrpcicPUh2eaj8bAD44u/view/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:35:26,143 basehttp 6884 12000 "GET /song/6NOrpcicPUh2eaj8bAD44u/ HTTP/1.1" 200 365
+INFO 2025-04-13 18:35:26,286 spotify_utils 6884 7936 Getting track for ID: 6NOrpcicPUh2eaj8bAD44u
+INFO 2025-04-13 18:35:26,300 basehttp 6884 12252 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:35:26,620 basehttp 6884 22996 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:35:26,639 spotify_utils 6884 19452 Getting track for ID: 6NOrpcicPUh2eaj8bAD44u
+INFO 2025-04-13 18:35:26,867 spotify_utils 6884 7936 Successfully retrieved track: Baby (Is it a Crime) by Rema
+INFO 2025-04-13 18:35:26,872 spotify_utils 6884 596 Getting track for ID: 6NOrpcicPUh2eaj8bAD44u
+INFO 2025-04-13 18:35:27,014 basehttp 6884 12000 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:35:27,244 spotify_utils 6884 19452 Successfully retrieved track: Baby (Is it a Crime) by Rema
+INFO 2025-04-13 18:35:27,481 spotify_utils 6884 596 Successfully retrieved track: Baby (Is it a Crime) by Rema
+ERROR 2025-04-13 18:35:27,569 log 6884 596 Internal Server Error: /songs/6NOrpcicPUh2eaj8bAD44u/view/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 1020, in view_song
+    song = Song.objects.create(
+        spotify_id=spotify_track_id,
+    ...<6 lines>...
+        url=song_details['url']
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\projects\music\server\songs\app\models.py", line 64, in save
+    self.full_clean()  # Run validation before saving
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1651, in full_clean
+    raise ValidationError(errors)
+django.core.exceptions.ValidationError: {'spotify_id': ['Song with this Spotify id already exists.']}
+INFO 2025-04-13 18:35:27,573 basehttp 6884 19452 "POST /songs/6NOrpcicPUh2eaj8bAD44u/view/ HTTP/1.1" 200 54
+INFO 2025-04-13 18:35:27,585 basehttp 6884 12000 "OPTIONS /songs/6NOrpcicPUh2eaj8bAD44u/status/ HTTP/1.1" 200 0
+WARNING 2025-04-13 18:35:27,590 log 6884 19452 Not Found: /songs/6NOrpcicPUh2eaj8bAD44u/status/
+ERROR 2025-04-13 18:35:27,590 basehttp 6884 596 "POST /songs/6NOrpcicPUh2eaj8bAD44u/view/ HTTP/1.1" 500 145
+WARNING 2025-04-13 18:35:27,590 basehttp 6884 19452 "GET /songs/6NOrpcicPUh2eaj8bAD44u/status/ HTTP/1.1" 404 179
+INFO 2025-04-13 18:35:27,820 basehttp 6884 22996 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:35:28,254 basehttp 6884 22996 "OPTIONS /songs/6NOrpcicPUh2eaj8bAD44u/play/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:35:29,039 basehttp 6884 19452 "POST /songs/6NOrpcicPUh2eaj8bAD44u/play/ HTTP/1.1" 200 60
+INFO 2025-04-13 18:35:29,893 basehttp 6884 7936 "GET /api/recommendations/similar/?spotify_id=6NOrpcicPUh2eaj8bAD44u HTTP/1.1" 200 3079
+INFO 2025-04-13 18:35:32,181 basehttp 6884 7936 "GET /api/recommendations/similar/?spotify_id=6NOrpcicPUh2eaj8bAD44u HTTP/1.1" 200 3079
+INFO 2025-04-13 18:35:33,932 basehttp 6884 22996 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:35:34,024 basehttp 6884 6460 "GET /api/recommendations/trending/ HTTP/1.1" 200 4903
+INFO 2025-04-13 18:35:34,228 basehttp 6884 12000 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:35:34,618 basehttp 6884 12252 "GET /popularity/ HTTP/1.1" 200 13836
+INFO 2025-04-13 18:35:34,631 basehttp 6884 22996 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:35:34,782 basehttp 6884 6460 "GET /api/recommendations/trending/ HTTP/1.1" 200 4903
+INFO 2025-04-13 18:35:35,244 basehttp 6884 12000 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:35:35,905 basehttp 6884 16424 "GET /popularity/ HTTP/1.1" 200 12381
+INFO 2025-04-13 18:35:37,291 basehttp 6884 12000 "GET /popularity/ HTTP/1.1" 200 13717
+INFO 2025-04-13 18:35:38,665 basehttp 6884 16424 "GET /popularity/ HTTP/1.1" 200 6554
+INFO 2025-04-13 18:36:34,013 basehttp 6884 16424 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:37:33,915 basehttp 6884 16424 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:38:34,106 basehttp 6884 16424 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:39:34,365 basehttp 6884 19544 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:40:33,900 basehttp 6884 19544 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:41:28,234 basehttp 6884 19544 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-13 18:41:28,246 log 6884 19508 Not Found: /recommendations/friends/
+WARNING 2025-04-13 18:41:28,248 basehttp 6884 19508 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-13 18:41:28,253 basehttp 6884 8580 "GET /history/recent/?limit=4 HTTP/1.1" 200 1515
+INFO 2025-04-13 18:41:28,318 basehttp 6884 21780 "GET /history/most-played/ HTTP/1.1" 200 3107
+INFO 2025-04-13 18:41:28,567 basehttp 6884 15700 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:41:28,648 basehttp 6884 22416 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6017
+INFO 2025-04-13 18:41:29,035 basehttp 6884 8580 "GET /history/recent/?limit=4 HTTP/1.1" 200 1515
+WARNING 2025-04-13 18:41:29,039 log 6884 19508 Not Found: /recommendations/friends/
+WARNING 2025-04-13 18:41:29,042 basehttp 6884 19508 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-13 18:41:29,044 basehttp 6884 19544 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:41:29,122 basehttp 6884 21780 "GET /history/most-played/ HTTP/1.1" 200 3107
+INFO 2025-04-13 18:41:29,625 basehttp 6884 15700 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:41:29,786 basehttp 6884 22416 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5964
+INFO 2025-04-13 18:41:30,240 basehttp 6884 21780 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:41:30,321 basehttp 6884 19508 "GET /api/recommendations/trending/ HTTP/1.1" 200 4903
+INFO 2025-04-13 18:41:30,630 basehttp 6884 15700 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:41:30,858 basehttp 6884 8580 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6017
+INFO 2025-04-13 18:41:30,881 basehttp 6884 19544 "GET /popularity/ HTTP/1.1" 200 13757
+INFO 2025-04-13 18:41:30,955 basehttp 6884 21780 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:41:31,082 basehttp 6884 22416 "GET /api/recommendations/trending/ HTTP/1.1" 200 4903
+INFO 2025-04-13 18:41:31,594 basehttp 6884 15700 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:41:31,958 basehttp 6884 19508 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5944
+INFO 2025-04-13 18:41:32,276 basehttp 6884 19544 "GET /popularity/ HTTP/1.1" 200 13880
+INFO 2025-04-13 18:41:33,448 basehttp 6884 19544 "GET /popularity/ HTTP/1.1" 200 7297
+INFO 2025-04-13 18:41:34,796 basehttp 6884 19508 "GET /popularity/ HTTP/1.1" 200 13758
+INFO 2025-04-13 18:42:30,870 basehttp 6884 19508 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:43:30,276 basehttp 6884 13368 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:44:30,236 basehttp 6884 13368 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:45:30,297 basehttp 6884 13368 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:46:30,268 basehttp 6884 13368 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:47:30,267 basehttp 6884 13368 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:48:31,049 basehttp 6884 13368 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:49:49,849 basehttp 6884 19600 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:50:49,733 basehttp 6884 11700 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:51:49,719 basehttp 6884 16572 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:52:50,401 basehttp 6884 16572 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:53:50,298 basehttp 6884 16572 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:54:49,826 basehttp 6884 16304 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:55:49,656 basehttp 6884 18960 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:56:49,691 basehttp 6884 18960 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:57:49,734 basehttp 6884 18960 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:58:30,812 basehttp 6884 2116 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:58:51,038 basehttp 6884 21672 "OPTIONS /search-songs/?q=t HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:51,190 basehttp 6884 15756 "OPTIONS /search-songs/?q=to HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:51,374 basehttp 6884 16492 "OPTIONS /search-songs/?q=tol HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:51,597 basehttp 6884 18272 "OPTIONS /search-songs/?q=tola HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:51,704 basehttp 6884 2760 "OPTIONS /search-songs/?q=tolai HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:51,988 basehttp 6884 23540 "OPTIONS /search-songs/?q=tolai%20 HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:52,100 basehttp 6884 21672 "GET /search-songs/?q=t HTTP/1.1" 200 1777
+INFO 2025-04-13 18:58:52,258 basehttp 6884 21672 "OPTIONS /search-songs/?q=tolai%20b HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:52,304 basehttp 6884 15756 "GET /search-songs/?q=to HTTP/1.1" 200 2054
+INFO 2025-04-13 18:58:52,357 basehttp 6884 15756 "OPTIONS /search-songs/?q=tolai%20ba HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:52,495 basehttp 6884 16492 "GET /search-songs/?q=tol HTTP/1.1" 200 1962
+INFO 2025-04-13 18:58:52,549 basehttp 6884 16492 "OPTIONS /search-songs/?q=tolai%20bas HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:52,783 basehttp 6884 18272 "GET /search-songs/?q=tola HTTP/1.1" 200 2479
+INFO 2025-04-13 18:58:52,788 basehttp 6884 18272 "OPTIONS /search-songs/?q=tolai%20basc HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:52,880 basehttp 6884 2760 "GET /search-songs/?q=tolai HTTP/1.1" 200 2480
+INFO 2025-04-13 18:58:53,002 basehttp 6884 2760 "OPTIONS /search-songs/?q=tolai%20basch HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:53,242 basehttp 6884 23540 "GET /search-songs/?q=tolai%20 HTTP/1.1" 200 2480
+INFO 2025-04-13 18:58:53,245 basehttp 6884 23540 "OPTIONS /search-songs/?q=tolai%20baschu HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:53,521 basehttp 6884 21672 "GET /search-songs/?q=tolai%20b HTTP/1.1" 200 2537
+INFO 2025-04-13 18:58:53,645 basehttp 6884 15756 "GET /search-songs/?q=tolai%20ba HTTP/1.1" 200 2518
+INFO 2025-04-13 18:58:53,655 basehttp 6884 16492 "GET /search-songs/?q=tolai%20bas HTTP/1.1" 200 2495
+INFO 2025-04-13 18:58:53,903 basehttp 6884 18272 "GET /search-songs/?q=tolai%20basc HTTP/1.1" 200 2492
+INFO 2025-04-13 18:58:54,219 basehttp 6884 2760 "GET /search-songs/?q=tolai%20basch HTTP/1.1" 200 2536
+INFO 2025-04-13 18:58:54,336 basehttp 6884 23540 "GET /search-songs/?q=tolai%20baschu HTTP/1.1" 200 2507
+INFO 2025-04-13 18:58:57,098 basehttp 6884 23540 "OPTIONS /log-interaction/ HTTP/1.1" 200 0
+WARNING 2025-04-13 18:58:57,116 log 6884 23540 Not Found: /log-interaction/
+WARNING 2025-04-13 18:58:57,118 basehttp 6884 23540 "POST /log-interaction/ HTTP/1.1" 404 179
+WARNING 2025-04-13 18:58:57,731 log 6884 15756 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+INFO 2025-04-13 18:58:57,732 basehttp 6884 2760 "OPTIONS /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:57,733 basehttp 6884 18272 "GET /song/1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 301 0
+INFO 2025-04-13 18:58:57,733 basehttp 6884 16492 "OPTIONS /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 0
+WARNING 2025-04-13 18:58:57,734 basehttp 6884 15756 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+WARNING 2025-04-13 18:58:57,742 log 6884 15756 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-13 18:58:57,744 basehttp 6884 15756 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+INFO 2025-04-13 18:58:58,025 basehttp 6884 16492 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-13 18:58:58,029 basehttp 6884 15756 "OPTIONS /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:58:58,338 basehttp 6884 16492 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-13 18:58:58,389 basehttp 6884 23540 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:58:58,405 spotify_utils 6884 18000 Getting track for ID: 1hKFMb7L1GCGQgOApDIUAp
+INFO 2025-04-13 18:58:58,725 basehttp 6884 21672 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:58:58,729 spotify_utils 6884 11544 Getting track for ID: 1hKFMb7L1GCGQgOApDIUAp
+INFO 2025-04-13 18:58:58,937 spotify_utils 6884 18000 Successfully retrieved track: Tolai Baschu by Ethos Band
+INFO 2025-04-13 18:58:59,099 spotify_utils 6884 5908 Getting track for ID: 1hKFMb7L1GCGQgOApDIUAp
+INFO 2025-04-13 18:58:59,131 basehttp 6884 23540 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 18:58:59,330 spotify_utils 6884 11544 Successfully retrieved track: Tolai Baschu by Ethos Band
+INFO 2025-04-13 18:58:59,630 basehttp 6884 11544 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+INFO 2025-04-13 18:58:59,636 basehttp 6884 23540 "OPTIONS /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 200 0
+WARNING 2025-04-13 18:58:59,643 log 6884 11544 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-13 18:58:59,644 basehttp 6884 11544 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-13 18:58:59,686 spotify_utils 6884 5908 Successfully retrieved track: Tolai Baschu by Ethos Band
+ERROR 2025-04-13 18:58:59,771 log 6884 5908 Internal Server Error: /songs/1hKFMb7L1GCGQgOApDIUAp/view/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 1020, in view_song
+    song = Song.objects.create(
+        spotify_id=spotify_track_id,
+    ...<6 lines>...
+        url=song_details['url']
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\projects\music\server\songs\app\models.py", line 64, in save
+    self.full_clean()  # Run validation before saving
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1651, in full_clean
+    raise ValidationError(errors)
+django.core.exceptions.ValidationError: {'spotify_id': ['Song with this Spotify id already exists.']}
+ERROR 2025-04-13 18:58:59,788 basehttp 6884 5908 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 500 145
+INFO 2025-04-13 18:58:59,865 basehttp 6884 21672 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 18:59:00,488 basehttp 6884 6964 "OPTIONS /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 0
+INFO 2025-04-13 18:59:01,284 basehttp 6884 21596 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 60
+INFO 2025-04-13 18:59:01,824 basehttp 6884 18000 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-13 18:59:04,249 basehttp 6884 18000 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-13 18:59:58,436 basehttp 6884 16308 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:00:58,434 basehttp 6884 23012 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:01:58,446 basehttp 6884 20992 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:02:58,413 basehttp 6884 13108 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:04:22,624 basehttp 6884 10900 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:04:27,520 basehttp 6884 15936 "OPTIONS /api/recommendations/similar/?spotify_id=1srnQGDZocVzKwURAiK97J HTTP/1.1" 200 0
+INFO 2025-04-13 19:04:27,526 basehttp 6884 22700 "GET /song/1srnQGDZocVzKwURAiK97J HTTP/1.1" 301 0
+WARNING 2025-04-13 19:04:27,530 log 6884 7912 Not Found: /songs/1srnQGDZocVzKwURAiK97J/comments
+WARNING 2025-04-13 19:04:27,548 basehttp 6884 7912 "GET /songs/1srnQGDZocVzKwURAiK97J/comments HTTP/1.1" 404 179
+INFO 2025-04-13 19:04:27,863 basehttp 6884 15936 "GET /song/1srnQGDZocVzKwURAiK97J/ HTTP/1.1" 200 342
+INFO 2025-04-13 19:04:27,867 basehttp 6884 15936 "OPTIONS /songs/1srnQGDZocVzKwURAiK97J/view/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:04:28,197 basehttp 6884 10900 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:04:28,547 basehttp 6884 21652 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 19:04:28,631 basehttp 6884 16696 "POST /songs/1srnQGDZocVzKwURAiK97J/view/ HTTP/1.1" 200 54
+INFO 2025-04-13 19:04:28,634 basehttp 6884 21652 "OPTIONS /songs/1srnQGDZocVzKwURAiK97J/status/ HTTP/1.1" 200 0
+WARNING 2025-04-13 19:04:28,637 log 6884 16696 Not Found: /songs/1srnQGDZocVzKwURAiK97J/status/
+WARNING 2025-04-13 19:04:28,637 basehttp 6884 16696 "GET /songs/1srnQGDZocVzKwURAiK97J/status/ HTTP/1.1" 404 179
+INFO 2025-04-13 19:04:29,430 basehttp 6884 21652 "OPTIONS /songs/1srnQGDZocVzKwURAiK97J/play/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:04:29,560 basehttp 6884 19020 "GET /api/recommendations/similar/?spotify_id=1srnQGDZocVzKwURAiK97J HTTP/1.1" 200 2878
+INFO 2025-04-13 19:04:30,244 basehttp 6884 16696 "POST /songs/1srnQGDZocVzKwURAiK97J/play/ HTTP/1.1" 200 60
+INFO 2025-04-13 19:05:28,212 basehttp 6884 10644 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:05:29,128 autoreload 6884 17420 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-13 19:05:31,342 autoreload 3340 13740 Watching for file changes with StatReloader
+INFO 2025-04-13 19:06:28,563 basehttp 3340 21256 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:07:00,882 autoreload 3340 13740 C:\projects\music\server\songs\app\urls.py changed, reloading.
+INFO 2025-04-13 19:07:01,878 autoreload 2140 5320 Watching for file changes with StatReloader
+INFO 2025-04-13 19:07:27,872 basehttp 2140 21932 "GET /api/recommendations/artists/ HTTP/1.1" 200 78
+INFO 2025-04-13 19:07:28,742 basehttp 2140 8440 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:08:28,249 basehttp 2140 15036 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:09:28,215 basehttp 2140 13280 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:09:39,194 basehttp 2140 19108 "OPTIONS /api/recommendations/similar/?spotify_id=6oA7e0fohYvsukh8ytkMr0 HTTP/1.1" 200 0
+WARNING 2025-04-13 19:09:39,205 log 2140 13760 Not Found: /songs/6oA7e0fohYvsukh8ytkMr0/comments
+INFO 2025-04-13 19:09:39,205 basehttp 2140 21752 "GET /song/6oA7e0fohYvsukh8ytkMr0 HTTP/1.1" 301 0
+WARNING 2025-04-13 19:09:39,206 basehttp 2140 13760 "GET /songs/6oA7e0fohYvsukh8ytkMr0/comments HTTP/1.1" 404 179
+INFO 2025-04-13 19:09:39,790 basehttp 2140 13760 "GET /song/6oA7e0fohYvsukh8ytkMr0/ HTTP/1.1" 200 341
+INFO 2025-04-13 19:09:39,795 basehttp 2140 13760 "OPTIONS /songs/6oA7e0fohYvsukh8ytkMr0/view/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:09:39,936 basehttp 2140 13280 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:09:40,266 basehttp 2140 12080 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 19:09:40,585 basehttp 2140 17052 "POST /songs/6oA7e0fohYvsukh8ytkMr0/view/ HTTP/1.1" 200 54
+INFO 2025-04-13 19:09:40,588 basehttp 2140 12080 "OPTIONS /songs/6oA7e0fohYvsukh8ytkMr0/status/ HTTP/1.1" 200 0
+WARNING 2025-04-13 19:09:40,589 log 2140 17052 Not Found: /songs/6oA7e0fohYvsukh8ytkMr0/status/
+WARNING 2025-04-13 19:09:40,590 basehttp 2140 17052 "GET /songs/6oA7e0fohYvsukh8ytkMr0/status/ HTTP/1.1" 404 179
+INFO 2025-04-13 19:09:41,327 basehttp 2140 20728 "GET /api/recommendations/similar/?spotify_id=6oA7e0fohYvsukh8ytkMr0 HTTP/1.1" 200 2878
+INFO 2025-04-13 19:09:41,880 basehttp 2140 12080 "OPTIONS /songs/6oA7e0fohYvsukh8ytkMr0/play/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:09:42,682 basehttp 2140 20728 "POST /songs/6oA7e0fohYvsukh8ytkMr0/play/ HTTP/1.1" 200 60
+INFO 2025-04-13 19:10:13,198 autoreload 2140 5320 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-13 19:10:14,688 autoreload 8588 700 Watching for file changes with StatReloader
+INFO 2025-04-13 19:10:22,925 basehttp 8588 22784 "GET /api/recommendations/artists/ HTTP/1.1" 200 77
+INFO 2025-04-13 19:10:39,880 basehttp 8588 18728 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:11:40,670 basehttp 8588 21200 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:12:40,687 basehttp 8588 500 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:13:40,647 basehttp 8588 500 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:14:49,645 basehttp 8588 500 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-13 19:15:04,854 log 8588 22568 Not Found: /songs/1srnQGDZocVzKwURAiK97J/comments
+WARNING 2025-04-13 19:15:04,856 basehttp 8588 22568 "GET /songs/1srnQGDZocVzKwURAiK97J/comments HTTP/1.1" 404 179
+INFO 2025-04-13 19:15:05,433 basehttp 8588 12896 "GET /song/1srnQGDZocVzKwURAiK97J/ HTTP/1.1" 200 342
+INFO 2025-04-13 19:15:05,539 basehttp 8588 500 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:15:05,872 basehttp 8588 14128 "GET /playlists/ HTTP/1.1" 200 370
+ERROR 2025-04-13 19:15:06,214 log 8588 21884 Internal Server Error: /songs/1srnQGDZocVzKwURAiK97J/view/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 164, view) already exists.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 1031, in view_song
+    Action.objects.create(user=user, song=song, action_type='view')
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 892, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 998, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1161, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, fields, returning_fields, raw
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1202, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 1847, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\sql\compiler.py", line 1836, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.IntegrityError: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 164, view) already exists.
+ERROR 2025-04-13 19:15:06,236 basehttp 8588 21884 "POST /songs/1srnQGDZocVzKwURAiK97J/view/ HTTP/1.1" 500 145
+INFO 2025-04-13 19:15:06,951 basehttp 8588 4236 "GET /api/recommendations/similar/?spotify_id=1srnQGDZocVzKwURAiK97J HTTP/1.1" 200 2878
+ERROR 2025-04-13 19:15:08,216 log 8588 4236 Internal Server Error: /songs/1srnQGDZocVzKwURAiK97J/play/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 164, play) already exists.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 970, in play_song
+    Action.objects.create(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        user=user,
+        ^^^^^^^^^^
+    ...<3 lines>...
+        context=data.get('context')  # e.g., 'playlist', 'search_results', 'recommendation'
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 892, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 998, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1161, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, fields, returning_fields, raw
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1202, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 1847, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\sql\compiler.py", line 1836, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\psycopg\cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.IntegrityError: duplicate key value violates unique constraint "unique_non_search_action"
+DETAIL:  Key (user_id, song_id, action_type)=(4, 164, play) already exists.
+ERROR 2025-04-13 19:15:08,220 basehttp 8588 4236 "POST /songs/1srnQGDZocVzKwURAiK97J/play/ HTTP/1.1" 500 145
+INFO 2025-04-13 19:16:05,520 basehttp 8588 3572 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:17:03,479 autoreload 8588 700 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-13 19:17:04,586 autoreload 10864 11440 Watching for file changes with StatReloader
+INFO 2025-04-13 19:17:47,189 autoreload 10864 11440 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-13 19:17:48,271 autoreload 23412 12740 Watching for file changes with StatReloader
+INFO 2025-04-13 19:18:05,584 basehttp 23412 3572 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:18:06,733 basehttp 23412 13264 "GET /api/recommendations/artists/ HTTP/1.1" 200 246
+INFO 2025-04-13 19:19:05,565 basehttp 23412 11872 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:20:05,577 basehttp 23412 6472 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:20:44,761 autoreload 23412 12740 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-13 19:20:45,779 autoreload 16776 23488 Watching for file changes with StatReloader
+INFO 2025-04-13 19:21:01,924 basehttp 16776 9236 "GET /api/recommendations/artists/ HTTP/1.1" 200 241
+INFO 2025-04-13 19:21:08,145 basehttp 16776 9236 "GET /api/recommendations/artists/ HTTP/1.1" 200 241
+INFO 2025-04-13 19:21:49,731 basehttp 16776 1812 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:22:50,872 basehttp 16776 21176 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:23:49,693 basehttp 16776 23492 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:24:31,772 basehttp 16776 7348 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:24:41,097 basehttp 16776 23144 "OPTIONS /api/recommendations/similar/?spotify_id=2imhsF5WUWS9upG7yyOWuu HTTP/1.1" 200 0
+WARNING 2025-04-13 19:24:41,105 log 16776 3100 Not Found: /songs/2imhsF5WUWS9upG7yyOWuu/comments
+INFO 2025-04-13 19:24:41,106 basehttp 16776 16556 "GET /song/2imhsF5WUWS9upG7yyOWuu HTTP/1.1" 301 0
+WARNING 2025-04-13 19:24:41,116 basehttp 16776 3100 "GET /songs/2imhsF5WUWS9upG7yyOWuu/comments HTTP/1.1" 404 179
+INFO 2025-04-13 19:24:41,670 basehttp 16776 23144 "GET /song/2imhsF5WUWS9upG7yyOWuu/ HTTP/1.1" 200 341
+INFO 2025-04-13 19:24:41,673 basehttp 16776 23144 "OPTIONS /songs/2imhsF5WUWS9upG7yyOWuu/view/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:24:41,769 basehttp 16776 7348 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:24:42,087 basehttp 16776 18976 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 19:24:42,461 basehttp 16776 14532 "POST /songs/2imhsF5WUWS9upG7yyOWuu/view/ HTTP/1.1" 200 54
+INFO 2025-04-13 19:24:42,468 basehttp 16776 18976 "OPTIONS /songs/2imhsF5WUWS9upG7yyOWuu/status/ HTTP/1.1" 200 0
+WARNING 2025-04-13 19:24:42,472 log 16776 14532 Not Found: /songs/2imhsF5WUWS9upG7yyOWuu/status/
+WARNING 2025-04-13 19:24:42,473 basehttp 16776 14532 "GET /songs/2imhsF5WUWS9upG7yyOWuu/status/ HTTP/1.1" 404 179
+INFO 2025-04-13 19:24:43,208 basehttp 16776 22008 "GET /api/recommendations/similar/?spotify_id=2imhsF5WUWS9upG7yyOWuu HTTP/1.1" 200 2878
+INFO 2025-04-13 19:24:43,390 basehttp 16776 18976 "OPTIONS /songs/2imhsF5WUWS9upG7yyOWuu/play/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:24:44,165 basehttp 16776 22008 "POST /songs/2imhsF5WUWS9upG7yyOWuu/play/ HTTP/1.1" 200 60
+INFO 2025-04-13 19:25:25,977 basehttp 16776 22548 "OPTIONS /search-songs/?q=s HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:26,243 basehttp 16776 22380 "OPTIONS /search-songs/?q=sa HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:26,405 basehttp 16776 23296 "OPTIONS /search-songs/?q=sat HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:26,552 basehttp 16776 21832 "OPTIONS /search-songs/?q=sata HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:26,736 basehttp 16776 23320 "OPTIONS /search-songs/?q=satay HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:26,902 basehttp 16776 18436 "OPTIONS /search-songs/?q=sataye HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:26,996 basehttp 16776 22548 "GET /search-songs/?q=s HTTP/1.1" 200 2010
+INFO 2025-04-13 19:25:27,089 basehttp 16776 22548 "OPTIONS /search-songs/?q=satayer HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:27,236 basehttp 16776 22380 "GET /search-songs/?q=sa HTTP/1.1" 200 2004
+INFO 2025-04-13 19:25:27,245 basehttp 16776 22380 "OPTIONS /search-songs/?q=satayera HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:27,456 basehttp 16776 23296 "GET /search-songs/?q=sat HTTP/1.1" 200 1944
+INFO 2025-04-13 19:25:27,458 basehttp 16776 23296 "OPTIONS /search-songs/?q=satayera%20 HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:27,585 basehttp 16776 21832 "GET /search-songs/?q=sata HTTP/1.1" 200 1970
+INFO 2025-04-13 19:25:27,771 basehttp 16776 23320 "GET /search-songs/?q=satay HTTP/1.1" 200 2499
+INFO 2025-04-13 19:25:27,966 basehttp 16776 18436 "GET /search-songs/?q=sataye HTTP/1.1" 200 2503
+INFO 2025-04-13 19:25:28,276 basehttp 16776 22548 "GET /search-songs/?q=satayer HTTP/1.1" 200 2431
+INFO 2025-04-13 19:25:28,353 basehttp 16776 22380 "GET /search-songs/?q=satayera HTTP/1.1" 200 2464
+INFO 2025-04-13 19:25:28,681 basehttp 16776 23296 "GET /search-songs/?q=satayera%20 HTTP/1.1" 200 2464
+INFO 2025-04-13 19:25:30,996 basehttp 16776 23296 "OPTIONS /search-songs/?q=satayera%20f HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:31,064 basehttp 16776 22380 "OPTIONS /search-songs/?q=satayera%20fa HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:31,494 basehttp 16776 22548 "OPTIONS /search-songs/?q=satayera%20fak HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:31,573 basehttp 16776 18436 "OPTIONS /search-songs/?q=satayera%20faka HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:31,744 basehttp 16776 23320 "OPTIONS /search-songs/?q=satayera%20fakau HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:32,017 basehttp 16776 21832 "OPTIONS /search-songs/?q=satayera%20fakaun HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:32,072 basehttp 16776 23296 "GET /search-songs/?q=satayera%20f HTTP/1.1" 200 2460
+INFO 2025-04-13 19:25:32,083 basehttp 16776 23296 "OPTIONS /search-songs/?q=satayera%20fakaune HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:32,128 basehttp 16776 22380 "GET /search-songs/?q=satayera%20fa HTTP/1.1" 200 2469
+INFO 2025-04-13 19:25:32,287 basehttp 16776 22380 "OPTIONS /search-songs/?q=satayera%20fakaune%20 HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:32,566 basehttp 16776 22548 "GET /search-songs/?q=satayera%20fak HTTP/1.1" 200 2475
+INFO 2025-04-13 19:25:32,569 basehttp 16776 22548 "OPTIONS /search-songs/?q=satayera%20fakaune%20b HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:32,673 basehttp 16776 18436 "GET /search-songs/?q=satayera%20faka HTTP/1.1" 200 2440
+INFO 2025-04-13 19:25:32,677 basehttp 16776 18436 "OPTIONS /search-songs/?q=satayera%20fakaune%20ba HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:32,818 basehttp 16776 23320 "GET /search-songs/?q=satayera%20fakau HTTP/1.1" 200 2479
+INFO 2025-04-13 19:25:32,854 basehttp 16776 23320 "OPTIONS /search-songs/?q=satayera%20fakaune%20ban HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:33,068 basehttp 16776 21832 "GET /search-songs/?q=satayera%20fakaun HTTP/1.1" 200 2475
+INFO 2025-04-13 19:25:33,073 basehttp 16776 21832 "OPTIONS /search-songs/?q=satayera%20fakaune%20bani HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:33,214 basehttp 16776 23296 "GET /search-songs/?q=satayera%20fakaune HTTP/1.1" 200 2480
+INFO 2025-04-13 19:25:33,243 basehttp 16776 22380 "GET /search-songs/?q=satayera%20fakaune%20 HTTP/1.1" 200 2480
+INFO 2025-04-13 19:25:33,759 basehttp 16776 18436 "GET /search-songs/?q=satayera%20fakaune%20ba HTTP/1.1" 200 2439
+INFO 2025-04-13 19:25:33,887 basehttp 16776 18436 "OPTIONS /search-songs/?q=satayera%20fakaune%20bani%20 HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:33,891 basehttp 16776 22548 "GET /search-songs/?q=satayera%20fakaune%20b HTTP/1.1" 200 2475
+INFO 2025-04-13 19:25:33,990 basehttp 16776 23320 "GET /search-songs/?q=satayera%20fakaune%20ban HTTP/1.1" 200 2466
+INFO 2025-04-13 19:25:34,236 basehttp 16776 21832 "GET /search-songs/?q=satayera%20fakaune%20bani HTTP/1.1" 200 2482
+INFO 2025-04-13 19:25:34,866 basehttp 16776 18436 "GET /search-songs/?q=satayera%20fakaune%20bani%20 HTTP/1.1" 200 2482
+WARNING 2025-04-13 19:25:37,104 log 16776 18436 Not Found: /log-interaction/
+WARNING 2025-04-13 19:25:37,105 basehttp 16776 18436 "POST /log-interaction/ HTTP/1.1" 404 179
+WARNING 2025-04-13 19:25:37,274 log 16776 22548 Not Found: /songs/5GN1D207XKDFHlOxL9n4f5/comments
+INFO 2025-04-13 19:25:37,277 basehttp 16776 21832 "OPTIONS /api/recommendations/similar/?spotify_id=5GN1D207XKDFHlOxL9n4f5 HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:37,277 basehttp 16776 22380 "OPTIONS /api/recommendations/similar/?spotify_id=5GN1D207XKDFHlOxL9n4f5 HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:37,277 basehttp 16776 23320 "GET /song/5GN1D207XKDFHlOxL9n4f5 HTTP/1.1" 301 0
+WARNING 2025-04-13 19:25:37,278 basehttp 16776 22548 "GET /songs/5GN1D207XKDFHlOxL9n4f5/comments HTTP/1.1" 404 179
+WARNING 2025-04-13 19:25:37,285 log 16776 22548 Not Found: /songs/5GN1D207XKDFHlOxL9n4f5/comments
+WARNING 2025-04-13 19:25:37,288 basehttp 16776 22548 "GET /songs/5GN1D207XKDFHlOxL9n4f5/comments HTTP/1.1" 404 179
+INFO 2025-04-13 19:25:37,541 basehttp 16776 22380 "GET /song/5GN1D207XKDFHlOxL9n4f5/ HTTP/1.1" 200 351
+INFO 2025-04-13 19:25:37,545 basehttp 16776 22548 "OPTIONS /songs/5GN1D207XKDFHlOxL9n4f5/view/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:37,806 basehttp 16776 22380 "GET /song/5GN1D207XKDFHlOxL9n4f5/ HTTP/1.1" 200 351
+INFO 2025-04-13 19:25:37,946 basehttp 16776 18436 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:25:37,981 spotify_utils 16776 23340 Getting track for ID: 5GN1D207XKDFHlOxL9n4f5
+INFO 2025-04-13 19:25:38,254 spotify_utils 16776 19528 Getting track for ID: 5GN1D207XKDFHlOxL9n4f5
+INFO 2025-04-13 19:25:38,259 basehttp 16776 23296 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 19:25:38,487 spotify_utils 16776 21680 Getting track for ID: 5GN1D207XKDFHlOxL9n4f5
+INFO 2025-04-13 19:25:38,491 spotify_utils 16776 23340 Successfully retrieved track: Satayera by GXSOUL, Priti, Binayak
+INFO 2025-04-13 19:25:38,638 basehttp 16776 18436 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:25:38,757 spotify_utils 16776 19528 Successfully retrieved track: Satayera by GXSOUL, Priti, Binayak
+INFO 2025-04-13 19:25:39,057 basehttp 16776 19528 "POST /songs/5GN1D207XKDFHlOxL9n4f5/view/ HTTP/1.1" 200 54
+INFO 2025-04-13 19:25:39,060 spotify_utils 16776 21680 Successfully retrieved track: Satayera by GXSOUL, Priti, Binayak
+INFO 2025-04-13 19:25:39,065 basehttp 16776 18436 "OPTIONS /songs/5GN1D207XKDFHlOxL9n4f5/status/ HTTP/1.1" 200 0
+WARNING 2025-04-13 19:25:39,069 log 16776 19528 Not Found: /songs/5GN1D207XKDFHlOxL9n4f5/status/
+WARNING 2025-04-13 19:25:39,070 basehttp 16776 19528 "GET /songs/5GN1D207XKDFHlOxL9n4f5/status/ HTTP/1.1" 404 179
+ERROR 2025-04-13 19:25:39,137 log 16776 21680 Internal Server Error: /songs/5GN1D207XKDFHlOxL9n4f5/view/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 188, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\utils\decorators.py", line 186, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 1020, in view_song
+    song = Song.objects.create(
+        spotify_id=spotify_track_id,
+    ...<6 lines>...
+        url=song_details['url']
+    )
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\projects\music\server\songs\app\models.py", line 64, in save
+    self.full_clean()  # Run validation before saving
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\db\models\base.py", line 1651, in full_clean
+    raise ValidationError(errors)
+django.core.exceptions.ValidationError: {'spotify_id': ['Song with this Spotify id already exists.']}
+ERROR 2025-04-13 19:25:39,166 basehttp 16776 21680 "POST /songs/5GN1D207XKDFHlOxL9n4f5/view/ HTTP/1.1" 500 145
+INFO 2025-04-13 19:25:39,276 basehttp 16776 23296 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 19:25:39,772 basehttp 16776 23296 "OPTIONS /songs/5GN1D207XKDFHlOxL9n4f5/play/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:25:40,531 basehttp 16776 21680 "POST /songs/5GN1D207XKDFHlOxL9n4f5/play/ HTTP/1.1" 200 60
+INFO 2025-04-13 19:25:41,273 basehttp 16776 23340 "GET /api/recommendations/similar/?spotify_id=5GN1D207XKDFHlOxL9n4f5 HTTP/1.1" 200 3039
+INFO 2025-04-13 19:25:43,356 basehttp 16776 23340 "GET /api/recommendations/similar/?spotify_id=5GN1D207XKDFHlOxL9n4f5 HTTP/1.1" 200 3039
+INFO 2025-04-13 19:26:37,954 basehttp 16776 18804 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:26:39,221 autoreload 16776 23488 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-13 19:26:40,743 autoreload 16636 7936 Watching for file changes with StatReloader
+INFO 2025-04-13 19:27:22,880 basehttp 16636 12740 "GET /api/recommendations/artists/ HTTP/1.1" 200 1657
+INFO 2025-04-13 19:27:37,941 basehttp 16636 16460 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:27:57,425 basehttp 16636 12740 "GET /api/recommendations/artists/ HTTP/1.1" 200 1657
+INFO 2025-04-13 19:28:37,946 basehttp 16636 4408 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:29:37,944 basehttp 16636 4408 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:30:48,376 basehttp 16636 4408 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:30:53,984 basehttp 16636 23112 "OPTIONS /api/recommendations/similar/?spotify_id=1qA9qskyfKjjxS5YBM4A0w HTTP/1.1" 200 0
+WARNING 2025-04-13 19:30:53,998 log 16636 18412 Not Found: /songs/1qA9qskyfKjjxS5YBM4A0w/comments
+INFO 2025-04-13 19:30:53,999 basehttp 16636 11656 "GET /song/1qA9qskyfKjjxS5YBM4A0w HTTP/1.1" 301 0
+WARNING 2025-04-13 19:30:53,999 basehttp 16636 18412 "GET /songs/1qA9qskyfKjjxS5YBM4A0w/comments HTTP/1.1" 404 179
+INFO 2025-04-13 19:30:54,290 basehttp 16636 18412 "GET /song/1qA9qskyfKjjxS5YBM4A0w/ HTTP/1.1" 200 377
+INFO 2025-04-13 19:30:54,294 basehttp 16636 18412 "OPTIONS /songs/1qA9qskyfKjjxS5YBM4A0w/view/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:30:54,634 basehttp 16636 4408 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:30:54,991 basehttp 16636 23532 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 19:30:55,019 basehttp 16636 22372 "POST /songs/1qA9qskyfKjjxS5YBM4A0w/view/ HTTP/1.1" 200 54
+INFO 2025-04-13 19:30:55,022 basehttp 16636 23532 "OPTIONS /songs/1qA9qskyfKjjxS5YBM4A0w/status/ HTTP/1.1" 200 0
+WARNING 2025-04-13 19:30:55,024 log 16636 22372 Not Found: /songs/1qA9qskyfKjjxS5YBM4A0w/status/
+WARNING 2025-04-13 19:30:55,025 basehttp 16636 22372 "GET /songs/1qA9qskyfKjjxS5YBM4A0w/status/ HTTP/1.1" 404 179
+INFO 2025-04-13 19:30:56,178 basehttp 16636 16904 "GET /api/recommendations/similar/?spotify_id=1qA9qskyfKjjxS5YBM4A0w HTTP/1.1" 200 3039
+INFO 2025-04-13 19:30:56,238 basehttp 16636 23532 "OPTIONS /songs/1qA9qskyfKjjxS5YBM4A0w/play/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:30:57,008 basehttp 16636 16904 "POST /songs/1qA9qskyfKjjxS5YBM4A0w/play/ HTTP/1.1" 200 60
+INFO 2025-04-13 19:31:52,324 autoreload 16636 7936 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-13 19:31:53,645 autoreload 22396 2116 Watching for file changes with StatReloader
+INFO 2025-04-13 19:32:54,670 basehttp 22396 6484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:33:35,628 basehttp 22396 18844 "GET /api/artists/3WrFJ7ztbogyGnTHbHJFl2/tracks/ HTTP/1.1" 200 152891
+INFO 2025-04-13 19:33:54,663 basehttp 22396 9344 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:34:23,689 basehttp 22396 5060 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:34:24,400 basehttp 22396 5060 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:34:54,723 basehttp 22396 5060 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:35:30,303 basehttp 22396 10104 "OPTIONS /api/recommendations/similar/?spotify_id=44ZRdPlGh8ZIyDNgBpP9w5 HTTP/1.1" 200 0
+WARNING 2025-04-13 19:35:30,313 log 22396 12080 Not Found: /songs/44ZRdPlGh8ZIyDNgBpP9w5/comments
+INFO 2025-04-13 19:35:30,313 basehttp 22396 7452 "GET /song/44ZRdPlGh8ZIyDNgBpP9w5 HTTP/1.1" 301 0
+WARNING 2025-04-13 19:35:30,316 basehttp 22396 12080 "GET /songs/44ZRdPlGh8ZIyDNgBpP9w5/comments HTTP/1.1" 404 179
+INFO 2025-04-13 19:35:30,610 basehttp 22396 10104 "GET /song/44ZRdPlGh8ZIyDNgBpP9w5/ HTTP/1.1" 200 352
+INFO 2025-04-13 19:35:30,613 basehttp 22396 10104 "OPTIONS /songs/44ZRdPlGh8ZIyDNgBpP9w5/view/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:35:30,973 basehttp 22396 5060 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-13 19:35:31,341 basehttp 22396 19968 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-13 19:35:31,416 basehttp 22396 21016 "POST /songs/44ZRdPlGh8ZIyDNgBpP9w5/view/ HTTP/1.1" 200 54
+INFO 2025-04-13 19:35:31,420 basehttp 22396 19968 "OPTIONS /songs/44ZRdPlGh8ZIyDNgBpP9w5/status/ HTTP/1.1" 200 0
+WARNING 2025-04-13 19:35:31,423 log 22396 21016 Not Found: /songs/44ZRdPlGh8ZIyDNgBpP9w5/status/
+WARNING 2025-04-13 19:35:31,424 basehttp 22396 21016 "GET /songs/44ZRdPlGh8ZIyDNgBpP9w5/status/ HTTP/1.1" 404 179
+INFO 2025-04-13 19:35:32,188 basehttp 22396 19968 "OPTIONS /songs/44ZRdPlGh8ZIyDNgBpP9w5/play/ HTTP/1.1" 200 0
+INFO 2025-04-13 19:35:32,486 basehttp 22396 18968 "GET /api/recommendations/similar/?spotify_id=44ZRdPlGh8ZIyDNgBpP9w5 HTTP/1.1" 200 3039
+INFO 2025-04-13 19:35:32,929 basehttp 22396 21016 "POST /songs/44ZRdPlGh8ZIyDNgBpP9w5/play/ HTTP/1.1" 200 60

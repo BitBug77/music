@@ -3472,13 +3472,13 @@ from django.views.decorators.csrf import csrf_protect
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
+from .algorithms import get_similar_users
 @csrf_protect
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def artist_tracks(request, artist_id):
     """
-    GET: Retrieve an artist's tracks from Spotify API.
+    GET: Retrieve an artist's tracks, albums, and album tracks from Spotify API.
     """
     user = request.user
     
@@ -3494,10 +3494,10 @@ def artist_tracks(request, artist_id):
     try:
         import requests
         
-        # Get artist info
-        artist_url = f"https://api.spotify.com/v1/artists/{artist_id}"
         headers = {"Authorization": f"Bearer {access_token}"}
         
+        # Get artist info
+        artist_url = f"https://api.spotify.com/v1/artists/{artist_id}"
         artist_response = requests.get(artist_url, headers=headers, timeout=10)
         if artist_response.status_code != 200:
             return Response({"status": "error", "message": f"Failed to fetch artist: {artist_response.text}"}, status=artist_response.status_code)
@@ -3506,7 +3506,8 @@ def artist_tracks(request, artist_id):
         artist_info = {
             "id": artist_data["id"],
             "name": artist_data["name"],
-            "image": artist_data["images"][0]["url"] if artist_data.get("images") else None
+            "image": artist_data["images"][0]["url"] if artist_data.get("images") else None,
+            "genres": artist_data.get("genres", [])
         }
         
         # Get artist's top tracks
@@ -3518,8 +3519,8 @@ def artist_tracks(request, artist_id):
         
         tracks_data = tracks_response.json()
         
-        # Process tracks
-        tracks = []
+        # Process top tracks
+        top_tracks = []
         for track in tracks_data["tracks"]:
             track_info = {
                 "id": track["id"],
@@ -3534,13 +3535,75 @@ def artist_tracks(request, artist_id):
                     "album_cover": track["album"]["images"][0]["url"] if track["album"].get("images") else None
                 }
             }
-            tracks.append(track_info)
+            top_tracks.append(track_info)
+        
+        # Get artist's albums
+        albums_url = f"https://api.spotify.com/v1/artists/{artist_id}/albums?include_groups=album,single&limit=50"
+        albums_response = requests.get(albums_url, headers=headers, timeout=10)
+        
+        if albums_response.status_code != 200:
+            return Response({"status": "error", "message": f"Failed to fetch albums: {albums_response.text}"}, status=albums_response.status_code)
+        
+        albums_data = albums_response.json()
+        
+        # Process albums and get tracks for each album
+        albums = []
+        for album in albums_data["items"]:
+            album_info = {
+                "id": album["id"],
+                "name": album["name"],
+                "release_date": album["release_date"],
+                "album_type": album["album_type"],
+                "total_tracks": album["total_tracks"],
+                "album_cover": album["images"][0]["url"] if album.get("images") else None,
+                "tracks": []
+            }
+            
+            # Get tracks for this album
+            album_tracks_url = f"https://api.spotify.com/v1/albums/{album['id']}/tracks"
+            album_tracks_response = requests.get(album_tracks_url, headers=headers, timeout=10)
+            
+            if album_tracks_response.status_code == 200:
+                album_tracks_data = album_tracks_response.json()
+                
+                # For each track in album, get full track details
+                track_ids = [track["id"] for track in album_tracks_data["items"]]
+                
+                if track_ids:
+                    # Get full track details in batches of 50 (API limit)
+                    all_album_tracks = []
+                    for i in range(0, len(track_ids), 50):
+                        batch = track_ids[i:i+50]
+                        tracks_detail_url = f"https://api.spotify.com/v1/tracks?ids={','.join(batch)}"
+                        tracks_detail_response = requests.get(tracks_detail_url, headers=headers, timeout=10)
+                        
+                        if tracks_detail_response.status_code == 200:
+                            all_album_tracks.extend(tracks_detail_response.json()["tracks"])
+                    
+                    # Process full track details
+                    for track in all_album_tracks:
+                        if track:  # Sometimes the API returns null for tracks
+                            # Format track info according to your required structure
+                            track_data = {
+                                "spotify_id": track["id"],
+                                "name": track["name"],
+                                "artist": artist_info["name"],
+                                "album": album["name"],
+                                "duration": track["duration_ms"],
+                                "spotify_url": track["external_urls"]["spotify"],
+                                "album_cover": album_info["album_cover"],
+                                "genre": artist_info.get("genres", [])[0] if artist_info.get("genres") else ""
+                            }
+                            album_info["tracks"].append(track_data)
+            
+            albums.append(album_info)
         
         # Return the complete response
         return Response({
             "status": "success",
             "artist": artist_info,
-            "tracks": tracks
+            "top_tracks": top_tracks,
+            "albums": albums
         })
         
     except requests.exceptions.RequestException as e:
@@ -3549,3 +3612,539 @@ def artist_tracks(request, artist_id):
     except Exception as e:
         logger.exception(f"Exception in artist_tracks: {str(e)}")
         return Response({"status": "error", "message": f"An error occurred: {str(e)}"}, status=500)
+    
+class ArtistRecommendationView(RecommendationAPIView):
+    """
+    Endpoint for recommending artists based on user history and preferences.
+    Works for both established users and new users with no interaction history.
+    """
+    
+    def get(self, request, *args, **kwargs):
+        try:
+            user = self.get_user_from_request(request)
+            
+            try:
+                # Increased default from 10 to 20, max from 50 to 100
+                limit = int(request.query_params.get('limit', 20))
+                if limit < 1 or limit > 100:
+                    return Response({"error": "Limit must be between 1 and 100"}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                return Response({"error": "Limit must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get recommended artists
+            recommended_artists, source = self.recommend_artists(user, limit)
+            
+            # Check if we got empty recommendations and handle it
+            if not recommended_artists:
+                recommended_artists, source = self.get_spotify_popular_artists(limit)
+            
+            # Format the response
+            response_data = {
+                "artist_recommendations": recommended_artists,
+                "algorithm": source,
+                "limit": limit
+            }
+            
+            return Response(response_data)
+        except Exception as e:
+            logger.exception(f"Error in ArtistRecommendationView: {str(e)}")
+            return Response(
+                {"error": "An error occurred while processing your request"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def recommend_artists(self, user, limit):
+        """
+        Recommend artists based on user's history or provide default recommendations
+        Returns a tuple of (artists, source)
+        """
+        # Removed cache checking code
+
+        # Get user's interaction history
+        user_actions = Action.objects.filter(user=user)
+        action_count = user_actions.count()
+        
+        # For users with sufficient history
+        if action_count >= 5:
+            artists, source = self.recommend_from_history(user, limit)
+        # For users with limited history
+        elif 0 < action_count < 5:
+            artists, source = self.recommend_from_limited_history(user, limit)
+        # For completely new users
+        else:
+            artists, source = self.recommend_for_new_user(limit)
+        
+        # Verify we have recommendations, if not get from Spotify
+        if not artists:
+            artists, source = self.get_spotify_popular_artists(limit)
+        
+        # Removed caching code
+        
+        return artists, source
+    
+    def recommend_from_history(self, user, limit):
+        """
+        Get artist recommendations for users with sufficient history (5+ interactions)
+        Uses collaborative filtering and includes both familiar and new artists
+        """
+        # Get artists the user has interacted with and their counts
+        user_artists = defaultdict(int)
+        user_actions = Action.objects.filter(user=user).select_related('song')
+        
+        for action in user_actions:
+            if action.song.artist:
+                weight = 5.0 if action.action_type == 'like' else 3.0 if action.action_type == 'save' else 1.0
+                user_artists[action.song.artist] += weight
+        
+        # Get top artists the user already likes (for familiar recommendations)
+        familiar_artists = sorted(user_artists.items(), key=lambda x: x[1], reverse=True)[:int(limit * 0.3)]
+        familiar_artist_names = [artist for artist, _ in familiar_artists]
+        
+        # Get new artist recommendations based on similar users
+        new_artist_recommendations = self.get_new_artists_from_similar_users(user, familiar_artist_names, int(limit * 0.7))
+        
+        # Combine familiar and new artists
+        combined_artists = [{"name": artist, "score": score, "familiar": True} for artist, score in familiar_artists]
+        combined_artists.extend(new_artist_recommendations)
+        
+        # If we don't have enough recommendations, get more from Spotify
+        if len(combined_artists) < limit:
+            spotify_artists, _ = self.get_spotify_related_artists(familiar_artist_names[:2], limit - len(combined_artists))
+            combined_artists.extend(spotify_artists)
+        
+        # Ensure we don't have duplicates
+        seen_artists = set()
+        unique_artists = []
+        for artist_data in combined_artists:
+            if artist_data["name"] not in seen_artists:
+                seen_artists.add(artist_data["name"])
+                unique_artists.append(artist_data)
+        
+        # Enrich artist data with images
+        enriched_artists = self.enrich_artist_data(unique_artists[:limit])
+        
+        return enriched_artists, "collaborative_with_familiar"
+    
+    def get_new_artists_from_similar_users(self, user, familiar_artists, limit):
+        """
+        Get recommendations for new artists based on similar users
+        """
+        # Update user preferences
+        update_preferences_based_on_actions(user)
+        
+        # Get similar users
+        similar_users = get_similar_users(user, top_n=20)
+        
+        # Get artists liked by similar users
+        artist_scores = defaultdict(float)
+        
+        for similar_user, similarity_score in similar_users:
+            if similarity_score <= 0:
+                continue
+                
+            actions = Action.objects.filter(user=similar_user)
+            for action in actions:
+                if action.song.artist and action.song.artist not in familiar_artists:
+                    weight = 5.0 if action.action_type == 'like' else 3.0 if action.action_type == 'save' else 1.0
+                    artist_scores[action.song.artist] += similarity_score * weight
+        
+        # Get top new artists
+        top_artists = sorted(artist_scores.items(), key=lambda x: x[1], reverse=True)[:limit]
+        
+        return [{"name": artist, "score": score, "familiar": False} for artist, score in top_artists]
+    
+    def recommend_from_limited_history(self, user, limit):
+        """
+        Get artist recommendations for users with limited history (1-4 interactions)
+        Include some artists they've already interacted with plus related artists
+        """
+        # Get artists the user has interacted with
+        user_artists = defaultdict(int)
+        user_actions = Action.objects.filter(user=user).select_related('song')
+        
+        for action in user_actions:
+            if action.song.artist:
+                weight = 5.0 if action.action_type == 'like' else 3.0 if action.action_type == 'save' else 1.0
+                user_artists[action.song.artist] += weight
+        
+        # Include familiar artists (30% of recommendations)
+        familiar_artists = sorted(user_artists.items(), key=lambda x: x[1], reverse=True)[:int(limit * 0.3)]
+        familiar_artist_names = [artist for artist, _ in familiar_artists]
+        
+        # Get Spotify recommendations based on these artists
+        spotify_artists, source = self.get_spotify_related_artists(familiar_artist_names, limit - len(familiar_artists))
+        
+        # Combine familiar and new artists
+        combined_artists = [{"name": artist, "score": score, "familiar": True} for artist, score in familiar_artists]
+        combined_artists.extend(spotify_artists)
+        
+        # Ensure we don't have duplicates
+        seen_artists = set()
+        unique_artists = []
+        for artist_data in combined_artists:
+            if artist_data["name"] not in seen_artists:
+                seen_artists.add(artist_data["name"])
+                unique_artists.append(artist_data)
+        
+        # Enrich artist data with images
+        enriched_artists = self.enrich_artist_data(unique_artists[:limit])
+        
+        return enriched_artists, f"limited_history_with_{source}"
+    
+    def recommend_for_new_user(self, limit):
+        """
+        Get artist recommendations for completely new users
+        Uses a mix of popular artists from DB and Spotify
+        """
+        # Try to get popular artists from DB first
+        db_artists = self.get_popular_artists_from_db(limit)
+        
+        # If we don't have enough from DB, supplement with Spotify
+        if len(db_artists) < limit:
+            spotify_artists, _ = self.get_spotify_popular_artists(limit - len(db_artists))
+            combined_artists = db_artists + spotify_artists
+        else:
+            combined_artists = db_artists
+        
+        # Ensure we have enough diversity
+        if len(combined_artists) >= limit * 2:
+            # Take 70% most popular and 30% random from the rest for discovery
+            top_count = int(limit * 0.7)
+            diverse_count = limit - top_count
+            
+            top_artists = combined_artists[:top_count]
+            
+            # Get some less popular artists for diversity
+            import random
+            diverse_pool = combined_artists[top_count:limit*2]
+            diverse_artists = random.sample(diverse_pool, diverse_count)
+            
+            result = top_artists + diverse_artists
+        else:
+            result = combined_artists[:limit]
+        
+        # Enrich artist data with images
+        enriched_artists = self.enrich_artist_data(result)
+        
+        return enriched_artists, "new_user_recommendations"
+    
+    def get_popular_artists_from_db(self, limit):
+        """Get popular artists from database based on interactions"""
+        # Combine play, like, and save counts with weights
+        artist_scores = defaultdict(float)
+        
+        # Get play counts
+        play_counts = Action.objects.filter(action_type='play').values('song__artist').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        for item in play_counts:
+            if item['song__artist']:
+                artist_scores[item['song__artist']] += item['count'] * 1.0
+        
+        # Get like counts (weighted higher)
+        like_counts = Action.objects.filter(action_type='like').values('song__artist').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        for item in like_counts:
+            if item['song__artist']:
+                artist_scores[item['song__artist']] += item['count'] * 5.0
+        
+        # Get save counts
+        save_counts = Action.objects.filter(action_type='save').values('song__artist').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        for item in save_counts:
+            if item['song__artist']:
+                artist_scores[item['song__artist']] += item['count'] * 3.0
+        
+        # Get trending (recent) artists
+        recent_date = timezone.now() - timezone.timedelta(days=7)
+        recent_actions = Action.objects.filter(timestamp__gte=recent_date).values('song__artist').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        for item in recent_actions:
+            if item['song__artist']:
+                artist_scores[item['song__artist']] += item['count'] * 2.0  # Trending bonus
+        
+        # Sort and format
+        top_artists = sorted(artist_scores.items(), key=lambda x: x[1], reverse=True)[:limit*2]
+        return [{"name": artist, "score": score} for artist, score in top_artists]
+    
+    def get_spotify_popular_artists(self, limit):
+        """
+        Get popular artists from Spotify
+        Uses the Spotify API to fetch current popular artists
+        """
+        try:
+            # Get Spotify token
+            token = get_spotify_token()
+            if not token:
+                return [], "spotify_failed"
+            
+            # Make request to Spotify API for top tracks
+            headers = {
+                'Authorization': f'Bearer {token}'
+            }
+            
+            # Get global top 50 playlist
+            response = requests.get(
+                'https://api.spotify.com/v1/playlists/37i9dQZEVXbMDoHDwVN2tF/tracks',
+                headers=headers,
+                params={'limit': limit*2, 'fields': 'items(track(name,artists(name,id)))'}
+            )
+            
+            if response.status_code != 200:
+                return [], "spotify_failed"
+            
+            data = response.json()
+            
+            # Extract artists
+            artists = []
+            artist_set = set()
+            artist_ids = []  # Store artist IDs for fetching images
+            
+            for item in data.get('items', []):
+                track = item.get('track', {})
+                for artist in track.get('artists', []):
+                    artist_name = artist.get('name')
+                    artist_id = artist.get('id')
+                    
+                    if artist_name and artist_name not in artist_set and artist_id:
+                        artists.append({
+                            "name": artist_name, 
+                            "score": 1.0, 
+                            "source": "spotify_charts",
+                            "id": artist_id  # Store ID for image lookup
+                        })
+                        artist_set.add(artist_name)
+                        artist_ids.append(artist_id)
+                        
+                        if len(artists) >= limit*2:  # Get more artists to ensure we have enough after filtering
+                            break
+                
+                if len(artists) >= limit*2:
+                    break
+            
+            # Get artist images
+            artists_with_images = self.get_artist_images(artists, token)
+            
+            return artists_with_images[:limit], "spotify_popular"
+            
+        except Exception as e:
+            logger.exception(f"Error getting Spotify popular artists: {str(e)}")
+            return [], "spotify_failed"
+    
+    def get_spotify_related_artists(self, seed_artists, limit):
+        """
+        Get related artists from Spotify based on seed artists
+        """
+        try:
+            if not seed_artists:
+                return self.get_spotify_popular_artists(limit)
+            
+            # Get Spotify token
+            token = get_spotify_token()
+            if not token:
+                return [], "spotify_failed"
+            
+            headers = {
+                'Authorization': f'Bearer {token}'
+            }
+            
+            # First search for the artist ID
+            related_artists = []
+            for seed_artist in seed_artists[:2]:  # Use up to 2 seed artists
+                search_response = requests.get(
+                    'https://api.spotify.com/v1/search',
+                    headers=headers,
+                    params={'q': seed_artist, 'type': 'artist', 'limit': 1}
+                )
+                
+                if search_response.status_code != 200:
+                    continue
+                
+                search_data = search_response.json()
+                if 'artists' in search_data and 'items' in search_data['artists'] and search_data['artists']['items']:
+                    artist_id = search_data['artists']['items'][0]['id']
+                    
+                    # Now get related artists
+                    related_response = requests.get(
+                        f'https://api.spotify.com/v1/artists/{artist_id}/related-artists',
+                        headers=headers
+                    )
+                    
+                    if related_response.status_code == 200:
+                        for artist in related_response.json().get('artists', []):
+                            related_artists.append({
+                                "name": artist['name'],
+                                "score": 1.0,
+                                "familiar": False,
+                                "source": f"related_to_{seed_artist}",
+                                "id": artist['id'],
+                                "images": artist.get('images', [])  # Spotify already includes images here
+                            })
+            
+            # If we couldn't get related artists, fall back to popular
+            if not related_artists:
+                return self.get_spotify_popular_artists(limit)
+            
+            # Process images for consistent format
+            for artist in related_artists:
+                if 'images' in artist and artist['images']:
+                    image_urls = {}
+                    for img in artist['images']:
+                        if 'height' in img and 'url' in img:
+                            if img['height'] <= 64:
+                                image_urls['small'] = img['url']
+                            elif img['height'] <= 300:
+                                image_urls['medium'] = img['url']
+                            else:
+                                image_urls['large'] = img['url']
+                    
+                    artist['image_urls'] = image_urls
+                    del artist['images']  # Remove the original format
+            
+            # Ensure no duplicate artists
+            seen_artists = set()
+            unique_artists = []
+            for artist in related_artists:
+                if artist["name"] not in seen_artists:
+                    seen_artists.add(artist["name"])
+                    unique_artists.append(artist)
+            
+            return unique_artists[:limit], "spotify_related"
+            
+        except Exception as e:
+            logger.exception(f"Error getting Spotify related artists: {str(e)}")
+            return self.get_spotify_popular_artists(limit)
+    
+    def get_artist_images(self, artists, token=None):
+        """
+        Fetch artist images from Spotify API
+        """
+        try:
+            if not token:
+                token = get_spotify_token()
+                if not token:
+                    return artists
+            
+            headers = {
+                'Authorization': f'Bearer {token}'
+            }
+            
+            # Collect artist IDs that need images
+            artist_ids = []
+            for artist in artists:
+                if 'id' in artist and not artist.get('image_urls'):
+                    artist_ids.append(artist['id'])
+            
+            # Spotify allows up to 50 IDs per request
+            batch_size = 50
+            for i in range(0, len(artist_ids), batch_size):
+                batch_ids = artist_ids[i:i + batch_size]
+                if not batch_ids:
+                    continue
+                    
+                # Request artist details
+                response = requests.get(
+                    'https://api.spotify.com/v1/artists',
+                    headers=headers,
+                    params={'ids': ','.join(batch_ids)}
+                )
+                
+                if response.status_code != 200:
+                    continue
+                
+                data = response.json()
+                
+                # Map the returned images to our artists
+                for artist_data in data.get('artists', []):
+                    artist_id = artist_data.get('id')
+                    images = artist_data.get('images', [])
+                    
+                    if not artist_id or not images:
+                        continue
+                    
+                    # Find the matching artist in our list
+                    for artist in artists:
+                        if artist.get('id') == artist_id:
+                            # Create image URLs object with different sizes
+                            image_urls = {}
+                            for img in images:
+                                if 'height' in img and 'url' in img:
+                                    if img['height'] <= 64:
+                                        image_urls['small'] = img['url']
+                                    elif img['height'] <= 300:
+                                        image_urls['medium'] = img['url']
+                                    else:
+                                        image_urls['large'] = img['url']
+                            
+                            artist['image_urls'] = image_urls
+                            break
+            
+            return artists
+            
+        except Exception as e:
+            logger.exception(f"Error fetching artist images: {str(e)}")
+            return artists
+    
+    def enrich_artist_data(self, artists):
+        """
+        Add images to artists that don't have them yet
+        """
+        # Check if any artists need images
+        artists_needing_images = [artist for artist in artists if not artist.get('image_urls') and not artist.get('id')]
+        
+        if not artists_needing_images:
+            return artists
+        
+        try:
+            # Get Spotify token
+            token = get_spotify_token()
+            if not token:
+                return artists
+            
+            headers = {
+                'Authorization': f'Bearer {token}'
+            }
+            
+            # Search for each artist
+            for artist in artists_needing_images:
+                search_response = requests.get(
+                    'https://api.spotify.com/v1/search',
+                    headers=headers,
+                    params={'q': artist['name'], 'type': 'artist', 'limit': 1}
+                )
+                
+                if search_response.status_code != 200:
+                    continue
+                
+                search_data = search_response.json()
+                if 'artists' in search_data and 'items' in search_data['artists'] and search_data['artists']['items']:
+                    spotify_artist = search_data['artists']['items'][0]
+                    artist['id'] = spotify_artist['id']
+                    
+                    # Process images
+                    images = spotify_artist.get('images', [])
+                    if images:
+                        image_urls = {}
+                        for img in images:
+                            if 'height' in img and 'url' in img:
+                                if img['height'] <= 64:
+                                    image_urls['small'] = img['url']
+                                elif img['height'] <= 300:
+                                    image_urls['medium'] = img['url']
+                                else:
+                                    image_urls['large'] = img['url']
+                        
+                        artist['image_urls'] = image_urls
+            
+            return artists
+            
+        except Exception as e:
+            logger.exception(f"Error enriching artist data: {str(e)}")
+            return artists
