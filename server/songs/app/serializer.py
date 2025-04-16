@@ -125,3 +125,19 @@ class ContactRequestSerializer(serializers.ModelSerializer):
         model = ContactRequest
         fields = ['id', 'name', 'email', 'subject', 'message', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+
+from rest_framework import serializers
+from .models import Song, ChartEntry
+
+class ChartEntrySerializer(serializers.ModelSerializer):
+    song_name = serializers.CharField(source='song.name')
+    artist_name = serializers.CharField(source='song.artist')
+    album_name = serializers.CharField(source='song.album')
+    album_cover = serializers.URLField(source='song.album_cover')
+    spotify_id = serializers.CharField(source='song.spotify_id')
+    
+    class Meta:
+        model = ChartEntry
+        fields = ['position', 'song_name', 'artist_name', 'album_name', 
+                  'album_cover', 'spotify_id', 'listeners', 'playcount']

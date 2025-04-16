@@ -43,7 +43,7 @@ def save_user_profile(sender, instance, **kwargs):
 from django.core.exceptions import ValidationError
 # Song Model
 class Song(models.Model):
-    spotify_id = models.CharField(max_length=255, unique=True)
+    spotify_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
     name = models.CharField(max_length=255)
     artist = models.CharField(max_length=255)
     album = models.CharField(max_length=255,null=True, blank=True)
@@ -274,3 +274,21 @@ class ContactRequest(models.Model):
     def __str__(self):
         return f"{self.name} - {self.subject} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
 
+from django.utils import timezone
+
+class ChartEntry(models.Model):
+    PERIOD_CHOICES = [
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+    ]
+    
+    song = models.ForeignKey('Song', on_delete=models.CASCADE)
+    position = models.IntegerField()
+    period = models.CharField(max_length=10, choices=PERIOD_CHOICES)
+    listeners = models.IntegerField(default=0)
+    playcount = models.IntegerField(default=0)
+    date_created = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        unique_together = ('song', 'period', 'date_created')
+        ordering = ['position']

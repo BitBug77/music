@@ -12883,3 +12883,458 @@ INFO 2025-04-16 19:37:16,349 basehttp 22028 16040 "GET /api/recommendations/simi
 INFO 2025-04-16 19:37:16,512 basehttp 22028 23364 "GET /playlists/ HTTP/1.1" 200 370
 INFO 2025-04-16 19:37:16,760 basehttp 22028 1756 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 60
 INFO 2025-04-16 19:37:18,416 basehttp 22028 16040 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 19:45:11,531 autoreload 5408 5468 Watching for file changes with StatReloader
+INFO 2025-04-16 19:46:37,557 basehttp 5408 7388 "OPTIONS /login/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:39,377 basehttp 5408 5908 "POST /login/ HTTP/1.1" 200 538
+INFO 2025-04-16 19:46:40,902 basehttp 5408 14676 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:40,903 basehttp 5408 6688 "OPTIONS /notifications/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:40,905 basehttp 5408 14228 "OPTIONS /playlists/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:40,907 basehttp 5408 14676 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:40,913 basehttp 5408 15828 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:40,915 basehttp 5408 14228 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:40,916 basehttp 5408 6688 "OPTIONS /playlists/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:40,919 basehttp 5408 5484 "OPTIONS /api/recommendations/trending/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:40,921 basehttp 5408 14676 "OPTIONS /api/recommendations/trending/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:40,935 basehttp 5408 12328 "OPTIONS /notifications/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:42,005 basehttp 5408 14228 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:46:42,097 basehttp 5408 5484 "GET /api/recommendations/trending/ HTTP/1.1" 200 6252
+INFO 2025-04-16 19:46:42,438 basehttp 5408 6688 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 19:46:42,832 basehttp 5408 14228 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:46:42,984 basehttp 5408 12328 "GET /api/recommendations/trending/ HTTP/1.1" 200 6252
+INFO 2025-04-16 19:46:43,000 basehttp 5408 15828 "GET /popularity/ HTTP/1.1" 200 13741
+INFO 2025-04-16 19:46:43,657 basehttp 5408 6688 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 19:46:44,309 basehttp 5408 15828 "GET /popularity/ HTTP/1.1" 200 13498
+INFO 2025-04-16 19:46:45,902 basehttp 5408 6688 "GET /popularity/ HTTP/1.1" 200 6833
+INFO 2025-04-16 19:46:47,386 basehttp 5408 15828 "OPTIONS /search-songs/?q=t HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:47,407 basehttp 5408 6688 "GET /popularity/ HTTP/1.1" 200 13718
+INFO 2025-04-16 19:46:47,506 basehttp 5408 6688 "OPTIONS /search-songs/?q=to HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:47,749 basehttp 5408 12328 "OPTIONS /search-songs/?q=tol HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:48,418 basehttp 5408 15828 "GET /search-songs/?q=t HTTP/1.1" 200 1764
+INFO 2025-04-16 19:46:48,592 basehttp 5408 6688 "GET /search-songs/?q=to HTTP/1.1" 200 2056
+INFO 2025-04-16 19:46:48,744 basehttp 5408 12328 "GET /search-songs/?q=tol HTTP/1.1" 200 1725
+INFO 2025-04-16 19:46:49,761 basehttp 5408 8648 "OPTIONS /log-interaction/ HTTP/1.1" 200 0
+WARNING 2025-04-16 19:46:49,765 log 5408 8648 Unauthorized: /log-interaction/
+WARNING 2025-04-16 19:46:49,766 basehttp 5408 8648 "POST /log-interaction/ HTTP/1.1" 401 58
+INFO 2025-04-16 19:46:51,312 basehttp 5408 8648 "OPTIONS /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 0
+WARNING 2025-04-16 19:46:51,335 log 5408 8648 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-16 19:46:51,336 basehttp 5408 8648 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+WARNING 2025-04-16 19:46:51,341 log 5408 8648 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-16 19:46:51,346 basehttp 5408 8648 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+INFO 2025-04-16 19:46:51,571 basehttp 5408 5148 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-16 19:46:51,576 basehttp 5408 8648 "OPTIONS /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:51,794 basehttp 5408 5148 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-16 19:46:52,107 basehttp 5408 15608 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:46:52,519 basehttp 5408 10904 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 19:46:52,524 basehttp 5408 5148 "OPTIONS /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 200 0
+WARNING 2025-04-16 19:46:52,529 log 5408 10904 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-16 19:46:52,530 basehttp 5408 10904 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 19:46:52,552 basehttp 5408 15184 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 19:46:52,652 basehttp 5408 12436 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 19:46:52,657 log 5408 12436 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-16 19:46:52,658 basehttp 5408 12436 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 19:46:52,904 basehttp 5408 15608 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:46:53,348 basehttp 5408 15608 "OPTIONS /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:46:53,625 basehttp 5408 4964 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 19:46:53,705 basehttp 5408 15184 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 19:46:54,260 basehttp 5408 12436 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 19:46:55,914 basehttp 5408 4964 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 19:47:04,201 basehttp 5408 15476 "OPTIONS /api/recommendations/similar/?spotify_id=6oA7e0fohYvsukh8ytkMr0 HTTP/1.1" 200 0
+WARNING 2025-04-16 19:47:04,210 log 5408 9316 Not Found: /songs/6oA7e0fohYvsukh8ytkMr0/comments
+WARNING 2025-04-16 19:47:04,210 basehttp 5408 9316 "GET /songs/6oA7e0fohYvsukh8ytkMr0/comments HTTP/1.1" 404 179
+INFO 2025-04-16 19:47:04,780 basehttp 5408 16508 "GET /song/6oA7e0fohYvsukh8ytkMr0/ HTTP/1.1" 200 341
+INFO 2025-04-16 19:47:04,789 basehttp 5408 16508 "OPTIONS /songs/6oA7e0fohYvsukh8ytkMr0/view/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:05,749 basehttp 5408 264 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:47:06,018 basehttp 5408 14272 "POST /songs/6oA7e0fohYvsukh8ytkMr0/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 19:47:06,026 basehttp 5408 264 "OPTIONS /songs/6oA7e0fohYvsukh8ytkMr0/status/ HTTP/1.1" 200 0
+WARNING 2025-04-16 19:47:06,034 log 5408 14272 Not Found: /songs/6oA7e0fohYvsukh8ytkMr0/status/
+WARNING 2025-04-16 19:47:06,039 basehttp 5408 14272 "GET /songs/6oA7e0fohYvsukh8ytkMr0/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 19:47:06,123 basehttp 5408 15960 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 19:47:07,047 basehttp 5408 12340 "GET /api/recommendations/similar/?spotify_id=6oA7e0fohYvsukh8ytkMr0 HTTP/1.1" 200 2878
+INFO 2025-04-16 19:47:07,289 basehttp 5408 15960 "OPTIONS /songs/6oA7e0fohYvsukh8ytkMr0/play/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:08,160 basehttp 5408 12340 "POST /songs/6oA7e0fohYvsukh8ytkMr0/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 19:47:12,372 basehttp 5408 8632 "OPTIONS /api/recommendations/matrix/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:12,377 basehttp 5408 5028 "OPTIONS /history/recent/?limit=4 HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:12,383 basehttp 5408 5028 "OPTIONS /history/recent/?limit=4 HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:12,384 basehttp 5408 8632 "OPTIONS /api/recommendations/matrix/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:12,387 basehttp 5408 6940 "OPTIONS /recommendations/friends/?limit=16 HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:12,391 basehttp 5408 5028 "OPTIONS /recommendations/friends/?limit=16 HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:12,393 basehttp 5408 2204 "OPTIONS /history/most-played/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:12,394 basehttp 5408 6940 "OPTIONS /history/most-played/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:12,395 basehttp 5408 5028 "OPTIONS /api/recommendations/matrix/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:12,400 basehttp 5408 13664 "OPTIONS /api/recommendations/matrix/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:13,907 basehttp 5408 2204 "GET /history/recent/?limit=4 HTTP/1.1" 200 1632
+WARNING 2025-04-16 19:47:13,911 log 5408 5028 Not Found: /recommendations/friends/
+WARNING 2025-04-16 19:47:13,915 basehttp 5408 5028 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-16 19:47:13,920 basehttp 5408 3884 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:47:14,005 basehttp 5408 13664 "GET /history/most-played/ HTTP/1.1" 200 3799
+INFO 2025-04-16 19:47:14,292 basehttp 5408 8632 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 19:47:14,650 basehttp 5408 6940 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6049
+WARNING 2025-04-16 19:47:14,791 log 5408 5028 Not Found: /recommendations/friends/
+WARNING 2025-04-16 19:47:14,796 basehttp 5408 5028 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-16 19:47:14,831 basehttp 5408 3884 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:47:14,838 basehttp 5408 2204 "GET /history/recent/?limit=4 HTTP/1.1" 200 1632
+INFO 2025-04-16 19:47:14,989 basehttp 5408 13664 "GET /history/most-played/ HTTP/1.1" 200 3799
+INFO 2025-04-16 19:47:15,497 basehttp 5408 8632 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 19:47:16,019 basehttp 5408 6940 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6049
+INFO 2025-04-16 19:47:17,483 basehttp 5408 8632 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6021
+INFO 2025-04-16 19:47:18,796 basehttp 5408 8632 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6034
+INFO 2025-04-16 19:47:19,774 basehttp 5408 15392 "OPTIONS /api/recommendations/similar/?spotify_id=4EWCNWgDS8707fNSZ1oaA5 HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:19,781 basehttp 5408 9180 "GET /song/4EWCNWgDS8707fNSZ1oaA5 HTTP/1.1" 301 0
+WARNING 2025-04-16 19:47:19,784 log 5408 15380 Not Found: /songs/4EWCNWgDS8707fNSZ1oaA5/comments
+WARNING 2025-04-16 19:47:19,790 basehttp 5408 15380 "GET /songs/4EWCNWgDS8707fNSZ1oaA5/comments HTTP/1.1" 404 179
+WARNING 2025-04-16 19:47:19,795 log 5408 15380 Not Found: /songs/4EWCNWgDS8707fNSZ1oaA5/comments
+INFO 2025-04-16 19:47:19,800 basehttp 5408 15692 "OPTIONS /api/recommendations/similar/?spotify_id=4EWCNWgDS8707fNSZ1oaA5 HTTP/1.1" 200 0
+WARNING 2025-04-16 19:47:19,803 basehttp 5408 15380 "GET /songs/4EWCNWgDS8707fNSZ1oaA5/comments HTTP/1.1" 404 179
+INFO 2025-04-16 19:47:20,062 basehttp 5408 15392 "GET /song/4EWCNWgDS8707fNSZ1oaA5/ HTTP/1.1" 200 357
+INFO 2025-04-16 19:47:20,066 basehttp 5408 15380 "OPTIONS /songs/4EWCNWgDS8707fNSZ1oaA5/view/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:20,286 basehttp 5408 15392 "GET /song/4EWCNWgDS8707fNSZ1oaA5/ HTTP/1.1" 200 357
+INFO 2025-04-16 19:47:20,577 basehttp 5408 13336 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:47:20,990 basehttp 5408 4404 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 19:47:21,281 basehttp 5408 12708 "POST /songs/4EWCNWgDS8707fNSZ1oaA5/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 19:47:21,288 basehttp 5408 15392 "OPTIONS /songs/4EWCNWgDS8707fNSZ1oaA5/status/ HTTP/1.1" 200 0
+WARNING 2025-04-16 19:47:21,292 log 5408 12708 Not Found: /songs/4EWCNWgDS8707fNSZ1oaA5/status/
+WARNING 2025-04-16 19:47:21,293 basehttp 5408 12708 "GET /songs/4EWCNWgDS8707fNSZ1oaA5/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 19:47:21,352 basehttp 5408 13336 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:47:21,601 basehttp 5408 2044 "POST /songs/4EWCNWgDS8707fNSZ1oaA5/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 19:47:21,608 log 5408 2044 Not Found: /songs/4EWCNWgDS8707fNSZ1oaA5/status/
+WARNING 2025-04-16 19:47:21,609 basehttp 5408 2044 "GET /songs/4EWCNWgDS8707fNSZ1oaA5/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 19:47:22,129 basehttp 5408 4404 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 19:47:22,131 basehttp 5408 13336 "OPTIONS /songs/4EWCNWgDS8707fNSZ1oaA5/play/ HTTP/1.1" 200 0
+INFO 2025-04-16 19:47:22,174 basehttp 5408 10208 "GET /api/recommendations/similar/?spotify_id=4EWCNWgDS8707fNSZ1oaA5 HTTP/1.1" 200 2952
+INFO 2025-04-16 19:47:23,266 basehttp 5408 2044 "POST /songs/4EWCNWgDS8707fNSZ1oaA5/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 19:47:24,357 basehttp 5408 10208 "GET /api/recommendations/similar/?spotify_id=4EWCNWgDS8707fNSZ1oaA5 HTTP/1.1" 200 2952
+INFO 2025-04-16 19:48:21,877 basehttp 5408 8088 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:49:22,520 basehttp 5408 12328 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:50:23,404 basehttp 5408 6316 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:51:23,968 basehttp 5408 17204 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:52:40,713 basehttp 5408 3548 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:53:41,080 basehttp 5408 12448 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:54:40,861 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:55:40,850 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:56:38,998 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:57:41,559 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:58:41,516 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 19:59:40,302 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:00:41,411 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:01:22,813 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:02:23,113 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:03:22,587 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:04:22,716 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:05:09,246 basehttp 5408 17832 "OPTIONS /songs/4EWCNWgDS8707fNSZ1oaA5/like/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:05:12,393 basehttp 5408 8464 "POST /songs/4EWCNWgDS8707fNSZ1oaA5/like/ HTTP/1.1" 200 74
+INFO 2025-04-16 20:05:13,405 basehttp 5408 17832 "OPTIONS /songs/4EWCNWgDS8707fNSZ1oaA5/save/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:05:13,422 basehttp 5408 8020 "POST /songs/4EWCNWgDS8707fNSZ1oaA5/like/ HTTP/1.1" 200 77
+INFO 2025-04-16 20:05:14,377 basehttp 5408 18424 "POST /songs/4EWCNWgDS8707fNSZ1oaA5/like/ HTTP/1.1" 200 74
+INFO 2025-04-16 20:05:15,678 basehttp 5408 8464 "POST /songs/4EWCNWgDS8707fNSZ1oaA5/save/ HTTP/1.1" 200 74
+INFO 2025-04-16 20:05:22,866 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 20:05:29,230 log 5408 1592 Not Found: /songs/4EWCNWgDS8707fNSZ1oaA5/comments
+WARNING 2025-04-16 20:05:29,231 basehttp 5408 1592 "GET /songs/4EWCNWgDS8707fNSZ1oaA5/comments HTTP/1.1" 404 179
+INFO 2025-04-16 20:05:29,782 basehttp 5408 16452 "GET /song/4EWCNWgDS8707fNSZ1oaA5/ HTTP/1.1" 200 357
+INFO 2025-04-16 20:05:31,432 basehttp 5408 17832 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:05:31,859 basehttp 5408 8176 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:05:31,947 basehttp 5408 18424 "POST /songs/4EWCNWgDS8707fNSZ1oaA5/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 20:05:31,962 log 5408 18424 Not Found: /songs/4EWCNWgDS8707fNSZ1oaA5/status/
+WARNING 2025-04-16 20:05:31,963 basehttp 5408 18424 "GET /songs/4EWCNWgDS8707fNSZ1oaA5/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:05:32,947 basehttp 5408 8464 "GET /api/recommendations/similar/?spotify_id=4EWCNWgDS8707fNSZ1oaA5 HTTP/1.1" 200 2952
+INFO 2025-04-16 20:05:34,487 basehttp 5408 8464 "POST /songs/4EWCNWgDS8707fNSZ1oaA5/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 20:06:32,352 basehttp 5408 8176 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:07:30,450 basehttp 5408 3484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:08:30,088 basehttp 5408 3484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:09:21,581 basehttp 5408 17628 "OPTIONS /api/recommendations/similar/?spotify_id=3DK6m7It6Pw857FcQftMds HTTP/1.1" 200 0
+WARNING 2025-04-16 20:09:21,587 log 5408 10836 Not Found: /songs/3DK6m7It6Pw857FcQftMds/comments
+INFO 2025-04-16 20:09:21,590 basehttp 5408 4088 "GET /song/3DK6m7It6Pw857FcQftMds HTTP/1.1" 301 0
+WARNING 2025-04-16 20:09:21,595 basehttp 5408 10836 "GET /songs/3DK6m7It6Pw857FcQftMds/comments HTTP/1.1" 404 179
+INFO 2025-04-16 20:09:22,381 basehttp 5408 17628 "GET /song/3DK6m7It6Pw857FcQftMds/ HTTP/1.1" 200 371
+INFO 2025-04-16 20:09:22,389 basehttp 5408 17628 "OPTIONS /songs/3DK6m7It6Pw857FcQftMds/view/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:09:23,678 basehttp 5408 3484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:09:24,304 basehttp 5408 15000 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:09:24,735 basehttp 5408 17536 "POST /songs/3DK6m7It6Pw857FcQftMds/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 20:09:24,740 basehttp 5408 15000 "OPTIONS /songs/3DK6m7It6Pw857FcQftMds/status/ HTTP/1.1" 200 0
+WARNING 2025-04-16 20:09:24,744 log 5408 17536 Not Found: /songs/3DK6m7It6Pw857FcQftMds/status/
+WARNING 2025-04-16 20:09:24,745 basehttp 5408 17536 "GET /songs/3DK6m7It6Pw857FcQftMds/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:09:25,791 basehttp 5408 15000 "OPTIONS /songs/3DK6m7It6Pw857FcQftMds/play/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:09:26,963 basehttp 5408 17536 "POST /songs/3DK6m7It6Pw857FcQftMds/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 20:09:27,322 basehttp 5408 8060 "GET /api/recommendations/similar/?spotify_id=3DK6m7It6Pw857FcQftMds HTTP/1.1" 200 2913
+INFO 2025-04-16 20:10:22,940 basehttp 5408 15000 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:10:24,966 basehttp 5408 15000 "GET /search-songs/?q=t HTTP/1.1" 200 1764
+INFO 2025-04-16 20:10:25,461 basehttp 5408 15000 "OPTIONS /search-songs/?q=tola HTTP/1.1" 200 0
+INFO 2025-04-16 20:10:25,596 basehttp 5408 3484 "GET /search-songs/?q=to HTTP/1.1" 200 2056
+INFO 2025-04-16 20:10:25,623 basehttp 5408 17628 "GET /search-songs/?q=tol HTTP/1.1" 200 1725
+INFO 2025-04-16 20:10:26,481 basehttp 5408 15000 "GET /search-songs/?q=tola HTTP/1.1" 200 2483
+WARNING 2025-04-16 20:10:27,088 log 5408 15000 Unauthorized: /log-interaction/
+WARNING 2025-04-16 20:10:27,089 basehttp 5408 15000 "POST /log-interaction/ HTTP/1.1" 401 58
+WARNING 2025-04-16 20:10:27,354 log 5408 17628 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-16 20:10:27,363 basehttp 5408 17628 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+WARNING 2025-04-16 20:10:27,366 log 5408 17628 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-16 20:10:27,367 basehttp 5408 17628 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+INFO 2025-04-16 20:10:27,577 basehttp 5408 10836 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-16 20:10:27,805 basehttp 5408 10836 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-16 20:10:28,130 basehttp 5408 15000 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:10:28,531 basehttp 5408 17536 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 20:10:28,534 basehttp 5408 3484 "GET /playlists/ HTTP/1.1" 200 370
+WARNING 2025-04-16 20:10:28,546 log 5408 17536 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-16 20:10:28,550 basehttp 5408 17536 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:10:28,679 basehttp 5408 6124 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 20:10:28,686 log 5408 6124 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-16 20:10:28,687 basehttp 5408 6124 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:10:28,885 basehttp 5408 15000 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:10:29,460 basehttp 5408 8060 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 20:10:29,683 basehttp 5408 3484 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:10:30,319 basehttp 5408 6124 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 20:10:31,696 basehttp 5408 8060 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 20:11:28,153 basehttp 5408 3484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:12:29,912 basehttp 5408 3484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:13:29,358 basehttp 5408 3484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:13:57,527 basehttp 5408 3484 "OPTIONS /songs/1hKFMb7L1GCGQgOApDIUAp/like/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:14:01,127 basehttp 5408 8060 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/like/ HTTP/1.1" 200 74
+INFO 2025-04-16 20:14:01,952 basehttp 5408 3484 "OPTIONS /songs/1hKFMb7L1GCGQgOApDIUAp/save/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:14:05,351 basehttp 5408 8060 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/save/ HTTP/1.1" 200 74
+INFO 2025-04-16 20:14:29,448 basehttp 5408 3484 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 20:14:34,378 log 5408 15000 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-16 20:14:34,386 basehttp 5408 15000 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+INFO 2025-04-16 20:14:34,607 basehttp 5408 17628 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-16 20:14:35,199 basehttp 5408 3484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:14:35,439 basehttp 5408 6124 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 20:14:35,448 log 5408 6124 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-16 20:14:35,449 basehttp 5408 6124 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:14:35,500 basehttp 5408 10836 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:14:36,416 basehttp 5408 8060 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 20:14:37,306 basehttp 5408 6124 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 20:15:36,583 basehttp 5408 10836 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:16:14,064 basehttp 5408 10836 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:16:30,652 basehttp 5408 10836 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:16:33,442 basehttp 5408 10836 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:16:36,414 basehttp 5408 10836 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 20:16:49,488 log 5408 3484 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-16 20:16:49,492 basehttp 5408 3484 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+INFO 2025-04-16 20:16:50,521 basehttp 5408 15000 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-16 20:16:51,912 basehttp 5408 10836 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:16:52,252 basehttp 5408 17628 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:16:52,386 basehttp 5408 8060 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 20:16:52,393 log 5408 8060 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-16 20:16:52,394 basehttp 5408 8060 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:16:53,272 basehttp 5408 6124 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 20:16:54,238 basehttp 5408 6124 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 20:17:10,484 basehttp 5408 17628 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 20:17:28,017 log 5408 10836 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-16 20:17:28,021 basehttp 5408 10836 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+INFO 2025-04-16 20:17:28,722 basehttp 5408 3484 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-16 20:17:29,927 basehttp 5408 17628 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:17:30,288 basehttp 5408 15000 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:17:30,400 basehttp 5408 8060 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 20:17:30,407 log 5408 8060 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-16 20:17:30,407 basehttp 5408 8060 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:17:31,298 basehttp 5408 6124 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 20:17:33,841 basehttp 5408 6124 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 20:18:28,864 basehttp 5408 15000 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:19:28,829 basehttp 5408 15000 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:20:30,622 basehttp 5408 15000 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 20:20:54,384 log 5408 10836 Not Found: /songs/0lWua9e6LFpepSoQfaleiJ/comments
+INFO 2025-04-16 20:20:54,385 basehttp 5408 17628 "OPTIONS /api/recommendations/similar/?spotify_id=0lWua9e6LFpepSoQfaleiJ HTTP/1.1" 200 0
+INFO 2025-04-16 20:20:54,386 basehttp 5408 3484 "GET /song/0lWua9e6LFpepSoQfaleiJ HTTP/1.1" 301 0
+WARNING 2025-04-16 20:20:54,386 basehttp 5408 10836 "GET /songs/0lWua9e6LFpepSoQfaleiJ/comments HTTP/1.1" 404 179
+INFO 2025-04-16 20:20:54,811 basehttp 5408 10836 "GET /song/0lWua9e6LFpepSoQfaleiJ/ HTTP/1.1" 200 346
+INFO 2025-04-16 20:20:54,815 basehttp 5408 10836 "OPTIONS /songs/0lWua9e6LFpepSoQfaleiJ/view/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:20:55,228 basehttp 5408 15000 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:20:55,584 basehttp 5408 18288 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:20:55,951 basehttp 5408 8060 "POST /songs/0lWua9e6LFpepSoQfaleiJ/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 20:20:55,958 basehttp 5408 18288 "OPTIONS /songs/0lWua9e6LFpepSoQfaleiJ/status/ HTTP/1.1" 200 0
+WARNING 2025-04-16 20:20:55,964 log 5408 8060 Not Found: /songs/0lWua9e6LFpepSoQfaleiJ/status/
+WARNING 2025-04-16 20:20:55,966 basehttp 5408 8060 "GET /songs/0lWua9e6LFpepSoQfaleiJ/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:20:56,472 basehttp 5408 6124 "GET /api/recommendations/similar/?spotify_id=0lWua9e6LFpepSoQfaleiJ HTTP/1.1" 200 2878
+INFO 2025-04-16 20:20:56,503 basehttp 5408 18288 "OPTIONS /songs/0lWua9e6LFpepSoQfaleiJ/play/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:20:57,640 basehttp 5408 6124 "POST /songs/0lWua9e6LFpepSoQfaleiJ/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 20:21:58,021 basehttp 5408 18288 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:22:57,594 basehttp 5408 18288 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:23:56,059 basehttp 5408 18288 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 20:24:49,685 log 5408 15000 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-16 20:24:49,690 basehttp 5408 15000 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+INFO 2025-04-16 20:24:49,940 basehttp 5408 17628 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-16 20:24:50,470 basehttp 5408 18288 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:24:50,835 basehttp 5408 8060 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 20:24:50,848 log 5408 8060 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-16 20:24:50,849 basehttp 5408 8060 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:24:50,931 basehttp 5408 10836 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:24:52,080 basehttp 5408 6124 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 20:24:52,263 basehttp 5408 8060 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 20:24:54,019 basehttp 5408 10836 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 20:24:54,039 log 5408 17476 Not Found: /recommendations/friends/
+WARNING 2025-04-16 20:24:54,041 basehttp 5408 17476 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-16 20:24:54,063 basehttp 5408 9040 "GET /history/recent/?limit=4 HTTP/1.1" 200 1478
+INFO 2025-04-16 20:24:54,097 basehttp 5408 17628 "GET /history/most-played/ HTTP/1.1" 200 3833
+INFO 2025-04-16 20:24:54,410 basehttp 5408 18288 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:24:54,734 basehttp 5408 15000 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6004
+INFO 2025-04-16 20:24:54,929 basehttp 5408 10836 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 20:24:54,935 log 5408 17476 Not Found: /recommendations/friends/
+WARNING 2025-04-16 20:24:54,938 basehttp 5408 17476 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-16 20:24:54,947 basehttp 5408 9040 "GET /history/recent/?limit=4 HTTP/1.1" 200 1478
+INFO 2025-04-16 20:24:55,022 basehttp 5408 17628 "GET /history/most-played/ HTTP/1.1" 200 3833
+INFO 2025-04-16 20:24:55,691 basehttp 5408 18288 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:24:56,210 basehttp 5408 15000 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5982
+INFO 2025-04-16 20:24:57,640 basehttp 5408 18288 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6042
+INFO 2025-04-16 20:24:59,162 basehttp 5408 15000 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5958
+INFO 2025-04-16 20:25:04,379 basehttp 5408 18288 "OPTIONS /api/recommendations/similar/?spotify_id=6NK9sI0Lnsiwn6I0MbWWxn HTTP/1.1" 200 0
+WARNING 2025-04-16 20:25:04,388 log 5408 9040 Not Found: /songs/6NK9sI0Lnsiwn6I0MbWWxn/comments
+INFO 2025-04-16 20:25:04,390 basehttp 5408 17476 "OPTIONS /api/recommendations/similar/?spotify_id=6NK9sI0Lnsiwn6I0MbWWxn HTTP/1.1" 200 0
+INFO 2025-04-16 20:25:04,390 basehttp 5408 17628 "GET /song/6NK9sI0Lnsiwn6I0MbWWxn HTTP/1.1" 301 0
+WARNING 2025-04-16 20:25:04,392 basehttp 5408 9040 "GET /songs/6NK9sI0Lnsiwn6I0MbWWxn/comments HTTP/1.1" 404 179
+WARNING 2025-04-16 20:25:04,400 log 5408 9040 Not Found: /songs/6NK9sI0Lnsiwn6I0MbWWxn/comments
+WARNING 2025-04-16 20:25:04,400 basehttp 5408 9040 "GET /songs/6NK9sI0Lnsiwn6I0MbWWxn/comments HTTP/1.1" 404 179
+INFO 2025-04-16 20:25:05,153 basehttp 5408 17476 "GET /song/6NK9sI0Lnsiwn6I0MbWWxn/ HTTP/1.1" 200 377
+INFO 2025-04-16 20:25:05,160 basehttp 5408 9040 "OPTIONS /songs/6NK9sI0Lnsiwn6I0MbWWxn/view/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:25:05,677 basehttp 5408 17476 "GET /song/6NK9sI0Lnsiwn6I0MbWWxn/ HTTP/1.1" 200 377
+INFO 2025-04-16 20:25:07,058 basehttp 5408 15000 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:25:07,633 basehttp 5408 10836 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:25:07,956 basehttp 5408 6124 "POST /songs/6NK9sI0Lnsiwn6I0MbWWxn/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 20:25:07,963 basehttp 5408 17476 "OPTIONS /songs/6NK9sI0Lnsiwn6I0MbWWxn/status/ HTTP/1.1" 200 0
+WARNING 2025-04-16 20:25:07,968 log 5408 6124 Not Found: /songs/6NK9sI0Lnsiwn6I0MbWWxn/status/
+WARNING 2025-04-16 20:25:07,970 basehttp 5408 6124 "GET /songs/6NK9sI0Lnsiwn6I0MbWWxn/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:25:08,107 basehttp 5408 15000 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:25:08,222 basehttp 5408 1232 "POST /songs/6NK9sI0Lnsiwn6I0MbWWxn/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 20:25:08,229 log 5408 1232 Not Found: /songs/6NK9sI0Lnsiwn6I0MbWWxn/status/
+WARNING 2025-04-16 20:25:08,230 basehttp 5408 1232 "GET /songs/6NK9sI0Lnsiwn6I0MbWWxn/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:25:08,792 basehttp 5408 10836 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:25:08,956 basehttp 5408 8060 "GET /api/recommendations/similar/?spotify_id=6NK9sI0Lnsiwn6I0MbWWxn HTTP/1.1" 200 3123
+INFO 2025-04-16 20:25:08,988 basehttp 5408 10836 "OPTIONS /songs/6NK9sI0Lnsiwn6I0MbWWxn/play/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:25:10,071 basehttp 5408 1232 "POST /songs/6NK9sI0Lnsiwn6I0MbWWxn/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 20:25:11,159 basehttp 5408 8060 "GET /api/recommendations/similar/?spotify_id=6NK9sI0Lnsiwn6I0MbWWxn HTTP/1.1" 200 3123
+WARNING 2025-04-16 20:25:28,307 log 5408 9040 Not Found: /songs/2ejkRnZWPACfuqr06gFw1w/comments
+INFO 2025-04-16 20:25:28,310 basehttp 5408 15000 "OPTIONS /api/recommendations/similar/?spotify_id=2ejkRnZWPACfuqr06gFw1w HTTP/1.1" 200 0
+INFO 2025-04-16 20:25:28,311 basehttp 5408 17476 "GET /song/2ejkRnZWPACfuqr06gFw1w HTTP/1.1" 301 0
+WARNING 2025-04-16 20:25:28,311 basehttp 5408 9040 "GET /songs/2ejkRnZWPACfuqr06gFw1w/comments HTTP/1.1" 404 179
+INFO 2025-04-16 20:25:28,955 basehttp 5408 9040 "GET /song/2ejkRnZWPACfuqr06gFw1w/ HTTP/1.1" 200 363
+INFO 2025-04-16 20:25:28,963 basehttp 5408 9040 "OPTIONS /songs/2ejkRnZWPACfuqr06gFw1w/view/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:25:29,950 basehttp 5408 10836 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:25:30,341 basehttp 5408 18288 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 20:25:30,519 basehttp 5408 1232 "POST /songs/2ejkRnZWPACfuqr06gFw1w/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 20:25:30,525 basehttp 5408 18288 "OPTIONS /songs/2ejkRnZWPACfuqr06gFw1w/status/ HTTP/1.1" 200 0
+WARNING 2025-04-16 20:25:30,530 log 5408 1232 Not Found: /songs/2ejkRnZWPACfuqr06gFw1w/status/
+WARNING 2025-04-16 20:25:30,532 basehttp 5408 1232 "GET /songs/2ejkRnZWPACfuqr06gFw1w/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 20:25:31,283 basehttp 5408 8060 "GET /api/recommendations/similar/?spotify_id=2ejkRnZWPACfuqr06gFw1w HTTP/1.1" 200 3123
+INFO 2025-04-16 20:25:31,347 basehttp 5408 18288 "OPTIONS /songs/2ejkRnZWPACfuqr06gFw1w/play/ HTTP/1.1" 200 0
+INFO 2025-04-16 20:25:32,659 basehttp 5408 8060 "POST /songs/2ejkRnZWPACfuqr06gFw1w/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 20:26:29,278 basehttp 5408 18288 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:27:29,171 basehttp 5408 18288 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:28:31,251 basehttp 5408 18288 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:29:31,379 basehttp 5408 19040 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:30:40,662 basehttp 5408 2204 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:31:40,797 basehttp 5408 2204 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:32:40,596 basehttp 5408 2204 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:33:41,093 basehttp 5408 2204 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:34:40,703 basehttp 5408 2204 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:35:40,091 basehttp 5408 18560 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:36:40,252 basehttp 5408 18560 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:37:39,119 basehttp 5408 3824 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:38:08,513 autoreload 5408 5468 C:\projects\music\server\songs\app\urls.py changed, reloading.
+INFO 2025-04-16 20:38:13,790 autoreload 4804 4772 Watching for file changes with StatReloader
+INFO 2025-04-16 20:38:34,121 autoreload 4804 4772 C:\projects\music\server\songs\app\models.py changed, reloading.
+INFO 2025-04-16 20:38:35,306 autoreload 17700 6416 Watching for file changes with StatReloader
+INFO 2025-04-16 20:38:43,415 basehttp 17700 9144 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:39:40,522 basehttp 17700 9144 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:40:41,130 basehttp 17700 9144 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:41:41,142 basehttp 17700 9144 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:54:37,070 basehttp 17700 21748 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:55:39,230 basehttp 17700 360 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:56:40,771 basehttp 17700 360 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:57:40,747 basehttp 17700 360 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 20:58:40,957 basehttp 17700 360 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 21:34:04,297 autoreload 10332 20656 Watching for file changes with StatReloader
+INFO 2025-04-16 21:50:59,780 autoreload 21444 5328 Watching for file changes with StatReloader
+WARNING 2025-04-16 21:51:36,975 log 21444 17152 Not Found: /api/charts/
+WARNING 2025-04-16 21:51:36,977 basehttp 21444 17152 "GET /api/charts/ HTTP/1.1" 404 179
+INFO 2025-04-16 21:51:38,228 basehttp 21444 18948 "OPTIONS /notifications/ HTTP/1.1" 200 0
+INFO 2025-04-16 21:51:38,986 basehttp 21444 18948 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 21:52:39,000 basehttp 21444 20740 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 21:52:40,048 log 21444 7176 Not Found: /api/charts/
+WARNING 2025-04-16 21:52:40,049 basehttp 21444 7176 "GET /api/charts/ HTTP/1.1" 404 179
+INFO 2025-04-16 21:53:38,959 basehttp 21444 3884 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 21:54:09,733 autoreload 21444 5328 C:\projects\music\server\songs\app\urls.py changed, reloading.
+INFO 2025-04-16 21:54:11,916 autoreload 22172 10320 Watching for file changes with StatReloader
+INFO 2025-04-16 21:54:28,193 basehttp 22172 7680 "GET /api/charts/ HTTP/1.1" 200 2820
+INFO 2025-04-16 21:54:38,973 basehttp 22172 6724 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 21:55:38,982 basehttp 22172 19220 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 21:56:39,025 basehttp 22172 4256 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 21:57:18,474 autoreload 22172 10320 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-16 21:57:19,870 autoreload 22212 20240 Watching for file changes with StatReloader
+INFO 2025-04-16 21:57:39,006 basehttp 22212 3188 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 21:57:49,569 autoreload 22212 20240 C:\projects\music\server\songs\app\urls.py changed, reloading.
+INFO 2025-04-16 21:57:50,487 autoreload 17296 20656 Watching for file changes with StatReloader
+INFO 2025-04-16 21:58:05,551 basehttp 17296 18352 "GET /api/charts/artist/ HTTP/1.1" 200 1502
+INFO 2025-04-16 21:58:38,972 basehttp 17296 21776 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 21:59:38,960 basehttp 17296 21408 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 21:59:41,019 autoreload 17296 20656 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-16 21:59:42,073 autoreload 16632 22096 Watching for file changes with StatReloader
+ERROR 2025-04-16 21:59:46,064 log 16632 6708 Internal Server Error: /api/charts/artist/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 4330, in get_artist_charts
+    artist_info = get_artist_info(artist_name)  # Function to fetch artist's info (name, image, etc.)
+                  ^^^^^^^^^^^^^^^
+NameError: name 'get_artist_info' is not defined
+ERROR 2025-04-16 21:59:46,170 basehttp 16632 6708 "GET /api/charts/artist/ HTTP/1.1" 500 145
+ERROR 2025-04-16 21:59:50,755 log 16632 6708 Internal Server Error: /api/charts/artist/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 4330, in get_artist_charts
+    artist_info = get_artist_info(artist_name)  # Function to fetch artist's info (name, image, etc.)
+                  ^^^^^^^^^^^^^^^
+NameError: name 'get_artist_info' is not defined
+ERROR 2025-04-16 21:59:50,778 basehttp 16632 6708 "GET /api/charts/artist/ HTTP/1.1" 500 145
+INFO 2025-04-16 22:00:06,745 autoreload 16632 22096 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-16 22:00:07,807 autoreload 20012 14876 Watching for file changes with StatReloader
+INFO 2025-04-16 22:00:38,988 basehttp 20012 4528 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 22:00:47,145 log 20012 19624 Not Found: /api/charts/artist/taylorswift/
+WARNING 2025-04-16 22:00:47,146 basehttp 20012 19624 "GET /api/charts/artist/taylorswift/ HTTP/1.1" 404 179
+INFO 2025-04-16 22:00:55,578 autoreload 20012 14876 C:\projects\music\server\songs\app\urls.py changed, reloading.
+INFO 2025-04-16 22:00:56,645 autoreload 20536 21744 Watching for file changes with StatReloader
+INFO 2025-04-16 22:01:04,615 basehttp 20536 19344 "GET /api/charts/artist/taylorswift/ HTTP/1.1" 200 2417
+INFO 2025-04-16 22:01:38,984 basehttp 20536 19988 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:02:39,003 basehttp 20536 21788 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:03:38,950 basehttp 20536 21760 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:04:38,925 basehttp 20536 21760 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:05:38,945 basehttp 20536 21760 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:18:08,208 basehttp 20536 19688 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:18:39,076 basehttp 20536 2532 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:19:38,939 basehttp 20536 2532 "GET /notifications/ HTTP/1.1" 200 21

@@ -1221,8 +1221,8 @@ def log_interaction(request):
         return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    
-       
+
+
 @csrf_exempt
 def session(request):
     """Debug view to check session status"""
@@ -4217,3 +4217,146 @@ class ArtistRecommendationView(RecommendationAPIView):
 
 
 
+from datetime import datetime, timedelta
+from django.utils import timezone
+from .models import Song, ChartEntry
+from .lastfm_utils import get_top_tracks, get_artist_top_tracks, format_track_data
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_top_charts(request):
+    """Get top charts for weekly or monthly periods"""
+    period = request.GET.get('period', 'weekly')
+    limit = int(request.GET.get('limit', 10))
+    
+    # Check if we have recent chart data
+    now = timezone.now()
+    if period == 'weekly':
+        threshold = now - timedelta(days=1)  # Refresh daily for weekly charts
+    else:
+        threshold = now - timedelta(days=7)  # Refresh weekly for monthly charts
+    
+    recent_chart = ChartEntry.objects.filter(
+        period=period,
+        date_created__gte=threshold
+    ).order_by('position')
+    
+    # If we have recent chart data, return it
+    if recent_chart.exists():
+        chart_data = []
+        for entry in recent_chart[:limit]:
+            song = entry.song
+            chart_data.append({
+                'position': entry.position,
+                'id': str(song.id),
+                'spotify_id': song.spotify_id,
+                'name': song.name,
+                'artist': song.artist,
+                'album': song.album,
+                'album_cover': song.album_cover,
+                'duration': song.duration,
+                'listeners': entry.listeners,
+                'playcount': entry.playcount
+            })
+        return JsonResponse({'status': 'success', 'data': chart_data})
+    
+    # Otherwise fetch new chart data from Last.fm
+    lastfm_period = '7day' if period == 'weekly' else '1month'
+    tracks = get_top_tracks(period=lastfm_period, limit=limit)
+    
+    if not tracks:
+        return JsonResponse({'status': 'error', 'message': 'Unable to fetch chart data'}, status=404)
+    
+    # Process and store chart data
+    chart_data = []
+    for position, track in enumerate(tracks, 1):
+        track_data = format_track_data(track)
+        
+        # Check if song exists in our database
+        song = Song.objects.filter(name=track_data['name'], artist=track_data['artist']).first()
+        
+        # If not, create it
+        if not song:
+            song = Song.objects.create(
+                name=track_data['name'],
+                artist=track_data['artist'],
+                album=track_data['album'],
+                album_cover=track_data['album_cover'],
+                genre=track_data['genre'],
+                duration=track_data['duration'],
+                url=track_data['url']
+                # Note: spotify_id would be None/blank here
+            )
+        
+        # Create chart entry
+        ChartEntry.objects.create(
+            song=song,
+            position=position,
+            period=period,
+            listeners=track_data['listeners'],
+            playcount=track_data['playcount']
+        )
+        
+        chart_data.append({
+            'position': position,
+            'id': str(song.id),
+            'spotify_id': song.spotify_id if song.spotify_id else '',
+            'name': song.name,
+            'artist': song.artist,
+            'album': song.album,
+            'album_cover': song.album_cover,
+            'duration': song.duration,
+            'listeners': track_data['listeners'],
+            'playcount': track_data['playcount']
+        })
+    
+    return JsonResponse({'status': 'success', 'data': chart_data})
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_artist_charts(request, artist_name):
+    """Get top tracks for a specific artist"""
+    period = request.GET.get('period', 'weekly')
+    limit = int(request.GET.get('limit', 10))
+    
+    # Fetch from Last.fm
+    lastfm_period = '7day' if period == 'weekly' else '1month'
+    tracks = get_artist_top_tracks(artist_name, period=lastfm_period, limit=limit)
+    
+    if not tracks:
+        return JsonResponse({'status': 'error', 'message': 'Unable to fetch artist chart data'}, status=404)
+    
+    # Process track data
+    chart_data = []
+    for position, track in enumerate(tracks, 1):
+        track_data = format_track_data(track)
+        chart_data.append({
+            'position': position,
+            'name': track_data['name'],
+            'artist': track_data['artist'],
+            'album': track_data['album'],
+            'album_cover': track_data['album_cover'],
+            'duration': track_data['duration'],
+            'listeners': track_data['listeners'],
+            'playcount': track_data['playcount']
+        })
+    
+    return JsonResponse({'status': 'success', 'data': chart_data})
+
+
+def enhance_with_spotify_data(song):
+    """
+    When a Spotify ID is available, update song with better metadata
+    """
+    if not song.spotify_id:
+        return song
+    
+    spotify_data = get_spotify_track(song.spotify_id)
+    if spotify_data:
+        song.album_cover = spotify_data['album_cover'] or song.album_cover
+        song.genre = spotify_data['genre'] or song.genre
+        song.save()
+    
+    return song

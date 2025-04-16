@@ -6,6 +6,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 ) 
 
+
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -77,6 +78,8 @@ urlpatterns = [
     path('api/recommendations/new-user/', views.NewUserRecommendationView.as_view(), name='new-user-recommendations'),
   path('feedback/', views.feedback_create, name='feedback-create'),
    path('contact/', ContactRequestView.as_view(), name='contact_request'),
+  path('api/charts/', views.get_top_charts, name='get_top_charts'),
+    path('api/charts/artist/<str:artist_name>/', views.get_artist_charts, name='get_artist_charts'),
 
 
 ]
