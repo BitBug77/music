@@ -4221,12 +4221,21 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from .models import Song, ChartEntry
 from .lastfm_utils import get_top_tracks, get_artist_top_tracks, format_track_data
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
+from datetime import timedelta
+from .models import Song, ChartEntry
+from .lastfm_utils import get_top_tracks, format_track_data
+from .lastfm_spotifymatcher import match_lastfm_to_spotify, update_tracks_with_spotify_details
 
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_top_charts(request):
-    """Get top charts for weekly or monthly periods"""
+    """Get top charts for weekly or monthly periods with complete Spotify details"""
     period = request.GET.get('period', 'weekly')
     limit = int(request.GET.get('limit', 10))
     
@@ -4242,9 +4251,10 @@ def get_top_charts(request):
         date_created__gte=threshold
     ).order_by('position')
     
-    # If we have recent chart data, return it
+    # If we have recent chart data, prepare it
     if recent_chart.exists():
         chart_data = []
+        
         for entry in recent_chart[:limit]:
             song = entry.song
             chart_data.append({
@@ -4259,7 +4269,31 @@ def get_top_charts(request):
                 'listeners': entry.listeners,
                 'playcount': entry.playcount
             })
-        return JsonResponse({'status': 'success', 'data': chart_data})
+        
+        # Check if we need to update album information
+        missing_album_info = any(not track['album'] for track in chart_data if track['spotify_id'])
+        
+        if missing_album_info:
+            # Update tracks with Spotify details
+            spotify_client_id = getattr(settings, 'SPOTIFY_CLIENT_ID', '')
+            spotify_client_secret = getattr(settings, 'SPOTIFY_CLIENT_SECRET', '')
+            
+            updated_tracks = update_tracks_with_spotify_details(chart_data, spotify_client_id, spotify_client_secret)
+            
+            # Update database with new album information
+            for track in updated_tracks:
+                if track.get('album') and track.get('id'):
+                    try:
+                        song = Song.objects.get(id=track['id'])
+                        if song.album != track['album']:
+                            song.album = track['album']
+                            song.save(update_fields=['album'])
+                    except Song.DoesNotExist:
+                        pass
+            
+            return JsonResponse({'status': 'success', 'data': updated_tracks})
+        else:
+            return JsonResponse({'status': 'success', 'data': chart_data})
     
     # Otherwise fetch new chart data from Last.fm
     lastfm_period = '7day' if period == 'weekly' else '1month'
@@ -4268,10 +4302,20 @@ def get_top_charts(request):
     if not tracks:
         return JsonResponse({'status': 'error', 'message': 'Unable to fetch chart data'}, status=404)
     
+    # Match Last.fm tracks with Spotify
+    spotify_client_id = getattr(settings, 'SPOTIFY_CLIENT_ID', '')
+    spotify_client_secret = getattr(settings, 'SPOTIFY_CLIENT_SECRET', '')
+    
+    matched_tracks = match_lastfm_to_spotify(tracks, spotify_client_id, spotify_client_secret)
+    
     # Process and store chart data
     chart_data = []
-    for position, track in enumerate(tracks, 1):
+    for position, track in enumerate(matched_tracks, 1):
         track_data = format_track_data(track)
+        
+        # Add Spotify-specific data
+        track_data['spotify_id'] = track.get('spotify_id', '')
+        track_data['album'] = track.get('album', '')  # Make sure album is included
         
         # Check if song exists in our database
         song = Song.objects.filter(name=track_data['name'], artist=track_data['artist']).first()
@@ -4283,11 +4327,18 @@ def get_top_charts(request):
                 artist=track_data['artist'],
                 album=track_data['album'],
                 album_cover=track_data['album_cover'],
-                genre=track_data['genre'],
+                genre=track_data.get('genre', ''),
                 duration=track_data['duration'],
-                url=track_data['url']
-                # Note: spotify_id would be None/blank here
+                url=track_data['url'],
+                spotify_id=track_data['spotify_id']
             )
+        # If song exists but doesn't have album or Spotify ID, update it
+        elif not song.album or not song.spotify_id:
+            if not song.spotify_id and track_data['spotify_id']:
+                song.spotify_id = track_data['spotify_id']
+            if not song.album and track_data['album']:
+                song.album = track_data['album']
+            song.save()
         
         # Create chart entry
         ChartEntry.objects.create(
@@ -4313,50 +4364,103 @@ def get_top_charts(request):
     
     return JsonResponse({'status': 'success', 'data': chart_data})
 
-@csrf_exempt
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_artist_charts(request, artist_name):
-    """Get top tracks for a specific artist"""
-    period = request.GET.get('period', 'weekly')
+print("Updated views with album support loaded successfully!")
+
+@csrf_exempt 
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated]) 
+def get_artist_charts_by_name(request, artist_name):
+    """Get top tracks for a specific artist using artist name"""
+    period = request.GET.get('period', 'medium_term')
     limit = int(request.GET.get('limit', 10))
     
-    # Fetch from Last.fm
-    lastfm_period = '7day' if period == 'weekly' else '1month'
-    tracks = get_artist_top_tracks(artist_name, period=lastfm_period, limit=limit)
+    # Get Spotify credentials
+    spotify_client_id = getattr(settings, 'SPOTIFY_CLIENT_ID', '')
+    spotify_client_secret = getattr(settings, 'SPOTIFY_CLIENT_SECRET', '')
     
-    if not tracks:
-        return JsonResponse({'status': 'error', 'message': 'Unable to fetch artist chart data'}, status=404)
+    # Get Spotify access token
+    auth_response = requests.post('https://accounts.spotify.com/api/token', {
+        'grant_type': 'client_credentials',
+        'client_id': spotify_client_id,
+        'client_secret': spotify_client_secret,
+    })
     
-    # Process track data
+    if auth_response.status_code != 200:
+        return JsonResponse({'status': 'error', 'message': 'Failed to authenticate with Spotify'}, status=500)
+    
+    auth_data = auth_response.json()
+    access_token = auth_data['access_token']
+    headers = {'Authorization': f'Bearer {access_token}'}
+    
+    # Search for artist by name
+    search_response = requests.get(
+        f'https://api.spotify.com/v1/search?q={urllib.parse.quote(artist_name)}&type=artist&limit=1',
+        headers=headers
+    )
+    
+    if search_response.status_code != 200 or not search_response.json()['artists']['items']:
+        return JsonResponse({'status': 'error', 'message': f'Artist "{artist_name}" not found on Spotify'}, status=404)
+    
+    # Get the first (most relevant) artist match
+    artist_data = search_response.json()['artists']['items'][0]
+    spotify_id = artist_data['id']
+    artist_name = artist_data['name']  # Use the official artist name from Spotify
+    
+    # Get artist's top tracks
+    top_tracks_response = requests.get(
+        f'https://api.spotify.com/v1/artists/{spotify_id}/top-tracks?market=US',
+        headers=headers
+    )
+    
+    if top_tracks_response.status_code != 200:
+        return JsonResponse({'status': 'error', 'message': 'Unable to fetch artist top tracks'}, status=404)
+    
+    tracks_data = top_tracks_response.json()['tracks'][:limit]
+    
+    # Process track data according to the specified format
     chart_data = []
-    for position, track in enumerate(tracks, 1):
-        track_data = format_track_data(track)
-        chart_data.append({
-            'position': position,
-            'name': track_data['name'],
-            'artist': track_data['artist'],
-            'album': track_data['album'],
-            'album_cover': track_data['album_cover'],
-            'duration': track_data['duration'],
-            'listeners': track_data['listeners'],
-            'playcount': track_data['playcount']
-        })
+    for position, song_data in enumerate(tracks_data, 1):
+        # Create song_details in the exact format requested
+        song_details = {
+            "track_id": song_data["id"],
+            "name": song_data["name"],
+            "artist": song_data["artists"][0]["name"],
+            "album": song_data["album"]["name"],
+            "album_cover": song_data["album"]["images"][0]["url"] if song_data["album"]["images"] else "",
+            "release_date": song_data["album"]["release_date"],
+            "duration": song_data["duration_ms"],
+            "popularity": song_data["popularity"],
+            "spotify_url": song_data["external_urls"]["spotify"],
+            "preview_url": song_data.get("preview_url", ""),
+        }
+        
+        # Store in database if needed
+        song = Song.objects.filter(spotify_id=song_details["track_id"]).first()
+        
+        if not song:
+            song = Song.objects.create(
+                name=song_details["name"],
+                artist=song_details["artist"],
+                album=song_details["album"],
+                album_cover=song_details["album_cover"],
+                duration=song_details["duration"],
+                url=song_details["spotify_url"],
+                spotify_id=song_details["track_id"]
+            )
+        
+        # Add position to the song details
+        song_details["position"] = position
+        
+        chart_data.append(song_details)
     
-    return JsonResponse({'status': 'success', 'data': chart_data})
-
-
-def enhance_with_spotify_data(song):
-    """
-    When a Spotify ID is available, update song with better metadata
-    """
-    if not song.spotify_id:
-        return song
-    
-    spotify_data = get_spotify_track(song.spotify_id)
-    if spotify_data:
-        song.album_cover = spotify_data['album_cover'] or song.album_cover
-        song.genre = spotify_data['genre'] or song.genre
-        song.save()
-    
-    return song
+    return JsonResponse({
+        'status': 'success', 
+        'artist': {
+            'name': artist_name,
+            'spotify_id': spotify_id,
+            'image': artist_data['images'][0]['url'] if artist_data['images'] else '',
+            'genres': artist_data.get('genres', []),
+            'followers': artist_data.get('followers', {}).get('total', 0)
+        },
+        'tracks': chart_data
+    })

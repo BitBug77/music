@@ -79,7 +79,7 @@ urlpatterns = [
   path('feedback/', views.feedback_create, name='feedback-create'),
    path('contact/', ContactRequestView.as_view(), name='contact_request'),
   path('api/charts/', views.get_top_charts, name='get_top_charts'),
-    path('api/charts/artist/<str:artist_name>/', views.get_artist_charts, name='get_artist_charts'),
+    path('api/charts/artist/<str:artist_name>/', views.get_artist_charts_by_name, name='get_artist_charts'),
 
 
 ]

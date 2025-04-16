@@ -13338,3 +13338,443 @@ INFO 2025-04-16 22:05:38,945 basehttp 20536 21760 "GET /notifications/ HTTP/1.1"
 INFO 2025-04-16 22:18:08,208 basehttp 20536 19688 "GET /notifications/ HTTP/1.1" 200 21
 INFO 2025-04-16 22:18:39,076 basehttp 20536 2532 "GET /notifications/ HTTP/1.1" 200 21
 INFO 2025-04-16 22:19:38,939 basehttp 20536 2532 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:30:41,473 autoreload 18400 20200 Watching for file changes with StatReloader
+INFO 2025-04-16 22:40:19,272 basehttp 18400 2420 "OPTIONS /login/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:20,692 basehttp 18400 7392 "POST /login/ HTTP/1.1" 200 538
+INFO 2025-04-16 22:40:21,863 basehttp 18400 5988 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:21,863 basehttp 18400 6960 "OPTIONS /notifications/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:21,866 basehttp 18400 5988 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:21,868 basehttp 18400 6960 "OPTIONS /playlists/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:21,869 basehttp 18400 21796 "OPTIONS /playlists/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:21,870 basehttp 18400 5988 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:21,915 basehttp 18400 13580 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:22,054 basehttp 18400 10656 "OPTIONS /notifications/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:22,057 basehttp 18400 6960 "OPTIONS /api/recommendations/trending/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:22,058 basehttp 18400 14092 "OPTIONS /api/recommendations/trending/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:22,148 basehttp 18400 14400 "OPTIONS /popularity HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:22,157 basehttp 18400 13368 "OPTIONS /popularity HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:22,157 basehttp 18400 14400 "GET /popularity HTTP/1.1" 301 0
+INFO 2025-04-16 22:40:22,169 basehttp 18400 13368 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:22,171 basehttp 18400 13368 "OPTIONS /popularity/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:22,806 basehttp 18400 21796 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:40:22,961 basehttp 18400 13368 "GET /popularity/ HTTP/1.1" 200 6849
+INFO 2025-04-16 22:40:22,983 basehttp 18400 6960 "GET /api/recommendations/trending/ HTTP/1.1" 200 6257
+INFO 2025-04-16 22:40:23,323 basehttp 18400 13580 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:40:23,459 basehttp 18400 5988 "GET /popularity/ HTTP/1.1" 200 6871
+INFO 2025-04-16 22:40:23,627 basehttp 18400 21796 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:40:23,762 basehttp 18400 13708 "GET /popularity/ HTTP/1.1" 200 6847
+INFO 2025-04-16 22:40:23,822 basehttp 18400 14092 "GET /api/recommendations/trending/ HTTP/1.1" 200 6257
+INFO 2025-04-16 22:40:24,445 basehttp 18400 13580 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:40:24,799 basehttp 18400 5988 "GET /popularity/ HTTP/1.1" 200 13751
+INFO 2025-04-16 22:40:26,076 basehttp 18400 5988 "GET /popularity/ HTTP/1.1" 200 13869
+INFO 2025-04-16 22:40:27,451 basehttp 18400 13580 "GET /popularity/ HTTP/1.1" 200 9699
+INFO 2025-04-16 22:40:34,721 basehttp 18400 21356 "OPTIONS /search-songs/?q=t HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:35,101 basehttp 18400 19484 "OPTIONS /search-songs/?q=to HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:35,501 basehttp 18400 17260 "OPTIONS /search-songs/?q=tol HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:35,682 basehttp 18400 21356 "GET /search-songs/?q=t HTTP/1.1" 200 1764
+INFO 2025-04-16 22:40:36,086 basehttp 18400 19484 "GET /search-songs/?q=to HTTP/1.1" 200 2056
+INFO 2025-04-16 22:40:36,452 basehttp 18400 17260 "GET /search-songs/?q=tol HTTP/1.1" 200 1725
+INFO 2025-04-16 22:40:37,717 basehttp 18400 17260 "OPTIONS /log-interaction/ HTTP/1.1" 200 0
+WARNING 2025-04-16 22:40:37,735 log 18400 17260 Unauthorized: /log-interaction/
+WARNING 2025-04-16 22:40:37,737 basehttp 18400 17260 "POST /log-interaction/ HTTP/1.1" 401 58
+INFO 2025-04-16 22:40:39,721 basehttp 18400 19484 "OPTIONS /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:39,728 basehttp 18400 21356 "OPTIONS /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 0
+WARNING 2025-04-16 22:40:39,741 log 18400 20444 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-16 22:40:39,747 basehttp 18400 20444 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+WARNING 2025-04-16 22:40:39,750 log 18400 20444 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-16 22:40:39,751 basehttp 18400 20444 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+INFO 2025-04-16 22:40:39,971 basehttp 18400 21356 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-16 22:40:39,978 basehttp 18400 20444 "OPTIONS /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:40,193 basehttp 18400 21356 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-16 22:40:40,466 basehttp 18400 17260 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:40:40,779 basehttp 18400 19484 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:40:40,871 basehttp 18400 21512 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 22:40:40,876 basehttp 18400 21356 "OPTIONS /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 200 0
+WARNING 2025-04-16 22:40:40,885 log 18400 21512 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-16 22:40:40,886 basehttp 18400 21512 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 22:40:41,060 basehttp 18400 17296 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 22:40:41,063 log 18400 17296 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-16 22:40:41,064 basehttp 18400 17296 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 22:40:41,245 basehttp 18400 17260 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:40:41,716 basehttp 18400 17260 "OPTIONS /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:40:41,885 basehttp 18400 19484 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:40:41,886 basehttp 18400 20260 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 22:40:42,666 basehttp 18400 17296 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 22:40:44,059 basehttp 18400 20260 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 22:41:05,578 basehttp 18400 8060 "GET /api/charts/ HTTP/1.1" 200 2820
+INFO 2025-04-16 22:41:40,462 basehttp 18400 19484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:42:40,457 basehttp 18400 10324 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:43:40,422 basehttp 18400 21580 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:44:40,476 basehttp 18400 9000 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:45:37,429 basehttp 18400 19776 "OPTIONS /api/recommendations/similar/?spotify_id=1srnQGDZocVzKwURAiK97J HTTP/1.1" 200 0
+WARNING 2025-04-16 22:45:37,431 log 18400 7676 Not Found: /songs/1srnQGDZocVzKwURAiK97J/comments
+WARNING 2025-04-16 22:45:37,438 basehttp 18400 7676 "GET /songs/1srnQGDZocVzKwURAiK97J/comments HTTP/1.1" 404 179
+INFO 2025-04-16 22:45:37,669 basehttp 18400 19776 "GET /song/1srnQGDZocVzKwURAiK97J/ HTTP/1.1" 200 342
+INFO 2025-04-16 22:45:37,674 basehttp 18400 19776 "OPTIONS /songs/1srnQGDZocVzKwURAiK97J/view/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:45:38,173 basehttp 18400 19960 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:45:38,473 basehttp 18400 20272 "POST /songs/1srnQGDZocVzKwURAiK97J/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 22:45:38,473 basehttp 18400 10372 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:45:38,482 basehttp 18400 10372 "OPTIONS /songs/1srnQGDZocVzKwURAiK97J/status/ HTTP/1.1" 200 0
+WARNING 2025-04-16 22:45:38,489 log 18400 20272 Not Found: /songs/1srnQGDZocVzKwURAiK97J/status/
+WARNING 2025-04-16 22:45:38,490 basehttp 18400 20272 "GET /songs/1srnQGDZocVzKwURAiK97J/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 22:45:39,095 basehttp 18400 10372 "OPTIONS /songs/1srnQGDZocVzKwURAiK97J/play/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:45:39,443 basehttp 18400 13696 "GET /api/recommendations/similar/?spotify_id=1srnQGDZocVzKwURAiK97J HTTP/1.1" 200 2878
+WARNING 2025-04-16 22:45:39,787 log 18400 19776 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/comments
+WARNING 2025-04-16 22:45:39,788 basehttp 18400 19776 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/comments HTTP/1.1" 404 179
+INFO 2025-04-16 22:45:39,937 basehttp 18400 20272 - Broken pipe from ('127.0.0.1', 65533)
+INFO 2025-04-16 22:45:40,005 basehttp 18400 19776 "GET /song/1hKFMb7L1GCGQgOApDIUAp/ HTTP/1.1" 200 347
+INFO 2025-04-16 22:45:40,511 basehttp 18400 10372 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:45:40,850 basehttp 18400 18996 "POST /songs/1hKFMb7L1GCGQgOApDIUAp/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 22:45:40,860 log 18400 18996 Not Found: /songs/1hKFMb7L1GCGQgOApDIUAp/status/
+WARNING 2025-04-16 22:45:40,861 basehttp 18400 18996 "GET /songs/1hKFMb7L1GCGQgOApDIUAp/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 22:45:40,873 basehttp 18400 19960 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:45:41,262 basehttp 18400 10372 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:45:41,270 basehttp 18400 7676 "GET /api/recommendations/trending/ HTTP/1.1" 200 6257
+INFO 2025-04-16 22:45:41,406 basehttp 18400 620 "GET /popularity/ HTTP/1.1" 200 13570
+INFO 2025-04-16 22:45:41,552 basehttp 18400 19776 "GET /popularity/ HTTP/1.1" 200 6908
+INFO 2025-04-16 22:45:41,789 basehttp 18400 13696 "GET /api/recommendations/similar/?spotify_id=1hKFMb7L1GCGQgOApDIUAp HTTP/1.1" 200 2878
+INFO 2025-04-16 22:45:41,961 basehttp 18400 19960 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:45:42,056 basehttp 18400 10372 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:45:42,146 basehttp 18400 19252 "GET /popularity/ HTTP/1.1" 200 6915
+INFO 2025-04-16 22:45:42,148 basehttp 18400 7676 "GET /api/recommendations/trending/ HTTP/1.1" 200 6257
+INFO 2025-04-16 22:45:42,867 basehttp 18400 21572 "GET /popularity/ HTTP/1.1" 200 13901
+INFO 2025-04-16 22:45:43,046 basehttp 18400 19960 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:45:44,116 basehttp 18400 7676 "GET /popularity/ HTTP/1.1" 200 10046
+INFO 2025-04-16 22:45:45,404 basehttp 18400 19960 "GET /popularity/ HTTP/1.1" 200 6579
+INFO 2025-04-16 22:46:41,246 basehttp 18400 22336 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:47:41,369 basehttp 18400 14032 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:48:13,226 basehttp 18400 7484 "OPTIONS /api/recommendations/matrix/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:13,227 basehttp 18400 20300 "OPTIONS /recommendations/friends/?limit=16 HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:13,227 basehttp 18400 20952 "OPTIONS /history/recent/?limit=4 HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:13,236 basehttp 18400 7484 "OPTIONS /api/recommendations/matrix/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:13,237 basehttp 18400 13988 "OPTIONS /history/most-played/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:13,239 basehttp 18400 19144 "OPTIONS /api/recommendations/matrix/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:13,246 basehttp 18400 7484 "OPTIONS /history/most-played/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:13,246 basehttp 18400 20952 "OPTIONS /history/recent/?limit=4 HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:13,247 basehttp 18400 13988 "OPTIONS /api/recommendations/matrix/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:13,257 basehttp 18400 20952 "OPTIONS /recommendations/friends/?limit=16 HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:13,961 basehttp 18400 2996 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 22:48:14,025 log 18400 7484 Not Found: /recommendations/friends/
+WARNING 2025-04-16 22:48:14,025 basehttp 18400 7484 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-16 22:48:14,050 basehttp 18400 13988 "GET /history/recent/?limit=4 HTTP/1.1" 200 1478
+INFO 2025-04-16 22:48:14,111 basehttp 18400 20952 "GET /history/most-played/ HTTP/1.1" 200 3793
+INFO 2025-04-16 22:48:14,339 basehttp 18400 20300 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:48:14,669 basehttp 18400 19144 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5954
+INFO 2025-04-16 22:48:14,704 basehttp 18400 2996 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 22:48:14,765 log 18400 7484 Not Found: /recommendations/friends/
+WARNING 2025-04-16 22:48:14,770 basehttp 18400 7484 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-16 22:48:14,849 basehttp 18400 13988 "GET /history/recent/?limit=4 HTTP/1.1" 200 1478
+INFO 2025-04-16 22:48:14,933 basehttp 18400 20952 "GET /history/most-played/ HTTP/1.1" 200 3793
+INFO 2025-04-16 22:48:15,482 basehttp 18400 20300 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:48:15,929 basehttp 18400 19144 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5954
+INFO 2025-04-16 22:48:17,204 basehttp 18400 20300 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5976
+INFO 2025-04-16 22:48:18,487 basehttp 18400 19144 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5954
+INFO 2025-04-16 22:48:29,936 basehttp 18400 20300 "OPTIONS /api/recommendations/similar/?spotify_id=7vgTNTaEz3CsBZ1N4YQalM HTTP/1.1" 200 0
+WARNING 2025-04-16 22:48:29,939 log 18400 13988 Not Found: /songs/7vgTNTaEz3CsBZ1N4YQalM/comments
+INFO 2025-04-16 22:48:29,944 basehttp 18400 7484 "OPTIONS /api/recommendations/similar/?spotify_id=7vgTNTaEz3CsBZ1N4YQalM HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:29,945 basehttp 18400 20952 "GET /song/7vgTNTaEz3CsBZ1N4YQalM HTTP/1.1" 301 0
+WARNING 2025-04-16 22:48:29,946 basehttp 18400 13988 "GET /songs/7vgTNTaEz3CsBZ1N4YQalM/comments HTTP/1.1" 404 179
+WARNING 2025-04-16 22:48:29,950 log 18400 13988 Not Found: /songs/7vgTNTaEz3CsBZ1N4YQalM/comments
+WARNING 2025-04-16 22:48:29,951 basehttp 18400 13988 "GET /songs/7vgTNTaEz3CsBZ1N4YQalM/comments HTTP/1.1" 404 179
+INFO 2025-04-16 22:48:30,226 basehttp 18400 13988 "GET /song/7vgTNTaEz3CsBZ1N4YQalM/ HTTP/1.1" 200 343
+INFO 2025-04-16 22:48:30,229 basehttp 18400 7484 "OPTIONS /songs/7vgTNTaEz3CsBZ1N4YQalM/view/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:30,434 basehttp 18400 13988 "GET /song/7vgTNTaEz3CsBZ1N4YQalM/ HTTP/1.1" 200 343
+INFO 2025-04-16 22:48:30,670 basehttp 18400 19144 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:48:31,005 basehttp 18400 2996 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:48:31,367 basehttp 18400 12856 "POST /songs/7vgTNTaEz3CsBZ1N4YQalM/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 22:48:31,374 basehttp 18400 13988 "OPTIONS /songs/7vgTNTaEz3CsBZ1N4YQalM/status/ HTTP/1.1" 200 0
+WARNING 2025-04-16 22:48:31,378 log 18400 12856 Not Found: /songs/7vgTNTaEz3CsBZ1N4YQalM/status/
+WARNING 2025-04-16 22:48:31,379 basehttp 18400 12856 "GET /songs/7vgTNTaEz3CsBZ1N4YQalM/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 22:48:31,459 basehttp 18400 19144 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:48:31,641 basehttp 18400 19176 "POST /songs/7vgTNTaEz3CsBZ1N4YQalM/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 22:48:31,644 log 18400 19176 Not Found: /songs/7vgTNTaEz3CsBZ1N4YQalM/status/
+WARNING 2025-04-16 22:48:31,645 basehttp 18400 19176 "GET /songs/7vgTNTaEz3CsBZ1N4YQalM/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 22:48:32,069 basehttp 18400 9664 "GET /api/recommendations/similar/?spotify_id=7vgTNTaEz3CsBZ1N4YQalM HTTP/1.1" 200 2883
+INFO 2025-04-16 22:48:32,101 basehttp 18400 2996 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:48:32,164 basehttp 18400 2996 "OPTIONS /songs/7vgTNTaEz3CsBZ1N4YQalM/play/ HTTP/1.1" 200 0
+INFO 2025-04-16 22:48:33,259 basehttp 18400 19176 "POST /songs/7vgTNTaEz3CsBZ1N4YQalM/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 22:48:34,116 basehttp 18400 9664 "GET /api/recommendations/similar/?spotify_id=7vgTNTaEz3CsBZ1N4YQalM HTTP/1.1" 200 2883
+INFO 2025-04-16 22:48:35,968 basehttp 18400 2996 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:48:36,051 basehttp 18400 7484 "GET /api/recommendations/trending/ HTTP/1.1" 200 6119
+INFO 2025-04-16 22:48:36,281 basehttp 18400 13988 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:48:36,383 basehttp 18400 13696 "GET /popularity/ HTTP/1.1" 200 6813
+INFO 2025-04-16 22:48:36,439 basehttp 18400 19144 "GET /popularity/ HTTP/1.1" 200 13895
+INFO 2025-04-16 22:48:36,709 basehttp 18400 2996 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:48:36,905 basehttp 18400 20300 "GET /api/recommendations/trending/ HTTP/1.1" 200 6119
+INFO 2025-04-16 22:48:37,018 basehttp 18400 7676 "GET /popularity/ HTTP/1.1" 200 13885
+INFO 2025-04-16 22:48:37,391 basehttp 18400 13988 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 22:48:37,875 basehttp 18400 7484 "GET /popularity/ HTTP/1.1" 200 6637
+INFO 2025-04-16 22:48:39,077 basehttp 18400 13988 "GET /popularity/ HTTP/1.1" 200 13818
+INFO 2025-04-16 22:48:40,508 basehttp 18400 7484 "GET /popularity/ HTTP/1.1" 200 6915
+INFO 2025-04-16 22:49:35,998 basehttp 18400 7484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:50:36,301 basehttp 18400 21316 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:51:36,038 basehttp 18400 21316 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:52:36,069 basehttp 18400 21316 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:53:36,045 basehttp 18400 21316 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:54:36,001 basehttp 18400 21316 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 22:55:36,024 basehttp 18400 21316 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:04:06,042 basehttp 18400 2776 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:04:37,032 basehttp 18400 11064 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:05:39,021 basehttp 18400 8668 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:06:35,782 basehttp 18400 19676 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:06:35,799 basehttp 18400 7604 "GET /history/recent/?limit=4 HTTP/1.1" 200 1458
+INFO 2025-04-16 23:06:35,867 basehttp 18400 12632 "GET /history/most-played/ HTTP/1.1" 200 3772
+WARNING 2025-04-16 23:06:35,875 log 18400 19156 Not Found: /recommendations/friends/
+WARNING 2025-04-16 23:06:35,876 basehttp 18400 19156 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-16 23:06:36,185 basehttp 18400 21904 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 23:06:36,468 basehttp 18400 15576 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6067
+INFO 2025-04-16 23:06:36,673 basehttp 18400 19676 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:06:36,768 basehttp 18400 7604 "GET /history/recent/?limit=4 HTTP/1.1" 200 1458
+WARNING 2025-04-16 23:06:36,813 log 18400 19156 Not Found: /recommendations/friends/
+WARNING 2025-04-16 23:06:36,815 basehttp 18400 19156 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-04-16 23:06:36,862 basehttp 18400 12632 "GET /history/most-played/ HTTP/1.1" 200 3772
+INFO 2025-04-16 23:06:37,915 basehttp 18400 21904 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 23:06:38,033 basehttp 18400 15576 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5979
+INFO 2025-04-16 23:06:39,497 basehttp 18400 21904 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6049
+INFO 2025-04-16 23:06:40,977 basehttp 18400 15576 "GET /api/recommendations/matrix/ HTTP/1.1" 200 5988
+INFO 2025-04-16 23:07:35,514 basehttp 18400 16484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:08:35,427 basehttp 18400 16484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:09:35,483 basehttp 18400 21416 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:10:35,504 basehttp 18400 10484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:11:35,655 basehttp 18400 10484 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 23:12:00,434 log 18400 6376 Not Found: /songs/5pzEYTNR667VbDAUmMpF0S/comments
+INFO 2025-04-16 23:12:00,435 basehttp 18400 13044 "GET /song/5pzEYTNR667VbDAUmMpF0S HTTP/1.1" 301 0
+INFO 2025-04-16 23:12:00,435 basehttp 18400 22108 "OPTIONS /api/recommendations/similar/?spotify_id=5pzEYTNR667VbDAUmMpF0S HTTP/1.1" 200 0
+WARNING 2025-04-16 23:12:00,437 basehttp 18400 6376 "GET /songs/5pzEYTNR667VbDAUmMpF0S/comments HTTP/1.1" 404 179
+INFO 2025-04-16 23:12:00,438 basehttp 18400 4068 "OPTIONS /api/recommendations/similar/?spotify_id=5pzEYTNR667VbDAUmMpF0S HTTP/1.1" 200 0
+WARNING 2025-04-16 23:12:00,442 log 18400 6376 Not Found: /songs/5pzEYTNR667VbDAUmMpF0S/comments
+WARNING 2025-04-16 23:12:00,453 basehttp 18400 6376 "GET /songs/5pzEYTNR667VbDAUmMpF0S/comments HTTP/1.1" 404 179
+INFO 2025-04-16 23:12:00,741 basehttp 18400 4068 "GET /song/5pzEYTNR667VbDAUmMpF0S/ HTTP/1.1" 200 376
+INFO 2025-04-16 23:12:00,746 basehttp 18400 6376 "OPTIONS /songs/5pzEYTNR667VbDAUmMpF0S/view/ HTTP/1.1" 200 0
+INFO 2025-04-16 23:12:01,002 basehttp 18400 4068 "GET /song/5pzEYTNR667VbDAUmMpF0S/ HTTP/1.1" 200 376
+INFO 2025-04-16 23:12:01,159 basehttp 18400 10484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:12:01,568 basehttp 18400 9228 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 23:12:01,890 basehttp 18400 10028 "POST /songs/5pzEYTNR667VbDAUmMpF0S/view/ HTTP/1.1" 200 54
+INFO 2025-04-16 23:12:01,893 basehttp 18400 4068 "OPTIONS /songs/5pzEYTNR667VbDAUmMpF0S/status/ HTTP/1.1" 200 0
+WARNING 2025-04-16 23:12:01,895 log 18400 10028 Not Found: /songs/5pzEYTNR667VbDAUmMpF0S/status/
+WARNING 2025-04-16 23:12:01,895 basehttp 18400 10028 "GET /songs/5pzEYTNR667VbDAUmMpF0S/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 23:12:01,914 basehttp 18400 10484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:12:02,161 basehttp 18400 20768 "POST /songs/5pzEYTNR667VbDAUmMpF0S/view/ HTTP/1.1" 200 54
+WARNING 2025-04-16 23:12:02,165 log 18400 20768 Not Found: /songs/5pzEYTNR667VbDAUmMpF0S/status/
+WARNING 2025-04-16 23:12:02,166 basehttp 18400 20768 "GET /songs/5pzEYTNR667VbDAUmMpF0S/status/ HTTP/1.1" 404 179
+INFO 2025-04-16 23:12:02,686 basehttp 18400 12492 "GET /api/recommendations/similar/?spotify_id=5pzEYTNR667VbDAUmMpF0S HTTP/1.1" 200 3123
+INFO 2025-04-16 23:12:02,689 basehttp 18400 9228 "GET /playlists/ HTTP/1.1" 200 370
+INFO 2025-04-16 23:12:02,781 basehttp 18400 9228 "OPTIONS /songs/5pzEYTNR667VbDAUmMpF0S/play/ HTTP/1.1" 200 0
+INFO 2025-04-16 23:12:03,941 basehttp 18400 20768 "POST /songs/5pzEYTNR667VbDAUmMpF0S/play/ HTTP/1.1" 200 60
+INFO 2025-04-16 23:12:05,000 basehttp 18400 12492 "GET /api/recommendations/similar/?spotify_id=5pzEYTNR667VbDAUmMpF0S HTTP/1.1" 200 3123
+INFO 2025-04-16 23:13:01,202 basehttp 18400 19556 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:14:01,174 basehttp 18400 19556 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:15:01,193 basehttp 18400 8940 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:16:01,234 basehttp 18400 2636 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:17:01,998 basehttp 18400 20912 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:18:02,988 basehttp 18400 20912 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:19:03,985 basehttp 18400 12596 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:20:04,978 basehttp 18400 13776 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:21:05,986 basehttp 18400 13776 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:22:06,955 basehttp 18400 10332 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:22:51,185 autoreload 18400 20200 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-16 23:22:53,429 autoreload 19252 19520 Watching for file changes with StatReloader
+INFO 2025-04-16 23:23:36,986 autoreload 19252 19520 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-16 23:23:38,048 autoreload 20264 15576 Watching for file changes with StatReloader
+INFO 2025-04-16 23:23:51,950 basehttp 20264 6584 "GET /api/charts/ HTTP/1.1" 200 3020
+INFO 2025-04-16 23:24:08,980 basehttp 20264 12536 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:25:10,016 basehttp 20264 21932 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:26:10,971 basehttp 20264 17204 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:27:11,951 basehttp 20264 9484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:28:12,995 basehttp 20264 9484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:29:13,971 basehttp 20264 9484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:30:15,003 basehttp 20264 9484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:31:15,990 basehttp 20264 9484 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:32:16,992 basehttp 20264 17572 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:33:17,960 basehttp 20264 14436 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:34:29,331 basehttp 20264 12652 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:34:54,852 autoreload 20264 15576 C:\projects\music\server\songs\app\lastfm_spotifymatcher.py changed, reloading.
+INFO 2025-04-16 23:34:56,942 autoreload 8816 21768 Watching for file changes with StatReloader
+INFO 2025-04-16 23:35:31,886 basehttp 8816 17328 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:35:55,931 autoreload 8816 21768 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-16 23:35:57,077 autoreload 11160 21952 Watching for file changes with StatReloader
+ERROR 2025-04-16 23:36:07,970 log 11160 4528 Internal Server Error: /api/charts/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 4281, in get_top_charts
+    updated_tracks = update_tracks_with_spotify_details(chart_data, spotify_client_id, spotify_client_secret)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+NameError: name 'update_tracks_with_spotify_details' is not defined
+ERROR 2025-04-16 23:36:07,986 basehttp 11160 4528 "GET /api/charts/ HTTP/1.1" 500 145
+INFO 2025-04-16 23:36:30,943 basehttp 11160 4520 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:36:53,258 autoreload 11160 21952 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-16 23:36:54,277 autoreload 3436 8824 Watching for file changes with StatReloader
+INFO 2025-04-16 23:37:05,448 basehttp 3436 20456 "GET /api/charts/ HTTP/1.1" 200 2963
+INFO 2025-04-16 23:37:31,940 basehttp 3436 15560 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:38:33,004 basehttp 3436 21788 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:39:14,468 autoreload 3436 8824 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-16 23:39:15,642 autoreload 644 18836 Watching for file changes with StatReloader
+WARNING 2025-04-16 23:39:27,690 log 644 20816 Not Found: /api/charts/artist/
+WARNING 2025-04-16 23:39:27,690 basehttp 644 20816 "GET /api/charts/artist/ HTTP/1.1" 404 179
+INFO 2025-04-16 23:39:33,969 basehttp 644 14692 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-04-16 23:39:46,662 log 644 20816 Not Found: /api/charts/artists/
+WARNING 2025-04-16 23:39:46,663 basehttp 644 20816 "GET /api/charts/artists/ HTTP/1.1" 404 179
+ERROR 2025-04-16 23:40:16,736 log 644 20816 Internal Server Error: /api/charts/artist/taylorswift/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 4393, in get_artist_charts
+    track_data = format_track_data(track)
+  File "C:\projects\music\server\songs\app\lastfm_utils.py", line 53, in format_track_data
+    'album': track.get('album', {}).get('title', '') if 'album' in track else '',
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+ERROR 2025-04-16 23:40:16,812 basehttp 644 20816 "GET /api/charts/artist/taylorswift/ HTTP/1.1" 500 145
+INFO 2025-04-16 23:40:34,947 basehttp 644 2636 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:41:35,986 basehttp 644 2636 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:42:36,957 basehttp 644 21720 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:43:37,990 basehttp 644 13992 "GET /notifications/ HTTP/1.1" 200 21
+ERROR 2025-04-16 23:43:51,370 log 644 18280 Internal Server Error: /api/charts/artist/taylorswift/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 4393, in get_artist_charts
+    track_data = format_track_data(track)
+  File "C:\projects\music\server\songs\app\lastfm_utils.py", line 53, in format_track_data
+    'album': track.get('album', {}).get('title', '') if 'album' in track else '',
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+ERROR 2025-04-16 23:43:51,372 basehttp 644 18280 "GET /api/charts/artist/taylorswift/?period=weekly&limit=10 HTTP/1.1" 500 145
+ERROR 2025-04-16 23:44:17,029 log 644 18280 Internal Server Error: /api/charts/artist/taylorswift/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "C:\projects\music\server\songs\app\views.py", line 4393, in get_artist_charts
+    track_data = format_track_data(track)
+  File "C:\projects\music\server\songs\app\lastfm_utils.py", line 53, in format_track_data
+    'album': track.get('album', {}).get('title', '') if 'album' in track else '',
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+ERROR 2025-04-16 23:44:17,046 basehttp 644 18280 "GET /api/charts/artist/taylorswift/ HTTP/1.1" 500 145
+INFO 2025-04-16 23:44:38,972 basehttp 644 13992 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:45:38,951 basehttp 644 14912 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:46:38,989 basehttp 644 13468 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:47:38,947 basehttp 644 13800 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:48:38,967 basehttp 644 13800 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:49:38,944 basehttp 644 13800 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:50:38,987 basehttp 644 10280 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:50:45,420 autoreload 644 18836 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-16 23:50:47,098 autoreload 17268 13852 Watching for file changes with StatReloader
+INFO 2025-04-16 23:51:17,753 autoreload 17268 13852 C:\projects\music\server\songs\app\urls.py changed, reloading.
+INFO 2025-04-16 23:51:18,657 autoreload 11008 20924 Watching for file changes with StatReloader
+INFO 2025-04-16 23:51:38,995 basehttp 11008 18304 "GET /notifications/ HTTP/1.1" 200 21
+ERROR 2025-04-16 23:51:43,886 log 11008 21020 Internal Server Error: /api/charts/artist/taylorswift/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Roaming\Python\Python313\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+TypeError: get_artist_charts_by_spotify_id() got an unexpected keyword argument 'artist_name'
+ERROR 2025-04-16 23:51:43,907 basehttp 11008 21020 "GET /api/charts/artist/taylorswift/ HTTP/1.1" 500 145
+INFO 2025-04-16 23:52:39,132 basehttp 11008 19056 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:53:39,002 basehttp 11008 16248 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-04-16 23:53:44,797 autoreload 11008 20924 C:\projects\music\server\songs\app\views.py changed, reloading.
+INFO 2025-04-16 23:53:45,977 autoreload 16992 9108 Watching for file changes with StatReloader
+INFO 2025-04-16 23:54:11,953 autoreload 16992 9108 C:\projects\music\server\songs\app\urls.py changed, reloading.
+INFO 2025-04-16 23:54:12,880 autoreload 19584 13696 Watching for file changes with StatReloader
+INFO 2025-04-16 23:54:23,150 basehttp 19584 22032 "GET /api/charts/artist/taylorswift/ HTTP/1.1" 200 4053
+INFO 2025-04-16 23:54:41,962 basehttp 19584 14688 "GET /notifications/ HTTP/1.1" 200 21
