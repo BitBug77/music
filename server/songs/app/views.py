@@ -967,7 +967,7 @@ def play_song(request, spotify_track_id):
             url=song_details['url']
         )
 
-    Action.objects.create(
+    Action.objects.get_or_create(
         user=user, 
         song=song, 
         action_type='play',
@@ -1028,7 +1028,7 @@ def view_song(request, spotify_track_id):
             url=song_details['url']
         )
 
-    Action.objects.create(user=user, song=song, action_type='view')
+    Action.objects.get_or_create(user=user, song=song, action_type='view')
     return JsonResponse({'status': 'success', 'message': 'Song view recorded'})
 
 @csrf_protect
@@ -1155,7 +1155,74 @@ class GetSongView(View):
         }
 
         return JsonResponse(song_details, safe=False)
+
+
+@csrf_protect
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def log_interaction(request):
+    """Generic endpoint to log various user interactions with songs."""
+    user = request.user
     
+    try:
+        data = json.loads(request.body)
+        
+        # Required fields
+        action_type = data.get('action_type')
+        if not action_type:
+            return JsonResponse({'status': 'error', 'message': 'action_type is required'}, status=400)
+            
+        # Handle search interactions separately as they don't require a song
+        if action_type == 'search':
+            Action.objects.create(
+                user=user,
+                action_type=action_type,
+                search_query=data.get('search_query'),
+                search_type=data.get('search_type', 'general'),
+                context=data.get('context')
+            )
+            return JsonResponse({'status': 'success', 'message': 'Search interaction logged'})
+            
+        # For non-search interactions, song_id is required
+        spotify_track_id = data.get('song_id')
+        if not spotify_track_id:
+            return JsonResponse({'status': 'error', 'message': 'song_id is required'}, status=400)
+            
+        # Get or create the song
+        song = Song.objects.filter(spotify_id=spotify_track_id).first()
+        if not song:
+            song_details = get_spotify_track(spotify_track_id)
+            if not song_details:
+                return JsonResponse({'status': 'error', 'message': 'Unable to fetch song details'}, status=404)
+
+            song = Song.objects.create(
+                spotify_id=spotify_track_id,
+                name=song_details['name'],
+                artist=song_details['artist'],
+                album=song_details['album'],
+                album_cover=song_details['album_cover'],
+                genre=song_details.get('genre'),
+                duration=song_details['duration'],
+                url=song_details.get('url')
+            )
+        
+        # Create the action with additional optional fields
+        Action.objects.create(
+            user=user,
+            song=song,
+            action_type=action_type,
+            duration=data.get('duration'),
+            context=data.get('context')
+        )
+        
+        return JsonResponse({'status': 'success', 'message': f'Song {action_type} interaction logged'})
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+       
 @csrf_exempt
 def session(request):
     """Debug view to check session status"""
@@ -1165,8 +1232,6 @@ def session(request):
         'username': request.user.username if request.user.is_authenticated else None,
         'session_data': dict(request.session)
     })
-
-
 
 
 
@@ -4148,3 +4213,7 @@ class ArtistRecommendationView(RecommendationAPIView):
         except Exception as e:
             logger.exception(f"Error enriching artist data: {str(e)}")
             return artists
+        
+
+
+

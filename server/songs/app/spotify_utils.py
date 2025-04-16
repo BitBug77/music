@@ -278,3 +278,4 @@ def get_recommendations_for_new_user(user, limit=20):
     
     # If nothing else, return popular tracks
     return get_related_spotify_tracks(limit=limit) 
+
