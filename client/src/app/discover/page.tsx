@@ -1,7 +1,6 @@
-"use client"
+"use client";
 import { useState, useEffect, useRef, useCallback } from "react"
 import type React from "react"
-
 import {
   Clock,
   Plus,
@@ -14,13 +13,14 @@ import {
   Pause,
 } from "lucide-react"
 import Navbar from "../navbar/page"
-import Sidebar from "../../components/ui/sidebar"
+import Sidebar from "@/components/ui/sidebar"
 import { useRouter } from "next/navigation"
-import { AddToPlaylistModal, CreatePlaylistModal, PlaylistModalStyles } from "../../components/ui/playlist-modals"
+import { AddToPlaylistModal, CreatePlaylistModal, PlaylistModalStyles } from "@/components/ui/playlist-modals"
+import FeaturedPlaylistsSection from "@/components/ui/featured-playlist-section"
+import SoundSpectrum from "@/components/ui/sound-spectrum"
+import BestsellersSection from "@/components/ui/bestsellers-section"
+import Footer from "@/components/ui/footer";
 
-// Add this import at the top of the file with the other imports
-import FeaturedPlaylistsSection from "../../components/ui/featured-playlist-section"
-import SoundSpectrum from "../../components/ui/sound-spectrum"
 
 // Define TypeScript interfaces for our data structures
 interface ApiResponse {
@@ -37,13 +37,16 @@ interface ProcessedSong {
   artist: string
   popularity: number
   spotifyUrl: string
-  spotifyTrackId: string // Made this a required field
+  spotifyTrackId: string
   coverUrl: string
 }
 
 interface SongCardProps {
-  song: ProcessedSong
+  song: ProcessedSong;
+  onAddToPlaylist: (song: ProcessedSong) => void;
+
 }
+
 
 interface Playlist {
   id: number
@@ -56,8 +59,46 @@ interface Position {
   y: number
 }
 
+// SongCard Component
+const SongCard: React.FC<SongCardProps> = ({ song }) => {
+  const [isHovered, setIsHovered] = useState(false)
+
+  return (
+    <div
+      className="relative cursor-pointer"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative overflow-hidden rounded-lg shadow-lg">
+        <img
+          src={song.coverUrl || "/placeholder.svg"}
+          alt={song.title}
+          className={`w-full aspect-square object-cover transition-transform duration-500 ${isHovered ? "scale-110 brightness-110" : ""}`}
+        />
+        <div
+          className={`absolute inset-0 bg-gradient-to-t from-black/80 to-transparent ${isHovered ? "opacity-70" : "opacity-80"}`}
+        ></div>
+        <div className="absolute bottom-0 left-0 p-3">
+          <h3 className={`font-medium truncate ${isHovered ? "text-white" : "text-gray-200"}`}>{song.title}</h3>
+          <p className={`text-sm truncate ${isHovered ? "text-gray-200" : "text-gray-300"}`}>{song.artist}</p>
+        </div>
+        <div className={`absolute top-2 right-2 transition-opacity ${isHovered ? "opacity-100" : "opacity-0"}`}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+            className="bg-gray-500 rounded-full p-1.5 shadow-lg hover:bg-gray-400 transition-colors"
+          >
+            <Plus size={16} className="text-white" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function DiscoverPage() {
-  // First, add a new state to track the currently hovered song at the top of the DiscoverPage component
+  // State for hovered song
   const [hoveredSong, setHoveredSong] = useState<ProcessedSong | null>(null)
   const [popularSongs, setPopularSongs] = useState<ProcessedSong[]>([])
   const [trendingSongs, setTrendingSongs] = useState<ProcessedSong[]>([])
@@ -77,12 +118,25 @@ export default function DiscoverPage() {
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false)
   const [pendingHoveredSong, setPendingHoveredSong] = useState<ProcessedSong | null>(null)
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const [hoveredArtistIndex, setHoveredArtistIndex] = useState<number | null>(null)
 
   // States for draggable player
-  const [playerPosition, setPlayerPosition] = useState<Position>({
-    x: window.innerWidth - 400,
-    y: window.innerHeight - 120,
-  })
+  const [playerPosition, setPlayerPosition] = useState<Position | null>(null);
+
+  useEffect(() => {
+    const updatePosition = () => {
+      setPlayerPosition({
+        x: window.innerWidth - 400,
+        y: window.innerHeight - 120,
+      });
+    };
+  
+    updatePosition(); // Initial set
+    window.addEventListener("resize", updatePosition);
+  
+    return () => window.removeEventListener("resize", updatePosition);
+  }, []);
+  
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 })
   const playerRef = useRef<HTMLDivElement>(null)
@@ -92,7 +146,7 @@ export default function DiscoverPage() {
   const popularContainerRef = useRef<HTMLDivElement>(null)
   const recentContainerRef = useRef<HTMLDivElement>(null)
 
-  // New states for CD player and slideshow
+  // States for CD player and slideshow
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [rotationDegree, setRotationDegree] = useState(0)
@@ -654,9 +708,9 @@ export default function DiscoverPage() {
     emptyMessage: string,
   ) => {
     return (
-      <section className="mb-16 relative">
+      <section className="mb-16 p-6 relative">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold flex items-center text-blue-700">
+          <h2 className="text-xl font-bold p-2 ml-2 flex items-center text-white">
             {icon}
             {title}
           </h2>
@@ -675,7 +729,7 @@ export default function DiscoverPage() {
             <p className="text-blue-600 mt-2">Showing mock data as fallback</p>
           </div>
         ) : items.length > 0 ? (
-          <div className="relative group">
+          <div className="relative group p-5">
             {/* Left scroll button */}
             <button
               onClick={() => scrollContainer(containerRef, "left")}
@@ -688,7 +742,7 @@ export default function DiscoverPage() {
             {/* Scrollable container */}
             <div
               ref={containerRef}
-              className="flex overflow-x-auto scrollbar-hide gap-4 pb-4 scroll-smooth"
+              className="flex overflow-x-auto scrollbar-hide gap-6 pb-4 scroll-smooth"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {items}
@@ -725,9 +779,8 @@ export default function DiscoverPage() {
     return (
       <section className="mb-16 relative w-1/2 group/player mr-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold flex items-center text-blue-700">
-            <Clock size={20} className="mr-2 text-gray-400" />
-            Recently Added
+          <h2 className="text-xl font-bold flex items-center text-white">
+            Popular Albums
           </h2>
           <a href="#" className="text-sm text-gray-400 hover:underline">
             See All
@@ -1076,7 +1129,7 @@ export default function DiscoverPage() {
                 popularSongs
                   .filter((song) => song.coverUrl)
                   .map((song) => (
-                    <div key={song.id} className="flex-shrink-0 w-[20%] min-w-[180px]">
+                    <div key={song.id} className="flex-shrink-0 w-[16%] min-w-[150px]">
                       <SongCard
                         song={song}
                         onAddToPlaylist={() => openAddToPlaylistModal(song)}
@@ -1093,8 +1146,8 @@ export default function DiscoverPage() {
               )}
 
               {/* Popular Artists Section */}
-              <section className="mb-16 relative">
-                <div className="flex items-center justify-between mb-4">
+              <section className="mb-20 mt-20 p-6 relative">
+                <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-white">Artists You Might Like</h2>
                   <a href="#" className="text-sm text-gray-400 hover:text-white transition-colors">
                     View All
@@ -1114,14 +1167,14 @@ export default function DiscoverPage() {
                   {/* Scrollable container */}
                   <div
                     ref={artistsContainerRef}
-                    className="flex overflow-x-auto scrollbar-hide gap-4 pb-4 scroll-smooth"
+                    className="flex overflow-x-auto scrollbar-hide gap-8 pb-4 scroll-smooth"
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                   >
                     {isPopularLoading
                       ? Array(7)
                           .fill(0)
                           .map((_, i) => (
-                            <div key={i} className="flex-shrink-0 w-[14.285%] min-w-[90px] flex flex-col items-center">
+                            <div key={i} className="flex-shrink-0 w-[12%] min-w-[80px] flex flex-col items-center">
                               <div className="w-full aspect-square bg-gray-800 rounded-md animate-pulse mb-2"></div>
                               <div className="h-3 w-3/4 bg-gray-800 rounded animate-pulse"></div>
                             </div>
@@ -1129,17 +1182,27 @@ export default function DiscoverPage() {
                       : popularSongs.map((song, index) => (
                           <div
                             key={`artist-${index}`}
-                            className="flex-shrink-0 w-[14.285%] min-w-[90px] flex flex-col items-center group cursor-pointer"
+                            className="flex-shrink-0 w-[12%] min-w-[80px] p-1 flex flex-col items-center cursor-pointer hover:scale-105 transition-transform"
+                            onMouseEnter={() => setHoveredArtistIndex(index)}
+                            onMouseLeave={() => setHoveredArtistIndex(null)}
                           >
-                            <div className="w-full aspect-square bg-gray-800 rounded-full overflow-hidden mb-1 relative">
+                            <div className="w-full aspect-square bg-gray-800 rounded-full overflow-hidden mb-2 relative">
                               <img
                                 src={song.coverUrl || "/placeholder.svg"}
                                 alt={song.artist}
-                                className="w-full h-full object-cover"
+                                className={`w-full h-full object-cover ${hoveredArtistIndex === index ? "brightness-110" : ""}`}
                               />
-                              <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity rounded-full"></div>
+                              <div
+                                className={`absolute inset-0 bg-black rounded-full transition-opacity ${
+                                  hoveredArtistIndex === index ? "opacity-40" : "opacity-0"
+                                }`}
+                              ></div>
                             </div>
-                            <span className="text-gray-300 text-xs truncate w-full text-center group-hover:text-white transition-colors">
+                            <span
+                              className={`text-xs truncate w-full text-center transition-colors ${
+                                hoveredArtistIndex === index ? "text-white" : "text-gray-300"
+                              }`}
+                            >
                               {song.artist}
                             </span>
                           </div>
@@ -1167,23 +1230,8 @@ export default function DiscoverPage() {
                 <section className="mb-16 relative w-full md:w-1/2">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold flex items-center text-blue-700">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="mr-2 text-gray-400"
-                      >
-                        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"></path>
-                        <path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2"></path>
-                        <path d="M19 11h2m-1 -1v2"></path>
-                      </svg>
-                      Sound Spectrum
+                    
+                     
                     </h2>
                     <a href="#" className="text-sm text-gray-400 hover:underline">
                       Shuffle
@@ -1203,14 +1251,97 @@ export default function DiscoverPage() {
                   )}
                 </section>
               </div>
+
+          
             </>
           )}
         </div>
 
         {/* Featured Playlists Section */}
         <FeaturedPlaylistsSection />
-      </div>
+        <BestsellersSection />
+         {/* Popular People Section */}
+         <section className="mb-20 mt-20 p-6 relative">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-white">Explore people</h2>
+                  <a href="#" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    View All
+                  </a>
+                </div>
 
+                <div className="relative group">
+                  {/* Left scroll button */}
+                  <button
+                    onClick={() => scrollContainer(artistsContainerRef, "left")}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg -ml-3"
+                    aria-label="Scroll left"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+
+                  {/* Scrollable container */}
+                  <div
+                    ref={artistsContainerRef}
+                    className="flex overflow-x-auto scrollbar-hide gap-8 pb-4 scroll-smooth"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  >
+                    {isPopularLoading
+                      ? Array(7)
+                          .fill(0)
+                          .map((_, i) => (
+                            <div key={i} className="flex-shrink-0 w-[12%] min-w-[80px] flex flex-col items-center">
+                              <div className="w-full aspect-square bg-gray-800 rounded-md animate-pulse mb-2"></div>
+                              <div className="h-3 w-3/4 bg-gray-800 rounded animate-pulse"></div>
+                            </div>
+                          ))
+                      : popularSongs.map((song, index) => (
+                          <div
+                            key={`artist-${index}`}
+                            className="flex-shrink-0 w-[12%] min-w-[80px] p-1 flex flex-col items-center cursor-pointer hover:scale-105 transition-transform"
+                            onMouseEnter={() => setHoveredArtistIndex(index)}
+                            onMouseLeave={() => setHoveredArtistIndex(null)}
+                          >
+                            <div className="w-full aspect-square bg-gray-800 rounded-full overflow-hidden mb-2 relative">
+                              <img
+                                src={song.coverUrl || "/placeholder.svg"}
+                                alt={song.artist}
+                                className={`w-full h-full object-cover ${hoveredArtistIndex === index ? "brightness-110" : ""}`}
+                              />
+                              <div
+                                className={`absolute inset-0 bg-black rounded-full transition-opacity ${
+                                  hoveredArtistIndex === index ? "opacity-40" : "opacity-0"
+                                }`}
+                              ></div>
+                            </div>
+                            <span
+                              className={`text-xs truncate w-full text-center transition-colors ${
+                                hoveredArtistIndex === index ? "text-white" : "text-gray-300"
+                              }`}
+                            >
+                              {song.artist}
+                            </span>
+                          </div>
+                        ))}
+                  </div>
+
+                  {/* Right scroll button */}
+                  <button
+                    onClick={() => scrollContainer(artistsContainerRef, "right")}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gray-800/80 hover:bg-gray-700 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg -mr-3"
+                    aria-label="Scroll right"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+
+                  {/* Gradient fades for edges */}
+                  <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#151b27] to-transparent pointer-events-none"></div>
+                  <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#151b27] to-transparent pointer-events-none"></div>
+                </div>
+              </section>
+             
+
+      </div>
+ <Footer />
       {/* Playlist Modals */}
       <AddToPlaylistModal
         isOpen={isPlaylistModalOpen}
@@ -1295,6 +1426,7 @@ export default function DiscoverPage() {
     </div>
   )
 }
+<<<<<<< HEAD
 
 // Replace the existing SongCard component with this updated version that properly isolates hover effects
 
@@ -1434,3 +1566,5 @@ function SongCard({
     </div>
   )
 }
+=======
+>>>>>>> 56ce300f3aa640185e22edb011d447c39e2352b4

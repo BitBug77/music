@@ -26,7 +26,7 @@ export default function FeaturedPlaylistCard({
 
   return (
     <div
-      className="group cursor-pointer relative rounded-lg overflow-hidden shadow-lg aspect-[4/5]"
+      className="group cursor-pointer relative rounded-lg overflow-hidden shadow-lg aspect-[3/4]"
       onClick={onClick}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
@@ -48,39 +48,39 @@ export default function FeaturedPlaylistCard({
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90"></div>
 
       {/* Top content - Title and provider */}
-      <div className="absolute top-0 left-0 p-4 w-full">
-        <h3 className="text-white font-bold text-lg">{title}</h3>
+      <div className="absolute top-0 left-0 p-3 w-full">
+        <h3 className="text-white font-bold text-sm line-clamp-2">{title}</h3>
         <p className="text-gray-300 text-xs">Playlist • {provider}</p>
       </div>
 
       {/* Bottom content - Description and controls */}
-      <div className="absolute bottom-0 left-0 p-4 w-full">
-        <p className="text-white/80 text-xs mb-3 line-clamp-2">
+      <div className="absolute bottom-0 left-0 p-3 w-full">
+        <p className="text-white/80 text-xs mb-2 line-clamp-1">
           {description}
           {coverArtist && <span className="text-white/60"> Cover: {coverArtist}</span>}
         </p>
 
         {/* Controls */}
         <div className="flex items-center justify-between">
-          <button className="text-white/70 text-xs bg-white/10 px-2 py-1 rounded-full hover:bg-white/20 transition-colors">
+          <button className="text-white/70 text-[10px] bg-white/10 px-2 py-0.5 rounded-full hover:bg-white/20 transition-colors">
             Preview
           </button>
 
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 flex items-center justify-center">
+          <div className="flex items-center gap-1">
+            <div className="w-6 h-6 flex items-center justify-center">
               <div className="w-1 h-1 bg-white/50 rounded-full"></div>
               <div className="w-1 h-1 bg-white/50 rounded-full mx-1"></div>
               <div className="w-1 h-1 bg-white/50 rounded-full"></div>
             </div>
 
             <button
-              className="bg-white rounded-full p-2 shadow-lg hover:scale-105 transition-transform"
+              className="bg-white rounded-full p-1.5 shadow-lg hover:scale-105 transition-transform"
               onClick={(e) => {
                 e.stopPropagation()
                 onClick?.()
               }}
             >
-              <Play size={16} className="text-black fill-black" />
+              <Play size={14} className="text-black fill-black" />
             </button>
           </div>
         </div>

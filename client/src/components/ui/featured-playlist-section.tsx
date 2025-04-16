@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import FeaturedPlaylistCard from "./featured-playlist-card"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 interface Song {
   name: string
@@ -26,6 +27,7 @@ export default function FeaturedPlaylistsSection() {
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchSongsAndCreatePlaylists = async () => {
@@ -256,8 +258,24 @@ export default function FeaturedPlaylistsSection() {
     // In a real app, you would navigate to the playlist page or open a modal
   }
 
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      // Scroll by 4 playlist cards
+      const scrollAmount = scrollContainerRef.current.clientWidth;
+      scrollContainerRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    }
+  }
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      // Scroll by 4 playlist cards
+      const scrollAmount = scrollContainerRef.current.clientWidth;
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  }
+
   return (
-    <section className="mb-16">
+    <section className="mb-16 relative">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-white">Featured Playlists</h2>
         <a href="#" className="text-sm text-gray-400 hover:text-white transition-colors">
@@ -272,27 +290,55 @@ export default function FeaturedPlaylistsSection() {
         </div>
       )}
 
-      {isLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(8)].map((_, index) => (
-            <div key={index} className="aspect-[4/5] bg-gray-800 rounded-lg animate-pulse"></div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {playlists.map((playlist) => (
-            <FeaturedPlaylistCard
-              key={playlist.id}
-              title={playlist.title}
-              imageUrl={playlist.imageUrl}
-              provider={playlist.provider}
-              description={playlist.description}
-              coverArtist={playlist.coverArtist}
-              onClick={() => handlePlaylistClick(playlist.id)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="relative">
+        {/* Navigation Arrows */}
+        <button 
+          onClick={scrollLeft}
+          className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 text-white rounded-full p-3 shadow-lg"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft size={24} />
+        </button>
+
+        <button 
+          onClick={scrollRight}
+          className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 text-white rounded-full p-3 shadow-lg"
+          aria-label="Scroll right"
+        >
+          <ChevronRight size={24} />
+        </button>
+
+        {isLoading ? (
+          <div className="flex space-x-8 overflow-hidden pb-4">
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="flex-shrink-0 w-1/5 aspect-[4/5] bg-gray-800 rounded-lg animate-pulse"></div>
+            ))}
+          </div>
+        ) : (
+          <div 
+            ref={scrollContainerRef}
+            className="flex space-x-8 overflow-x-auto pb-4 scrollbar-hide px-2"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollSnapType: 'x mandatory' }}
+          >
+            {playlists.map((playlist) => (
+              <div 
+                key={playlist.id} 
+                className="flex-shrink-0 w-1/5 min-w-[calc(20%-24px)]"
+                style={{ scrollSnapAlign: 'start' }}
+              >
+                <FeaturedPlaylistCard
+                  title={playlist.title}
+                  imageUrl={playlist.imageUrl}
+                  provider={playlist.provider}
+                  description={playlist.description}
+                  coverArtist={playlist.coverArtist}
+                  onClick={() => handlePlaylistClick(playlist.id)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   )
 }
