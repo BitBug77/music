@@ -18042,3 +18042,4 @@ INFO 2025-05-07 12:26:03,097 basehttp 22968 16068 "GET /playlists/ HTTP/1.1" 200
 INFO 2025-05-07 12:26:03,738 basehttp 22968 16428 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6165
 INFO 2025-05-07 12:26:07,060 basehttp 22968 16068 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6146
 INFO 2025-05-07 12:26:09,803 basehttp 22968 16068 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6165
+INFO 2025-06-26 08:34:55,622 autoreload 1388 11692 Watching for file changes with StatReloader
