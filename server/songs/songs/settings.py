@@ -18,17 +18,27 @@ env = environ.Env(
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Read environment variables from .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+# Read environment variables from .env file (only if it exists)
+env_file = os.path.join(BASE_DIR, '.env')
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('DJANGO_SECRET_KEY')
+SECRET_KEY = env('DJANGO_SECRET_KEY', default='your-fallback-secret-key-here')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = env('DEBUG', default=False)
 
-# Hosts
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['music-wisx.onrender.com', 'localhost', '127.0.0.1'])
+# Hosts - Always include your Render domain
+ALLOWED_HOSTS = [
+    'music-wisx.onrender.com',
+    'localhost', 
+    '127.0.0.1',
+]
+
+# Add any additional hosts from environment
+additional_hosts = env.list('ALLOWED_HOSTS', default=[])
+ALLOWED_HOSTS.extend(additional_hosts)
 
 # Application definition
 INSTALLED_APPS = [
@@ -108,12 +118,12 @@ WSGI_APPLICATION = 'songs.wsgi.application'
 # Database
 DATABASES = {
     'default': {
-        'ENGINE': env('DB_ENGINE'),
+        'ENGINE': env('DB_ENGINE', default='django.db.backends.postgresql'),
         'NAME': env('DB_NAME'),
         'USER': env('DB_USER'),
         'PASSWORD': env('DB_PASSWORD'),
         'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
+        'PORT': env('DB_PORT', default='5432'),
         'OPTIONS': {
             'sslmode': 'require',
         },
@@ -135,7 +145,7 @@ USE_I18N = True
 USE_TZ = True
 
 # Static and Media
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
@@ -145,23 +155,27 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Spotify settings
-SPOTIFY_CLIENT_ID = env("SPOTIFY_CLIENT_ID")
-SPOTIFY_CLIENT_SECRET = env("SPOTIFY_CLIENT_SECRET")
-SPOTIFY_REDIRECT_URI = env("SPOTIFY_REDIRECT_URI")
+SPOTIFY_CLIENT_ID = env("SPOTIFY_CLIENT_ID", default="")
+SPOTIFY_CLIENT_SECRET = env("SPOTIFY_CLIENT_SECRET", default="")
+SPOTIFY_REDIRECT_URI = env("SPOTIFY_REDIRECT_URI", default="")
 
 # eSewa settings
 ESEWA_CONFIG = {
-    "MERCHANT_ID": env("ESEWA_MERCHANT_ID"),
-    "SECRET_KEY": env("ESEWA_SECRET_KEY"),
-    "CLIENT_ID": env("ESEWA_CLIENT_ID"),
-    "CLIENT_SECRET": env("ESEWA_CLIENT_SECRET"),
-    "TEST_URL": env("ESEWA_TEST_URL"),
-    "RETURN_URL": env("ESEWA_RETURN_URL"),
-    "CANCEL_URL": env("ESEWA_CANCEL_URL"),
+    "MERCHANT_ID": env("ESEWA_MERCHANT_ID", default=""),
+    "SECRET_KEY": env("ESEWA_SECRET_KEY", default=""),
+    "CLIENT_ID": env("ESEWA_CLIENT_ID", default=""),
+    "CLIENT_SECRET": env("ESEWA_CLIENT_SECRET", default=""),
+    "TEST_URL": env("ESEWA_TEST_URL", default=""),
+    "RETURN_URL": env("ESEWA_RETURN_URL", default=""),
+    "CANCEL_URL": env("ESEWA_CANCEL_URL", default=""),
 }
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
+    "https://music-wisx.onrender.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+])
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
     'DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT',
@@ -176,38 +190,44 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Redis Cache
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('REDIS_URL'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'SOCKET_CONNECT_TIMEOUT': 5,
-            'SOCKET_TIMEOUT': 5,
-        },
-        'KEY_PREFIX': 'spotify_app',
-        'TIMEOUT': 3600,
+# Redis Cache - Only if Redis URL is provided
+REDIS_URL = env('REDIS_URL', default=None)
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'SOCKET_CONNECT_TIMEOUT': 5,
+                'SOCKET_TIMEOUT': 5,
+            },
+            'KEY_PREFIX': 'spotify_app',
+            'TIMEOUT': 3600,
+        }
     }
-}
-
-# Kafka settings (optional)
-KAFKA_ENABLED = env.bool('KAFKA_ENABLED', default=False)
-
-if KAFKA_ENABLED:
-    KAFKA_BROKER_URL = env('KAFKA_BROKER_URL')
-    KAFKA_TOPIC = env('KAFKA_TOPIC')
 else:
-    KAFKA_BROKER_URL = None
-    KAFKA_TOPIC = None
+    # Fallback to local memory cache
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+        }
+    }
+
+# Kafka settings - DISABLED FOR NOW
+# Removed Kafka configuration to prevent warnings
+KAFKA_ENABLED = False
+KAFKA_BROKER_URL = None
+KAFKA_TOPIC = None
 
 # Security settings
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 SECURE_SSL_REDIRECT = False  # Set True for production with SSL
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
@@ -232,7 +252,7 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': 'DEBUG' if DEBUG else 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
@@ -246,7 +266,7 @@ LOGGING = {
     'loggers': {
         '': {
             'handlers': ['console', 'file'],
-            'level': 'INFO',
+            'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': True,
         },
         'django': {
@@ -261,7 +281,7 @@ LOGGING = {
         },
         'app': {
             'handlers': ['console', 'file'],
-            'level': 'INFO',
+            'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
         },
     },
@@ -269,3 +289,9 @@ LOGGING = {
 
 # Initialize logger
 logger = logging.getLogger('app')
+
+# Print debug info for troubleshooting (remove in production)
+if DEBUG:
+    logger.info(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+    logger.info(f"DEBUG: {DEBUG}")
+    logger.info(f"Database ENGINE: {DATABASES['default']['ENGINE']}")
