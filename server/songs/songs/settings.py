@@ -222,13 +222,6 @@ KAFKA_ENABLED = False
 KAFKA_BROKER_URL = None
 KAFKA_TOPIC = None
 
-# Disable Kafka logging to prevent warnings
-LOGGING['loggers']['kafka'] = {
-    'handlers': [],
-    'level': 'CRITICAL',
-    'propagate': False,
-}
-
 # Security settings
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
@@ -245,6 +238,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 
+# LOGGING CONFIGURATION - FIXED: Define LOGGING before trying to modify it
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -290,6 +284,12 @@ LOGGING = {
         'app': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        # Kafka logger - disabled to prevent warnings
+        'kafka': {
+            'handlers': [],
+            'level': 'CRITICAL',
             'propagate': False,
         },
     },
