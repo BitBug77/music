@@ -7,6 +7,8 @@ from pathlib import Path
 from datetime import timedelta
 import environ
 import logging.config
+import logging
+
 
 # Initialize environment
 env = environ.Env(
@@ -215,11 +217,17 @@ else:
         }
     }
 
-# Kafka settings - DISABLED FOR NOW
-# Removed Kafka configuration to prevent warnings
+# Kafka settings - COMPLETELY DISABLED
 KAFKA_ENABLED = False
 KAFKA_BROKER_URL = None
 KAFKA_TOPIC = None
+
+# Disable Kafka logging to prevent warnings
+LOGGING['loggers']['kafka'] = {
+    'handlers': [],
+    'level': 'CRITICAL',
+    'propagate': False,
+}
 
 # Security settings
 SESSION_COOKIE_SECURE = not DEBUG
