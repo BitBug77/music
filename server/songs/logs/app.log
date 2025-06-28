@@ -18128,3 +18128,354 @@ INFO 2025-06-26 08:44:42,903 basehttp 1388 18968 "GET /notifications/ HTTP/1.1" 
 INFO 2025-06-26 08:45:42,993 basehttp 1388 18968 "GET /notifications/ HTTP/1.1" 200 21
 INFO 2025-06-26 08:47:14,987 basehttp 1388 5740 "GET /notifications/ HTTP/1.1" 200 21
 INFO 2025-06-26 08:48:14,904 basehttp 1388 19680 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:49:14,980 basehttp 1388 5436 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:50:20,840 basehttp 1388 7924 "POST /login/ HTTP/1.1" 200 538
+INFO 2025-06-26 08:50:22,816 basehttp 1388 10324 "GET /playlists/ HTTP/1.1" 200 35
+INFO 2025-06-26 08:50:22,844 basehttp 1388 18800 "GET /api/recommendations/trending/ HTTP/1.1" 200 47
+INFO 2025-06-26 08:50:22,869 basehttp 1388 17628 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:50:23,352 basehttp 1388 8116 "GET /popularity/ HTTP/1.1" 200 6655
+INFO 2025-06-26 08:50:23,482 basehttp 1388 19620 "GET /popularity/ HTTP/1.1" 200 14035
+INFO 2025-06-26 08:50:23,508 basehttp 1388 10324 "GET /playlists/ HTTP/1.1" 200 35
+INFO 2025-06-26 08:50:23,513 basehttp 1388 18800 "GET /api/recommendations/trending/ HTTP/1.1" 200 47
+INFO 2025-06-26 08:50:23,555 basehttp 1388 17628 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:50:24,284 basehttp 1388 14860 "GET /popularity/ HTTP/1.1" 200 6871
+INFO 2025-06-26 08:50:24,896 basehttp 1388 19620 "GET /popularity/ HTTP/1.1" 200 13940
+INFO 2025-06-26 08:50:27,521 basehttp 1388 19620 "GET /popularity/ HTTP/1.1" 200 14691
+INFO 2025-06-26 08:50:28,915 basehttp 1388 17628 "GET /popularity/ HTTP/1.1" 200 13997
+WARNING 2025-06-26 08:50:40,548 log 1388 5232 Not Found: /recommendations/friends/
+INFO 2025-06-26 08:50:40,551 basehttp 1388 8444 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-06-26 08:50:40,551 basehttp 1388 5232 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-06-26 08:50:40,570 basehttp 1388 6912 "GET /history/most-played/ HTTP/1.1" 200 70
+INFO 2025-06-26 08:50:40,598 basehttp 1388 11060 "GET /playlists/ HTTP/1.1" 200 35
+INFO 2025-06-26 08:50:40,624 basehttp 1388 19632 "GET /history/recent/?limit=4 HTTP/1.1" 200 70
+INFO 2025-06-26 08:50:41,159 basehttp 1388 14020 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6195
+INFO 2025-06-26 08:50:41,240 basehttp 1388 8444 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-06-26 08:50:41,257 log 1388 5232 Not Found: /recommendations/friends/
+WARNING 2025-06-26 08:50:41,259 basehttp 1388 5232 "GET /recommendations/friends/?limit=16 HTTP/1.1" 404 53
+INFO 2025-06-26 08:50:41,339 basehttp 1388 6912 "GET /history/most-played/ HTTP/1.1" 200 70
+INFO 2025-06-26 08:50:41,359 basehttp 1388 11060 "GET /playlists/ HTTP/1.1" 200 35
+INFO 2025-06-26 08:50:41,377 basehttp 1388 19632 "GET /history/recent/?limit=4 HTTP/1.1" 200 70
+INFO 2025-06-26 08:50:42,506 basehttp 1388 14020 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6118
+INFO 2025-06-26 08:50:43,743 basehttp 1388 14020 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6015
+INFO 2025-06-26 08:50:44,980 basehttp 1388 14020 "GET /api/recommendations/matrix/ HTTP/1.1" 200 6145
+INFO 2025-06-26 08:50:59,298 basehttp 1388 4080 "OPTIONS /api/recommendations/similar/?spotify_id=1ShRHPAiiIrh0arZbSFmx1 HTTP/1.1" 200 0
+INFO 2025-06-26 08:50:59,322 basehttp 1388 10560 "GET /song/1ShRHPAiiIrh0arZbSFmx1 HTTP/1.1" 301 0
+WARNING 2025-06-26 08:50:59,329 log 1388 16644 Not Found: /songs/1ShRHPAiiIrh0arZbSFmx1/comments
+WARNING 2025-06-26 08:50:59,332 basehttp 1388 16644 "GET /songs/1ShRHPAiiIrh0arZbSFmx1/comments HTTP/1.1" 404 179
+INFO 2025-06-26 08:50:59,333 basehttp 1388 16152 "OPTIONS /api/recommendations/similar/?spotify_id=1ShRHPAiiIrh0arZbSFmx1 HTTP/1.1" 200 0
+WARNING 2025-06-26 08:50:59,335 log 1388 16644 Not Found: /songs/1ShRHPAiiIrh0arZbSFmx1/comments
+WARNING 2025-06-26 08:50:59,338 basehttp 1388 16644 "GET /songs/1ShRHPAiiIrh0arZbSFmx1/comments HTTP/1.1" 404 179
+INFO 2025-06-26 08:50:59,616 basehttp 1388 4080 "GET /song/1ShRHPAiiIrh0arZbSFmx1/ HTTP/1.1" 200 347
+INFO 2025-06-26 08:50:59,622 basehttp 1388 16644 "OPTIONS /songs/1ShRHPAiiIrh0arZbSFmx1/view/ HTTP/1.1" 200 0
+INFO 2025-06-26 08:50:59,934 basehttp 1388 4080 "GET /song/1ShRHPAiiIrh0arZbSFmx1/ HTTP/1.1" 200 347
+INFO 2025-06-26 08:51:00,006 basehttp 1388 12836 "GET /playlists/ HTTP/1.1" 200 35
+INFO 2025-06-26 08:51:00,012 basehttp 1388 16428 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:51:00,619 basehttp 1388 9400 "POST /songs/1ShRHPAiiIrh0arZbSFmx1/view/ HTTP/1.1" 200 54
+INFO 2025-06-26 08:51:00,626 basehttp 1388 4080 "OPTIONS /songs/1ShRHPAiiIrh0arZbSFmx1/status/ HTTP/1.1" 200 0
+WARNING 2025-06-26 08:51:00,631 log 1388 9400 Not Found: /songs/1ShRHPAiiIrh0arZbSFmx1/status/
+WARNING 2025-06-26 08:51:00,632 basehttp 1388 9400 "GET /songs/1ShRHPAiiIrh0arZbSFmx1/status/ HTTP/1.1" 404 179
+INFO 2025-06-26 08:51:00,683 basehttp 1388 15524 "POST /songs/1ShRHPAiiIrh0arZbSFmx1/view/ HTTP/1.1" 200 54
+INFO 2025-06-26 08:51:00,690 basehttp 1388 16428 "GET /notifications/ HTTP/1.1" 200 21
+WARNING 2025-06-26 08:51:00,733 log 1388 15524 Not Found: /songs/1ShRHPAiiIrh0arZbSFmx1/status/
+WARNING 2025-06-26 08:51:00,736 basehttp 1388 15524 "GET /songs/1ShRHPAiiIrh0arZbSFmx1/status/ HTTP/1.1" 404 179
+INFO 2025-06-26 08:51:00,768 basehttp 1388 12836 "GET /playlists/ HTTP/1.1" 200 35
+INFO 2025-06-26 08:51:01,912 basehttp 1388 1180 "OPTIONS /songs/1ShRHPAiiIrh0arZbSFmx1/play/ HTTP/1.1" 200 0
+INFO 2025-06-26 08:51:01,955 basehttp 1388 4924 "GET /api/recommendations/similar/?spotify_id=1ShRHPAiiIrh0arZbSFmx1 HTTP/1.1" 200 3011
+INFO 2025-06-26 08:51:03,051 basehttp 1388 18000 "POST /songs/1ShRHPAiiIrh0arZbSFmx1/play/ HTTP/1.1" 200 60
+INFO 2025-06-26 08:51:04,161 basehttp 1388 4924 "GET /api/recommendations/similar/?spotify_id=1ShRHPAiiIrh0arZbSFmx1 HTTP/1.1" 200 3011
+INFO 2025-06-26 08:52:00,915 basehttp 1388 15228 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:53:01,014 basehttp 1388 17672 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:54:01,005 basehttp 1388 10860 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:55:00,988 basehttp 1388 10860 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:56:00,986 basehttp 1388 1196 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:57:00,975 basehttp 1388 18104 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:58:01,077 basehttp 1388 13724 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 08:59:02,000 basehttp 1388 7636 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:00:03,005 basehttp 1388 19672 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:01:04,001 basehttp 1388 19956 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:02:05,033 basehttp 1388 8244 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:03:06,076 basehttp 1388 17760 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:04:06,982 basehttp 1388 17760 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:05:07,985 basehttp 1388 17760 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:06:08,969 basehttp 1388 17760 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:07:09,979 basehttp 1388 22284 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:08:11,057 basehttp 1388 21736 "GET /notifications/ HTTP/1.1" 200 21
+ERROR 2025-06-26 09:46:34,539 log 1388 17044 Internal Server Error: /notifications/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\postgresql\base.py", line 332, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\psycopg2\__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: could not translate host name "ep-little-bonus-a153eygd-pooler.ap-southeast-1.aws.neon.tech" to address: No such host is known. 
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 420, in initial
+    self.perform_authentication(request)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 330, in perform_authentication
+    request.user
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\request.py", line 232, in user
+    self._authenticate()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\request.py", line 385, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework_simplejwt\authentication.py", line 51, in authenticate
+    return self.get_user(validated_token), validated_token
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework_simplejwt\authentication.py", line 130, in get_user
+    user = self.user_model.objects.get(**{api_settings.USER_ID_FIELD: user_id})
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 629, in get
+    num = len(clone)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 366, in __len__
+    self._fetch_all()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 1935, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\sql\compiler.py", line 1620, in execute_sql
+    cursor = self.connection.cursor()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 320, in cursor
+    return self._cursor()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 296, in _cursor
+    self.ensure_connection()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 278, in ensure_connection
+    with self.wrap_database_errors:
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\postgresql\base.py", line 332, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\psycopg2\__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+django.db.utils.OperationalError: could not translate host name "ep-little-bonus-a153eygd-pooler.ap-southeast-1.aws.neon.tech" to address: No such host is known. 
+
+ERROR 2025-06-26 09:46:34,967 basehttp 1388 17044 "GET /notifications/ HTTP/1.1" 500 145
+INFO 2025-06-26 09:56:26,918 basehttp 1388 22504 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:57:15,015 basehttp 1388 23716 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:58:15,023 basehttp 1388 1196 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 09:59:15,010 basehttp 1388 5944 "GET /notifications/ HTTP/1.1" 200 21
+INFO 2025-06-26 10:43:53,286 basehttp 1388 23016 "OPTIONS /notifications/ HTTP/1.1" 200 0
+ERROR 2025-06-26 10:43:53,297 log 1388 23016 Internal Server Error: /notifications/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\postgresql\base.py", line 332, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\psycopg2\__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: could not translate host name "ep-little-bonus-a153eygd-pooler.ap-southeast-1.aws.neon.tech" to address: No such host is known. 
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 420, in initial
+    self.perform_authentication(request)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 330, in perform_authentication
+    request.user
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\request.py", line 232, in user
+    self._authenticate()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\request.py", line 385, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework_simplejwt\authentication.py", line 51, in authenticate
+    return self.get_user(validated_token), validated_token
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework_simplejwt\authentication.py", line 130, in get_user
+    user = self.user_model.objects.get(**{api_settings.USER_ID_FIELD: user_id})
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 629, in get
+    num = len(clone)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 366, in __len__
+    self._fetch_all()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 1935, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\sql\compiler.py", line 1620, in execute_sql
+    cursor = self.connection.cursor()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 320, in cursor
+    return self._cursor()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 296, in _cursor
+    self.ensure_connection()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 278, in ensure_connection
+    with self.wrap_database_errors:
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\postgresql\base.py", line 332, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\psycopg2\__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+django.db.utils.OperationalError: could not translate host name "ep-little-bonus-a153eygd-pooler.ap-southeast-1.aws.neon.tech" to address: No such host is known. 
+
+ERROR 2025-06-26 10:43:53,305 basehttp 1388 23016 "GET /notifications/ HTTP/1.1" 500 145
+INFO 2025-06-27 00:26:15,528 basehttp 1388 25964 "OPTIONS /notifications/ HTTP/1.1" 200 0
+ERROR 2025-06-27 00:26:15,539 log 1388 25964 Internal Server Error: /notifications/
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\postgresql\base.py", line 332, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\psycopg2\__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: could not translate host name "ep-little-bonus-a153eygd-pooler.ap-southeast-1.aws.neon.tech" to address: No such host is known. 
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 420, in initial
+    self.perform_authentication(request)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\views.py", line 330, in perform_authentication
+    request.user
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\request.py", line 232, in user
+    self._authenticate()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework\request.py", line 385, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework_simplejwt\authentication.py", line 51, in authenticate
+    return self.get_user(validated_token), validated_token
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\rest_framework_simplejwt\authentication.py", line 130, in get_user
+    user = self.user_model.objects.get(**{api_settings.USER_ID_FIELD: user_id})
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 629, in get
+    num = len(clone)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 366, in __len__
+    self._fetch_all()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 1935, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\models\sql\compiler.py", line 1620, in execute_sql
+    cursor = self.connection.cursor()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 320, in cursor
+    return self._cursor()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 296, in _cursor
+    self.ensure_connection()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 278, in ensure_connection
+    with self.wrap_database_errors:
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\django\db\backends\postgresql\base.py", line 332, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+  File "C:\Users\mitak\AppData\Local\Programs\Python\Python310\lib\site-packages\psycopg2\__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+django.db.utils.OperationalError: could not translate host name "ep-little-bonus-a153eygd-pooler.ap-southeast-1.aws.neon.tech" to address: No such host is known. 
+
+ERROR 2025-06-27 00:26:15,547 basehttp 1388 25964 "GET /notifications/ HTTP/1.1" 500 145
