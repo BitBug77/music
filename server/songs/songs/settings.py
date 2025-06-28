@@ -1,10 +1,12 @@
 """
 Django settings for songs project.
 """
+
 import os
 from pathlib import Path
 from datetime import timedelta
 import environ
+import logging.config
 
 # Initialize environment
 env = environ.Env(
@@ -12,8 +14,6 @@ env = environ.Env(
     ALLOWED_HOSTS=(list, []),
     CORS_ALLOWED_ORIGINS=(list, []),
 )
-
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +27,8 @@ SECRET_KEY = env('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env('ALLOWED_HOSTS')
+# Hosts
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['music-wisx.onrender.com', 'localhost', '127.0.0.1'])
 
 # Application definition
 INSTALLED_APPS = [
@@ -58,7 +59,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-# JWT Settings with more secure defaults
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
@@ -118,25 +118,14 @@ DATABASES = {
             'sslmode': 'require',
         },
     }
-}  
+}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {
-            'min_length': 12,
-        },
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 12}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 # Internationalization
@@ -145,11 +134,10 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# Static and Media
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -173,27 +161,16 @@ ESEWA_CONFIG = {
 }
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS')
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
+    'DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT',
 ]
 CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
+    'accept', 'accept-encoding', 'authorization', 'content-type',
+    'dnt', 'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
 ]
+
 # Authentication
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -214,31 +191,30 @@ CACHES = {
     }
 }
 
-# Kafka
-KAFKA_BROKER_URL = env('KAFKA_BROKER_URL')
-KAFKA_TOPIC = env('KAFKA_TOPIC')
+# Kafka settings (optional)
+KAFKA_ENABLED = env.bool('KAFKA_ENABLED', default=False)
+
+if KAFKA_ENABLED:
+    KAFKA_BROKER_URL = env('KAFKA_BROKER_URL')
+    KAFKA_TOPIC = env('KAFKA_TOPIC')
+else:
+    KAFKA_BROKER_URL = None
+    KAFKA_TOPIC = None
 
 # Security settings
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = False
-SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_SSL_REDIRECT = False  # Set True for production with SSL
+SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = False  # Disable SSL redirection for local development
 
-# Logging configuration
-# Add this to your settings.py file or wherever you configure logging
-
-import os
-import logging.config
-
-# Ensure log directory exists
-LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+# Logging setup
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 
 LOGGING = {
@@ -268,7 +244,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        '': {  # Root logger
+        '': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': True,
@@ -283,7 +259,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
-        'your_app_name': {  # Replace with your app name
+        'app': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False,
@@ -292,4 +268,4 @@ LOGGING = {
 }
 
 # Initialize logger
-logger = logging.getLogger('app')  # Replace with your app name
+logger = logging.getLogger('app')
