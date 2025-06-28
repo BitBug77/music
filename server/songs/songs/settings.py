@@ -88,6 +88,7 @@ SIMPLE_JWT = {
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ADDED: This fixes static files
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -146,9 +147,17 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static and Media
+# Static and Media Files - FIXED
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# ADDED: Optional directory for custom static files
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+] if os.path.exists(os.path.join(BASE_DIR, 'static')) else []
+
+# ADDED: WhiteNoise storage for better static file handling
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -217,11 +226,6 @@ else:
         }
     }
 
-# Kafka settings - COMPLETELY DISABLED
-KAFKA_ENABLED = False
-KAFKA_BROKER_URL = None
-KAFKA_TOPIC = None
-
 # Security settings
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
@@ -238,7 +242,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 
-# LOGGING CONFIGURATION - FIXED: Define LOGGING before trying to modify it
+# LOGGING CONFIGURATION - MODIFIED: Suppress Kafka warnings completely
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -286,8 +290,13 @@ LOGGING = {
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
         },
-        # Kafka logger - disabled to prevent warnings
+        # ADDED: Suppress all Kafka-related logs completely
         'kafka': {
+            'handlers': [],
+            'level': 'CRITICAL',
+            'propagate': False,
+        },
+        'rdkafka': {
             'handlers': [],
             'level': 'CRITICAL',
             'propagate': False,
