@@ -12,7 +12,32 @@ from django.conf.urls.static import static
 
 app_name = 'app'
 
+def home_view(request):
+    """Simple home view for API status"""
+    from django.http import JsonResponse
+    return JsonResponse({
+        'message': 'Music API is running successfully!',
+        'status': 'online',
+        'version': '1.0',
+        'endpoints': {
+            'admin': '/admin/',
+            'api_docs': 'Add your API endpoints here'
+        }
+    })
+
+def health_check(request):
+    """Health check endpoint for monitoring"""
+    from django.http import JsonResponse
+    return JsonResponse({
+        'status': 'healthy',
+        'service': 'music-api'
+    })
+
+
+
 urlpatterns = [
+    path('', home_view, name='home'),
+    path('health/', health_check, name='health'),
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),
     path('spotify-login/', views.spotify_login, name='spotify_login'),
