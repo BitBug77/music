@@ -8,7 +8,8 @@ from datetime import timedelta
 import environ
 import logging.config
 import logging
-
+import os
+PORT = int(os.environ.get('PORT', 8000))
 
 # Initialize environment
 env = environ.Env(

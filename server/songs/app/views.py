@@ -407,7 +407,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .models import User, FriendRequest
-from .kafka_producer import send_kafka_message
+from app.kafka_producer import send_kafka_message 
 from django.conf import settings
 
 @csrf_protect
