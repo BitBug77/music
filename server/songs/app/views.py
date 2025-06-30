@@ -407,7 +407,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .models import User, FriendRequest
-from app.kafka_producer import send_kafka_message 
+
 from django.conf import settings
 
 @csrf_protect
@@ -461,17 +461,17 @@ def send_friend_request(request):
     if already_friends:
         return JsonResponse({"status": "error", "message": "You are already friends with this user"}, status=400)
     
-    FriendRequest.objects.create(sender=sender, receiver=receiver)
+    # Create the friend request
+    friend_request = FriendRequest.objects.create(sender=sender, receiver=receiver)
     
-    # Send Kafka message
-    message = {
-        'event': 'friend_request_sent',
-        'sender_id': sender.id,
-        'receiver_id': receiver.id,
-        'sender_username': sender.username,
-        'receiver_username': receiver.username
-    }
-    send_kafka_message(settings.KAFKA_TOPIC, message)
+    # Create a notification for the receiver
+    Notification.objects.create(
+        recipient=receiver,
+        sender=sender,
+        notification_type='friend_request',
+        message=f'{sender.username} sent you a friend request',
+        related_object_id=friend_request.id
+    )
     
     return JsonResponse({
         "status": "success", 
@@ -483,6 +483,8 @@ def send_friend_request(request):
             }
         }
     })
+
+
 @csrf_protect
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -506,15 +508,13 @@ def respond_to_friend_request(request):
             friend_request.status = "accepted"
             friend_request.save()
             
-            # Send Kafka message for accepted request
-            message = {
-                'event': 'friend_request_accepted',
-                'sender_id': friend_request.sender.id,
-                'receiver_id': friend_request.receiver.id,
-                'sender_username': friend_request.sender.username,
-                'receiver_username': friend_request.receiver.username
-            }
-            send_kafka_message(settings.KAFKA_TOPIC, message)
+            # Create notification for the sender
+            Notification.objects.create(
+                recipient=friend_request.sender,
+                sender=friend_request.receiver,
+                notification_type='friend_request_accepted',
+                message=f'{friend_request.receiver.username} accepted your friend request'
+            )
             
             return JsonResponse({"status": "success", "message": "Friend request accepted"})
         
@@ -522,33 +522,33 @@ def respond_to_friend_request(request):
             friend_request.status = "rejected"
             friend_request.save()
             
-            # Send Kafka message for declined request
-            message = {
-                'event': 'friend_request_rejected',
-                'sender_id': friend_request.sender.id,
-                'receiver_id': friend_request.receiver.id,
-                'sender_username': friend_request.sender.username,
-                'receiver_username': friend_request.receiver.username
-            }
-            send_kafka_message(settings.KAFKA_TOPIC, message)
+            # Create notification for the sender
+            Notification.objects.create(
+                recipient=friend_request.sender,
+                sender=friend_request.receiver,
+                notification_type='friend_request_rejected',
+                message=f'{friend_request.receiver.username} declined your friend request'
+            )
             
             return JsonResponse({"status": "success", "message": "Friend request rejected"})
         
         else:
-            return JsonResponse({"status": "error", "message": "Invalid action. Use 'accept' or 'reject'"}, status=400)
+            return JsonResponse({"status": "error", "message": "Invalid action. Use 'accept' or 'decline'"}, status=400)
     
     except FriendRequest.DoesNotExist:
         return JsonResponse({"status": "error", "message": "Friend request not found or you don't have permission"}, status=404)
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
-    
+
+
 from .models import Notification
+
 @csrf_protect
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_notifications(request):
     """Get all notifications for the current user"""
-    notifications = Notification.objects.filter(recipient=request.user)
+    notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')
     
     data = []
     for notification in notifications:
@@ -557,14 +557,17 @@ def get_notifications(request):
             'sender': {
                 'id': notification.sender.id,
                 'username': notification.sender.username
-            },
+            } if notification.sender else None,
             'type': notification.notification_type,
             'message': notification.message,
             'is_read': notification.is_read,
-            'created_at': notification.created_at
+            'created_at': notification.created_at,
+            'related_object_id': getattr(notification, 'related_object_id', None)
         })
     
     return JsonResponse({'notifications': data})
+
+
 @csrf_protect
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -579,6 +582,23 @@ def mark_notification_read(request, notification_id):
         return JsonResponse({'status': 'error', 'message': 'Notification not found'}, status=404)
 
 
+@csrf_protect
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_all_notifications_read(request):
+    """Mark all notifications as read for the current user"""
+    try:
+        updated_count = Notification.objects.filter(
+            recipient=request.user, 
+            is_read=False
+        ).update(is_read=True)
+        
+        return JsonResponse({
+            'status': 'success', 
+            'message': f'{updated_count} notifications marked as read'
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 @csrf_protect
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
